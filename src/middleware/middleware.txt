@@ -1,0 +1,3 @@
+# Add your middleware functions here.
+# Example: Authentication checks, request logging, error handling.
+# Each middleware file (e.g., authMiddleware.js) should be placed in this folder.
