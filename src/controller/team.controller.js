@@ -4,7 +4,10 @@ const teamSchema = require('../models/team.model');
 
 const fetchTeamMembers = async (req, res) => {
     try {
-        const members = await teamSchema.find().sort({ index: 1 });
+        const members = await teamSchema
+            .find()
+            .sort({ index: 1 })
+            .lean();
         res.status(200).json(members);
     }
     catch (err) {
