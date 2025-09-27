@@ -12,6 +12,24 @@ const fetchTeamMembers = async (req, res) => {
     }
 };
 
+// get single member by index
+
+const fetchSingleMember = async (req, res) => {
+    try {
+        const { index } = req.params;
+        const member = await teamSchema.findOne({ index: parseInt(index) });
+        
+        if (!member) {
+            return res.status(404).json({ message: 'Team member not found' });
+        }
+        
+        res.status(200).json(member);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 // create member
 
 const createTeamMember = async (req, res) => {
@@ -25,7 +43,50 @@ const createTeamMember = async (req, res) => {
     }
 };
 
+// update member by index
+
+const updateTeamMember = async (req, res) => {
+    try {
+        const { index } = req.params;
+        const updatedMember = await teamSchema.findOneAndUpdate(
+            { index: parseInt(index) },
+            req.body,
+            { new: true, runValidators: true }
+        );
+        
+        if (!updatedMember) {
+            return res.status(404).json({ message: 'Team member not found' });
+        }
+        
+        res.status(200).json(updatedMember);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// delete member by index
+
+const deleteTeamMember = async (req, res) => {
+    try {
+        const { index } = req.params;
+        const deletedMember = await teamSchema.findOneAndDelete({ index: parseInt(index) });
+        
+        if (!deletedMember) {
+            return res.status(404).json({ message: 'Team member not found' });
+        }
+        
+        res.status(200).json({ message: 'Team member deleted successfully', deletedMember });
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 module.exports = {
     fetchTeamMembers,
-    createTeamMember
+    fetchSingleMember,
+    createTeamMember,
+    updateTeamMember,
+    deleteTeamMember
 };
