@@ -28,7 +28,7 @@ app.use(helmet());
 // routes
 
 app.get('/', (req, res) => {
-    res.status(200).json({ message: 'SRM Github Community Server' });
+    res.status(200).json({ message: 'SRM Github Community Server...' });
 });
 
 app.use('/api/v1', routes);
