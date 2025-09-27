@@ -12,6 +12,24 @@ const fetchEvents = async (req, res) => {
     }
 };
 
+// fetch single event by slug
+
+const fetchSingleEvent = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const event = await eventSchema.findOne({ slug: slug });
+        
+        if (!event) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        
+        res.status(200).json(event);
+    }
+    catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
 // create events
 
 const createEvent = async (req, res) => {
@@ -24,4 +42,40 @@ const createEvent = async (req, res) => {
     }
 };
 
-module.exports = { fetchEvents, createEvent };
+// edit events
+
+const editEvent = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const updatedEvent = await eventSchema.findOneAndUpdate(
+            { slug: slug },
+            req.body,
+            { new: true, runValidators: true }
+        );
+        if (!updatedEvent) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        res.status(200).json(updatedEvent);
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+// delete events
+
+const deleteEvent = async (req, res) => {
+    try {
+        const { slug } = req.params;
+        const deletedEvent = await eventSchema.findOneAndDelete({ slug: slug });
+
+        if (!deletedEvent) {
+            return res.status(404).json({ message: 'Event not found' });
+        }
+        res.status(200).json({ message: 'Event deleted successfully' });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
+    }
+};
+
+
+module.exports = { fetchEvents, fetchSingleEvent, createEvent, editEvent, deleteEvent };
