@@ -1,15 +1,13 @@
-// Using native driver via session manager instead of mongoose for performance & session reuse
-const sessionManager = require('../utils/sessionManager');
+const teamSchema = require('../models/team.model');
 
 // get members
 
 const fetchTeamMembers = async (req, res) => {
     try {
-        const members = await sessionManager
-            .collection('teams')
-            .find({}, { session: global.session })
+        const members = await teamSchema
+            .find()
             .sort({ index: 1 })
-            .toArray();
+            .lean();
         res.status(200).json(members);
     }
     catch (err) {
@@ -21,13 +19,9 @@ const fetchTeamMembers = async (req, res) => {
 
 const createTeamMember = async (req, res) => {
     try {
-        const doc = req.body;
-        doc.createdAt = new Date();
-        doc.updatedAt = new Date();
-        const result = await sessionManager
-            .collection('teams')
-            .insertOne(doc, { session: global.session });
-        res.status(201).json({ _id: result.insertedId, ...doc });
+        const newMember = new teamSchema(req.body);
+        const savedMember = await newMember.save();
+        res.status(201).json(savedMember);
     }
     catch (err) {
         res.status(500).json({ message: err.message });
