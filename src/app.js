@@ -3,6 +3,7 @@ const morgan = require('morgan');
 const helmet = require('helmet');
 const cors = require('cors');
 const dotenv = require('dotenv');
+const routes = require('./routes');
 
 const errorHandler = require('./middleware/errorMiddleware');
 
@@ -25,6 +26,12 @@ if (process.env.NODE_ENV === 'prod') {
 app.use(helmet());
 
 // routes
+
+app.get('/', (req, res) => {
+    res.status(200).json({ message: 'octacore is awesome' });
+});
+
+app.use('/api/v1', routes);
 
 app.use(errorHandler);
 
