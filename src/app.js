@@ -4,6 +4,7 @@ const helmet = require('helmet');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const routes = require('./routes');
+const sessionManager = require('./utils/sessionManager');
 
 const errorHandler = require('./middleware/errorMiddleware');
 
@@ -29,6 +30,16 @@ app.use(helmet());
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'octacore is awesome' });
+});
+
+app.get('/healthz', async (req, res) => {
+    const sessionHealth = sessionManager.health();
+    res.status(sessionHealth.ready ? 200 : 503).json({
+        service: 'gcsrm_server',
+        session: sessionHealth,
+        uptime: process.uptime(),
+        timestamp: Date.now()
+    });
 });
 
 app.use('/api/v1', routes);
