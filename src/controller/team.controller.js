@@ -24,6 +24,9 @@ const fetchTeamMembers = async (req, res) => {
 
 const fetchSingleMember = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const { index } = req.params;
         const member = await teamSchema.findOne({ index: parseInt(index) });
         
@@ -58,6 +61,9 @@ const createTeamMember = async (req, res) => {
 
 const updateTeamMember = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const { index } = req.params;
         const updatedMember = await teamSchema.findOneAndUpdate(
             { index: parseInt(index) },
@@ -80,6 +86,9 @@ const updateTeamMember = async (req, res) => {
 
 const deleteTeamMember = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const { index } = req.params;
         const deletedMember = await teamSchema.findOneAndDelete({ index: parseInt(index) });
         

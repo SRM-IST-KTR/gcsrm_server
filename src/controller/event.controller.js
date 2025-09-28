@@ -1,9 +1,13 @@
 const eventSchema = require('../models/event.model');
+const { connectDB } = require('../utils/db');
 
 // fetch events
 
 const fetchEvents = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const events = await eventSchema.find().sort({ createdAt: -1 });
         res.status(200).json(events);
     }
@@ -16,6 +20,9 @@ const fetchEvents = async (req, res) => {
 
 const fetchSingleEvent = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const { slug } = req.params;
         const event = await eventSchema.findOne({ slug: slug });
         
@@ -34,6 +41,9 @@ const fetchSingleEvent = async (req, res) => {
 
 const createEvent = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const newEvent = new eventSchema(req.body);
         const savedEvent = await newEvent.save();
         res.status(201).json(savedEvent);
@@ -46,6 +56,9 @@ const createEvent = async (req, res) => {
 
 const editEvent = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const { slug } = req.params;
         const updatedEvent = await eventSchema.findOneAndUpdate(
             { slug: slug },
@@ -65,6 +78,9 @@ const editEvent = async (req, res) => {
 
 const deleteEvent = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const { slug } = req.params;
         const deletedEvent = await eventSchema.findOneAndDelete({ slug: slug });
 
