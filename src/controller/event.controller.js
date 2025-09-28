@@ -1,6 +1,6 @@
 const eventSchema = require('../models/event.model');
+const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
-
 // fetch events
 
 const fetchEvents = async (req, res) => {

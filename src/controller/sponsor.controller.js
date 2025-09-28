@@ -1,4 +1,5 @@
 const sponsorSchema = require('../models/sponsor.model');
+const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 
 // fetch sponsors
