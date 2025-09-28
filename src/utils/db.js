@@ -1,5 +1,6 @@
 const dotenv = require('dotenv');
 const mongoose = require('mongoose');
+const Sentry = require('@sentry/node');
 
 dotenv.config();
 
@@ -33,14 +34,35 @@ async function connectDB() {
 
         cached.promise = mongoose.connect(uri, opts)
             .then((m) => {
-                console.log('[Mongo] Connected:', m.connection.host, 'db:', m.connection.name);
-                mongoose.connection.on('error', (err) => console.error('[Mongo][error]', err.message));
-                mongoose.connection.on('disconnected', () => console.warn('[Mongo] Disconnected'));
-                mongoose.connection.on('reconnected', () => console.log('[Mongo] Reconnected'));
+                console.log(`[Mongo] Connected: ${m.connection.host} db: ${m.connection.name}`);
+
+                // Only log errors and disconnections
+                mongoose.connection.on('error', (err) => {
+                    Sentry.logger.error('MongoDB connection error', {
+                        error: err.message,
+                        host: m.connection.host,
+                    });
+                    Sentry.captureException(err, {
+                        tags: { component: 'database', event: 'connection_error' }
+                    });
+                });
+
+                mongoose.connection.on('disconnected', () => {
+                    Sentry.logger.warn('MongoDB disconnected', {
+                        host: m.connection.host,
+                    });
+                });
+
                 return m;
             })
             .catch(err => {
-                console.error('[Mongo] Initial connection error:', err.message);
+                Sentry.logger.error('MongoDB connection failed', {
+                    error: err.message,
+                    uri: uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'),
+                });
+                Sentry.captureException(err, {
+                    tags: { component: 'database', event: 'connection_error' }
+                });
                 throw err;
             });
     }
