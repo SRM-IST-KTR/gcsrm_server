@@ -1,3 +1,6 @@
+require('./utils/instrument.js');
+
+const Sentry = require('@sentry/node');
 const express = require('express');
 const morgan = require('morgan');
 const helmet = require('helmet');
@@ -65,6 +68,19 @@ async function ensureDB(req, res, next) {
 
 app.use('/api/v1', ensureDB, routes);
 
-app.use(errorHandler);
+// Add debug endpoint for testing Sentry
+app.get("/debug-sentry", function mainHandler(req, res) {
+    throw new Error("My first Sentry error!");
+});
+
+Sentry.setupExpressErrorHandler(app);
+
+
+app.use(function onError(err, req, res, next) {
+    // The error id is attached to `res.sentry` to be returned
+    // and optionally displayed to the user for support.
+    res.statusCode = 500;
+    res.end(res.sentry + "\n");
+});
 
 module.exports = app;
