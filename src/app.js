@@ -11,10 +11,14 @@ const { connectDB, dbHealth } = require('./utils/db');
 const mongoose = require('mongoose');
 
 const errorHandler = require('./middleware/errorMiddleware');
+const requestLoggingMiddleware = require('./middleware/requestLogging');
 
 dotenv.config();
 
 const app = express();
+
+// Add comprehensive request logging middleware early
+app.use(requestLoggingMiddleware);
 
 app.use(express.json());
 
@@ -22,7 +26,8 @@ app.use(cors({
     origin: process.env.ORIGIN,
 }));
 
-if (process.env.NODE_ENV === 'prod') {
+// Morgan logging (keep for file logs if needed)
+if (process.env.NODE_ENV === 'production') {
     app.use(morgan('combined'));
 } else {
     app.use(morgan('dev'));
@@ -42,20 +47,36 @@ app.get('/healthz', async (req, res) => {
         if (mongoose.connection.readyState !== 1) {
             await connectDB();
         }
+
         const h = dbHealth();
-        res.status(h.state === 'connected' ? 200 : 503).json({
-            ok: h.state === 'connected',
+        const isHealthy = h.state === 'connected';
+
+        const healthData = {
+            ok: isHealthy,
             state: h.state,
             readyState: h.readyState,
             uptime: process.uptime(),
-            timestamp: Date.now()
-        });
-    } catch (e) {
-        res.status(500).json({ ok: false, error: e.message });
-    }
-});
+            timestamp: Date.now(),
+        };
 
-async function ensureDB(req, res, next) {
+        res.status(isHealthy ? 200 : 503).json(healthData);
+    } catch (e) {
+        // Only log health check errors
+        Sentry.logger.error('Health check failed', {
+            error: e.message,
+        });
+
+        Sentry.captureException(e, {
+            tags: { component: 'health_check' }
+        });
+
+        res.status(500).json({
+            ok: false,
+            error: e.message,
+            timestamp: Date.now(),
+        });
+    }
+}); async function ensureDB(req, res, next) {
     if (mongoose.connection.readyState !== 1) {
         try {
             await connectDB();
@@ -68,12 +89,10 @@ async function ensureDB(req, res, next) {
 
 app.use('/api/v1', ensureDB, routes);
 
-// Add debug endpoint for testing Sentry
+// Simple debug endpoint for testing Sentry
 app.get("/debug-sentry", function mainHandler(req, res) {
-    throw new Error("My first Sentry error!");
-});
-
-Sentry.setupExpressErrorHandler(app);
+    throw new Error("Test Sentry error!");
+}); Sentry.setupExpressErrorHandler(app);
 
 
 app.use(function onError(err, req, res, next) {
