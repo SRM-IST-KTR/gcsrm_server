@@ -1,9 +1,14 @@
 const teamSchema = require('../models/team.model');
+const mongoose = require('mongoose');
+const { connectDB } = require('../utils/db');
 
 // get members
 
 const fetchTeamMembers = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const members = await teamSchema
             .find()
             .sort({ index: 1 })
@@ -19,6 +24,9 @@ const fetchTeamMembers = async (req, res) => {
 
 const createTeamMember = async (req, res) => {
     try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
         const newMember = new teamSchema(req.body);
         const savedMember = await newMember.save();
         res.status(201).json(savedMember);
