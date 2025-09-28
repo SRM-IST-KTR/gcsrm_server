@@ -20,8 +20,7 @@ const sponsorSchema = new mongoose.Schema({
     link: {
         type: String,
         required: true
-    },
-
+    }
 });
 
 module.exports = mongoose.models.sponsors || mongoose.model('sponsors', sponsorSchema);
