@@ -70,10 +70,6 @@ app.use('/api/v1', ensureDB, routes);
 
 // Add debug endpoint for testing Sentry
 app.get("/debug-sentry", function mainHandler(req, res) {
-    // Send a log before throwing the error
-    Sentry.logger.info('User triggered test error', {
-        action: 'test_error_endpoint',
-    });
     throw new Error("My first Sentry error!");
 });
 
