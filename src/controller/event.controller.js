@@ -24,7 +24,7 @@ const fetchSingleEvent = async (req, res) => {
             await connectDB();
         }
         const { slug } = req.params;
-        const event = await eventSchema.findOne({ slug: slug });
+        const event = await eventSchema.findOne({ slug });
         
         if (!event) {
             return res.status(404).json({ message: 'Event not found' });
@@ -61,7 +61,7 @@ const editEvent = async (req, res) => {
         }
         const { slug } = req.params;
         const updatedEvent = await eventSchema.findOneAndUpdate(
-            { slug: slug },
+            { slug },
             req.body,
             { new: true, runValidators: true }
         );
@@ -82,7 +82,7 @@ const deleteEvent = async (req, res) => {
             await connectDB();
         }
         const { slug } = req.params;
-        const deletedEvent = await eventSchema.findOneAndDelete({ slug: slug });
+        const deletedEvent = await eventSchema.findOneAndDelete({ slug });
 
         if (!deletedEvent) {
             return res.status(404).json({ message: 'Event not found' });
