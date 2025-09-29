@@ -47,7 +47,10 @@ const updateSponsor = async (req, res) => {
             return res.status(400).json({ message: 'Invalid sponsor ID format' });
         }
         
-        const updatedSponsor = await sponsorSchema.findByIdAndUpdate(id, req.body, { new: true });
+        const updatedSponsor = await sponsorSchema.findByIdAndUpdate(
+            id, 
+            req.body, 
+            { new: true, runValidators: true });
         
         if (!updatedSponsor) {
             return res.status(404).json({ message: 'Sponsor not found' });
