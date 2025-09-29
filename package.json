@@ -27,7 +27,7 @@
     "express": "^5.1.0",
     "helmet": "^8.1.0",
     "mongodb": "^6.20.0",
-    "mongoose": "^8.18.2",
+    "mongoose": "^8.18.3",
     "morgan": "^1.10.1"
   },
   "devDependencies": {
