@@ -25,9 +25,6 @@ const fetchSponsor = async (req, res) => {
             .sort({ tier: 1 })
             .lean();
 
-        // Custom sort sponsors by tier hierarchy
-        const tierOrder = ['platinum', 'gold', 'silver', 'bronze'];
-        sponsors.sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier));
         const queryDuration = Date.now() - queryStart;
         const totalDuration = Date.now() - startTime;
 
@@ -163,20 +160,6 @@ const createSponsor = async (req, res) => {
             });
         }
 
-        if (err.code === 11000) {
-            // Duplicate key error - 409 Conflict
-            Sentry.logger.warn('Duplicate sponsor creation attempted', {
-                operation: 'createSponsor',
-                error: err.message,
-                duration: `${totalDuration}ms`,
-            });
-
-            return res.status(409).json({
-                message: 'Sponsor already exists',
-                conflict: Object.keys(err.keyPattern || {})
-            });
-        }
-
         // Always log errors
         Sentry.logger.error('Failed to create sponsor', {
             operation: 'createSponsor',
@@ -297,21 +280,6 @@ const updateSponsor = async (req, res) => {
                     field: key,
                     message: err.errors[key].message
                 }))
-            });
-        }
-
-        if (err.name === 'CastError') {
-            // Invalid ObjectId format - 400 Bad Request
-            Sentry.logger.warn('Invalid ObjectId format in update', {
-                operation: 'updateSponsor',
-                sponsorId: req.params.id,
-                error: err.message,
-                duration: `${totalDuration}ms`,
-            });
-
-            return res.status(400).json({
-                message: 'Invalid sponsor ID format',
-                provided: req.params.id
             });
         }
 
