@@ -26,7 +26,7 @@ const fetchSponsor = async (req, res) => {
             .lean();
 
         // Custom sort sponsors by tier hierarchy
-        const tierOrder = ['Platinum', 'Gold', 'Silver', 'Bronze'];
+        const tierOrder = ['platinum', 'gold', 'silver', 'bronze'];
         sponsors.sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier));
         const queryDuration = Date.now() - queryStart;
         const totalDuration = Date.now() - startTime;
@@ -452,5 +452,6 @@ const deleteSponsor = async (req, res) => {
         });
     }
 };
+
 
 module.exports = { fetchSponsor, createSponsor, updateSponsor, deleteSponsor };
