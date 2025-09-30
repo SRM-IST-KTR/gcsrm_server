@@ -57,8 +57,30 @@ const deleteEvent = async (req, res) => {
     }
 };
 
+const fetchEvent = async (req, res) => {
+    try{
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+
+        const { id } = req.params;
+        if (!id){
+            return res.status(400).json({message: "No event ID provided"});
+        }
+        const fetchedevent = await eventSchema.findById(id);
+        if (!fetchedevent){
+            return res.status(404).json({message: "no such event not found with that id!"});
+        }
+        res.status(200).json({message: "event fetched successfully", event: fetchedevent});
+    }
+    catch(error){
+        res.status(500).json({msg: error.message});
+    }
+};
+
 module.exports = {
     createEvent,
     editEvent,
-    deleteEvent
+    deleteEvent,
+    fetchEvent
 };
