@@ -29,7 +29,9 @@ const editEvent = async (req, res) => {
 
         const { data } = req.body;
         if (!data || !data.id) return res.status(400).json({ message: "No event ID provided" });
-
+        if (!mongoose.Types.ObjectId.isValid(data.id)) {
+            return res.status(400).json({message: "this event id is invalid!"});
+        }
         const updatedEvent = await eventSchema.findByIdAndUpdate(data.id, data, { new: true });
         if (!updatedEvent) return res.status(404).json({ message: 'Event not found' });
 
@@ -47,7 +49,9 @@ const deleteEvent = async (req, res) => {
 
         const { id } = req.params;
         if (!id) return res.status(400).json({ message: "No event ID provided" });
-
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({ message: "Invalid event ID format" });
+        }
         const deletedevent = await eventSchema.findByIdAndDelete(id);
         if (!deletedevent) return res.status(404).json({ message: 'Event not found' });
 
@@ -67,6 +71,10 @@ const fetchEvent = async (req, res) => {
         if (!id){
             return res.status(400).json({message: "No event ID provided"});
         }
+        if (!mongoose.Types.ObjectId.isValid(id)){
+            return res.status(400).json({message: "Invalid event ID format"});
+        }
+
         const fetchedevent = await eventSchema.findById(id);
         if (!fetchedevent){
             return res.status(404).json({message: "no such event not found with that id!"});
