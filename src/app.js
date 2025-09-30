@@ -12,6 +12,7 @@ const mongoose = require('mongoose');
 
 const errorHandler = require('./middleware/errorMiddleware');
 const requestLoggingMiddleware = require('./middleware/requestLogging');
+const Team = require('./models/team.model.js');
 
 dotenv.config();
 
@@ -40,6 +41,44 @@ app.use(helmet());
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'octacore is awesome' });
 });
+
+
+//fech team member by index
+//ERR : user is not allowed to do action [find] on [gcsrm_db.teams]
+
+
+app.get('/fetch/mem/:index', async (req, res) => {
+    const idx = Number(req.params.index);
+
+    if (Number.isNaN(idx)) {
+        return res.status(400).json({ message: 'index must be a number' });
+    }
+
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB(); 
+        }
+
+        const member = await Team.findOne({ index: idx });
+
+        if (!member) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        return res.status(200).json(member);
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({
+            message: 'Error fetching member',
+            error: err.message,
+        });
+    }
+});
+
+
+
+
+
 
 // health endpoint (cheap for uptime checks)
 app.get('/healthz', async (req, res) => {
