@@ -16,7 +16,7 @@ const createEvent = async (req, res) => {
         const saved = await eventnew.save();
 
         res.status(201).json({ message: 'Event created successfully', event: saved });
-    } catch(error) {
+    } catch (error) {
         res.status(500).json({ msg: error.message });
     }
 };
@@ -62,7 +62,7 @@ const deleteEvent = async (req, res) => {
 };
 
 const fetchEvent = async (req, res) => {
-    try{
+    try {
         if (mongoose.connection.readyState !== 1) {
             await connectDB();
         }
@@ -81,7 +81,7 @@ const fetchEvent = async (req, res) => {
         }
         res.status(200).json({message: "event fetched successfully", event: fetchedevent});
     }
-    catch(error){
+    catch (error){
         res.status(500).json({msg: error.message});
     }
 };
