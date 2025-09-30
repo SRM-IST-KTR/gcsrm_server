@@ -1,3 +1,0 @@
-# Define your database models here.
-# Example: User schema, Product schema, etc.
-# Each model file (e.g., userModel.js) should be placed in this folder.
