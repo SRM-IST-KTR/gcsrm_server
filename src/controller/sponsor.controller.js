@@ -25,6 +25,9 @@ const fetchSponsor = async (req, res) => {
             .sort({ tier: 1 })
             .lean();
 
+        // Custom sort sponsors by tier hierarchy
+        const tierOrder = ['Platinum', 'Gold', 'Silver', 'Bronze'];
+        sponsors.sort((a, b) => tierOrder.indexOf(a.tier) - tierOrder.indexOf(b.tier));
         const queryDuration = Date.now() - queryStart;
         const totalDuration = Date.now() - startTime;
 
