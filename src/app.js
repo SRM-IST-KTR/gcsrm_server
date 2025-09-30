@@ -92,14 +92,12 @@ app.use('/api/v1', ensureDB, routes);
 // Simple debug endpoint for testing Sentry
 app.get("/debug-sentry", function mainHandler(req, res) {
     throw new Error("Test Sentry error!");
-}); Sentry.setupExpressErrorHandler(app);
-
-
-app.use(function onError(err, req, res, next) {
-    // The error id is attached to `res.sentry` to be returned
-    // and optionally displayed to the user for support.
-    res.statusCode = 500;
-    res.end(res.sentry + "\n");
 });
+
+// Sentry error handler should come before custom error handler
+Sentry.setupExpressErrorHandler(app);
+
+// Use our custom error handler middleware
+app.use(errorHandler);
 
 module.exports = app;
