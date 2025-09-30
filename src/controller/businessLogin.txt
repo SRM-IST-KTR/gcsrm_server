@@ -1,3 +1,0 @@
-# Place your business logic functions here.
-# Example: Functions for handling login, registration, etc.
-# When you create a new controller (e.g., userController.js), put it in this folder.

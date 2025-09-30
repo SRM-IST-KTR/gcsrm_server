@@ -9,6 +9,7 @@ const dotenv = require('dotenv');
 const routes = require('./routes');
 const { connectDB, dbHealth } = require('./utils/db');
 const mongoose = require('mongoose');
+const swaggerDocs = require('./utils/swagger');
 
 const errorHandler = require('./middleware/errorMiddleware');
 const requestLoggingMiddleware = require('./middleware/requestLogging');
@@ -88,6 +89,9 @@ app.get('/healthz', async (req, res) => {
 }
 
 app.use('/api/v1', ensureDB, routes);
+
+// Initialize Swagger documentation
+swaggerDocs(app);
 
 // Simple debug endpoint for testing Sentry
 app.get("/debug-sentry", function mainHandler(req, res) {
