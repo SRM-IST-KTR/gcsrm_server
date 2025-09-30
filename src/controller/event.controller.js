@@ -77,7 +77,7 @@ const fetchEvent = async (req, res) => {
 
         const fetchedevent = await eventSchema.findById(id);
         if (!fetchedevent){
-            return res.status(404).json({message: "no such event not found with that id!"});
+            return res.status(404).json({message: "no such event found with that id!"});
         }
         res.status(200).json({message: "event fetched successfully", event: fetchedevent});
     }
