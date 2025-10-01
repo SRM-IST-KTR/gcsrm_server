@@ -43,22 +43,16 @@ app.get('/', (req, res) => {
 });
 
 
-//fech team member by index
+//fech team member by _id
+app.get('/fetch/mem/:id', ensureDB, async (req, res) => {
+    const id = req.params.id;
 
-
-app.get('/fetch/mem/:index', async (req, res) => {
-    const idx = Number(req.params.index);
-
-    if (Number.isNaN(idx)) {
-        return res.status(400).json({ message: 'index must be a number' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: '_id must be a valid ObjectId' });
     }
 
     try {
-        if (mongoose.connection.readyState !== 1) {
-            await connectDB(); 
-        }
-
-        const member = await Team.findOne({ index: idx });
+        const member = await Team.findById(id).lean().exec();
 
         if (!member) {
             return res.status(404).json({ message: 'Member not found' });
@@ -74,19 +68,54 @@ app.get('/fetch/mem/:index', async (req, res) => {
     }
 });
 
+//delete team member by _id
+app.delete('/delete/mem/:id', ensureDB, async (req, res) => {
+    const id = req.params.id;
 
-app.delete('/delete/mem/:index', async (req, res) => {
-    if(!isNaN(req.params.index)) {
-    db.collection('teams')
-        .deleteOne({ index: Number(req.params.index) })
-        .then(result => {
-                return res.status(200).json(result);
-            })
-        .catch(err => {
-                return res.status(500).json({ message: 'Error deleting member', error: err.message });
-            });
-    } else {
-        return res.status(400).json({ message: 'index must be a number' });
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: '_id must be a valid ObjectId' });
+    }
+
+    try {
+        const deleted = await Team.findByIdAndDelete(id).exec();
+
+        if (!deleted) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        return res.status(200).json({ message: 'Member deleted', member: deleted });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Error deleting member', error: err.message });
+    }
+});
+
+//ignore this for now
+// edit team member by id
+
+app.put('/edit/mem/:id', ensureDB, async (req, res) => {
+    const id = req.params.id;
+    const updateData = req.body;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: '_id must be a valid ObjectId' });
+    }
+
+    try {
+        let updated = await Team.findByIdAndUpdate(id, updateData, {
+            new: true,
+            runValidators: true,
+            lean: true
+        }).exec();
+
+        if (!updated) {
+            return res.status(404).json({ message: 'Member not found' });
+        }
+
+        return res.status(200).json({ message: 'Member updated', member: updated });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ message: 'Error updating member', error: err.message });
     }
 });
 
