@@ -44,7 +44,6 @@ app.get('/', (req, res) => {
 
 
 //fech team member by index
-//ERR : user is not allowed to do action [find] on [gcsrm_db.teams]
 
 
 app.get('/fetch/mem/:index', async (req, res) => {
@@ -76,7 +75,20 @@ app.get('/fetch/mem/:index', async (req, res) => {
 });
 
 
-
+app.delete('/delete/mem/:index', async (req, res) => {
+    if(!isNaN(req.params.index)) {
+    db.collection('teams')
+        .deleteOne({ index: Number(req.params.index) })
+        .then(result => {
+                return res.status(200).json(result);
+            })
+        .catch(err => {
+                return res.status(500).json({ message: 'Error deleting member', error: err.message });
+            });
+    } else {
+        return res.status(400).json({ message: 'index must be a number' });
+    }
+});
 
 
 
