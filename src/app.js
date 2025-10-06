@@ -34,7 +34,17 @@ if (process.env.NODE_ENV === 'production') {
     app.use(morgan('dev'));
 }
 
-app.use(helmet());
+// Configure helmet to allow Swagger UI to work properly
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            styleSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "'unsafe-inline'"],
+            imgSrc: ["'self'", "data:", "https:"],
+        },
+    },
+}));
 
 // routes
 

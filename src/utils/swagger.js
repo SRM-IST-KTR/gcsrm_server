@@ -1,5 +1,6 @@
 const swaggerJsDoc = require("swagger-jsdoc");
 const swaggerUi = require("swagger-ui-express");
+const path = require("path");
 
 const options = {
     definition: {
@@ -181,14 +182,35 @@ const options = {
             }
         }
     },
-    apis: ["./src/routes/*.js"]
+    apis: [path.join(__dirname, "../routes/*.js")]
 };
 
 const swaggerSpec = swaggerJsDoc(options);
 
 const swaggerDocs = (app) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-    console.log("Swagger docs available at http://localhost:3000/api-docs");
+    try {
+        // Add custom CSS for better styling
+        const swaggerOptions = {
+            explorer: true,
+            customCss: '.swagger-ui .topbar { display: none }',
+            customSiteTitle: "GCSRM API Documentation"
+        };
+
+        app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
+
+        // Log the swagger spec for debugging
+        console.log("Swagger spec generated successfully");
+        console.log(`Found ${Object.keys(swaggerSpec.paths || {}).length} API paths`);
+
+        const port = process.env.PORT || 3000;
+        const host = process.env.NODE_ENV === 'production'
+            ? 'https://octacore.githubsrmist.in'
+            : `http://localhost:${port}`;
+
+        console.log(`Swagger docs available at ${host}/api-docs`);
+    } catch (error) {
+        console.error("Error setting up Swagger documentation:", error);
+    }
 };
 
 module.exports = swaggerDocs;
