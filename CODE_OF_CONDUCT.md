@@ -60,7 +60,7 @@ representative at an online or offline event.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may be
 reported to the community leaders responsible for enforcement at
-[INSERT CONTACT METHOD]. All complaints will be reviewed and investigated 
+[technical@githubsrmist.in](mailto:technical@githubsrmist.in). All complaints will be reviewed and investigated 
 promptly and fairly.
 
 All community leaders are obligated to respect the privacy and security of the
@@ -144,7 +144,7 @@ If you experience or witness unacceptable behavior, or have any other concerns,
 please report it by contacting the project maintainers at:
 
 * **GitHub Issues**: For public discussions about community guidelines
-* **Email**: [Insert project maintainer email here]
+* **Email**: [technical@githubsrmist.in](mailto:technical@githubsrmist.in)
 * **Direct Message**: Contact project maintainers directly on GitHub
 
 All reports will be handled with discretion and confidentiality.
