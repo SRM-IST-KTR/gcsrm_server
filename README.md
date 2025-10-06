@@ -14,14 +14,65 @@ The complete server backend for GCSRM (GitHub Club SRM) - A robust Node.js/Expre
 
 This repository is open for contributions during Hacktoberfest and throughout the year. We welcome developers of all skill levels to contribute to this project.
 
+### 🔍 Hacktoberfest PR/MR Validation Criteria
+
+**IMPORTANT**: Your contributions must meet ALL the following criteria to count for Hacktoberfest:
+
+#### ⏰ **[BOUNDS]** Timeline Requirements
+
+- PR/MRs must be created between **October 1, 10:00 AM UTC** and **October 31, 11:59:59 PM UTC**
+- Repository must be public and unarchived
+- PRs created before October 1 but merged after do NOT count
+
+#### 🚫 **[EXCLUSION]** Repository Standards
+
+- This repository follows Hacktoberfest values and is NOT excluded
+- We maintain high standards for contributions and community behavior
+
+#### 🛡️ **[SPAM]** Quality Assurance
+
+- PR/MRs labeled with "spam" by maintainers will NOT be counted
+- PR/MRs detected as spammy by the system will NOT be counted
+- Users with 2+ spammy PR/MRs will be **disqualified**
+- Only quality, meaningful contributions are accepted
+
+#### ✅ **[PARTICIPATING]** Opt-in Verification
+
+- This repository has the `hacktoberfest` topic (✓)
+- OR your PR/MR must have the `hacktoberfest-accepted` label
+- This is a **one-time check** - once passed, won't be rechecked
+
+#### ❌ **[INVALID]** Label Check
+
+- PR/MRs labeled with "invalid" will NOT be counted
+- Exception: If also labeled `hacktoberfest-accepted`
+
+#### 🎉 **[ACCEPTED]** Final Approval
+
+Your PR/MR must be **ONE** of the following:
+
+- ✅ **Merged** by a maintainer
+- ✅ **Labeled** with `hacktoberfest-accepted`
+- ✅ **Approved** with an overall approving review (and not closed)
+
+**Important**: Draft PRs are NOT considered accepted.
+
+#### ⏳ **7-Day Review Period
+
+- After passing all checks, there's a **7-day review period**
+- If any check fails during this time, the timer resets
+- PRs still in review on October 31 can continue into November
+- After 7 days, your PR is automatically accepted for Hacktoberfest! 🎉
+
 ### How to Contribute for Hacktoberfest
 
-1. ⭐ Star this repository
-2. 🍴 Fork the repository
-3. 👀 Look for issues labeled with `hacktoberfest`, `good first issue`, or `help wanted`
-4. 📖 Read our [Contributing Guidelines](CONTRIBUTING.md)
-5. 🚀 Make your contribution
-6. 📝 Submit a pull request
+1. ⭐ **Star this repository**
+2. 🍴 **Fork the repository**
+3. 👀 **Look for issues** labeled with `hacktoberfest`, `good first issue`, or `help wanted`
+4. 📖 **Read our** [Contributing Guidelines](CONTRIBUTING.md)
+5. 🚀 **Make your contribution** (ensure it meets quality standards)
+6. 📝 **Submit a pull request** (use our PR template)
+7. 🔍 **Wait for review** (7-day review period after initial approval)
 
 ### Good First Issues for Beginners
 
@@ -32,6 +83,14 @@ We maintain a list of beginner-friendly issues perfect for newcomers:
 - ✨ Small feature enhancements
 - 🧪 Adding unit tests
 - 🎨 Code style improvements
+
+### 🚨 What We DON'T Accept
+
+- Spam or low-quality contributions
+- Automated commits without meaningful changes
+- Copy-paste code without understanding
+- Breaking changes without discussion
+- Contributions that don't follow our guidelines
 
 ## 📋 Table of Contents
 

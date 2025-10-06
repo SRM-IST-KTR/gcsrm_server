@@ -6,6 +6,15 @@
 
 Please check all the boxes that apply to your pull request:
 
+#### 🎃 Hacktoberfest Validation (Required for Hacktoberfest PRs)
+- [ ] **Timeline**: PR created between Oct 1, 10:00 AM UTC and Oct 31, 11:59:59 PM UTC
+- [ ] **Quality**: This is NOT spam, automated content, or low-quality contribution  
+- [ ] **Meaningful**: This PR provides real value and follows coding standards
+- [ ] **Complete**: This PR is ready for review (not a draft)
+- [ ] **Guidelines**: I have read and followed [CONTRIBUTING.md](CONTRIBUTING.md)
+- [ ] **Understanding**: I understand PRs need to be merged, approved, or labeled `hacktoberfest-accepted`
+- [ ] **Review Period**: I understand there's a 7-day review period after acceptance
+
 #### 🔍 Code Quality
 - [ ] My code follows the coding guidelines outlined in [CONTRIBUTING.md](CONTRIBUTING.md)
 - [ ] I have performed a self-review of my own code
@@ -127,12 +136,26 @@ Please select the type of change your PR introduces:
 
 ## 🎯 Hacktoberfest Information
 
-If this is a Hacktoberfest contribution:
+**If this is a Hacktoberfest contribution, confirm ALL validation criteria:**
 
-- [ ] This PR addresses an issue labeled with `hacktoberfest`
-- [ ] This is a meaningful contribution (not spam or low-effort)
-- [ ] I have read and followed the [Hacktoberfest guidelines](https://hacktoberfest.com/participation/)
-- [ ] I am eligible for Hacktoberfest participation
+### ✅ Required Validations
+- [ ] **BOUNDS**: PR created between Oct 1, 10:00 AM UTC - Oct 31, 11:59:59 PM UTC
+- [ ] **QUALITY**: This is NOT spam, automated, or low-effort content  
+- [ ] **PARTICIPATION**: Issue labeled `hacktoberfest` OR expecting `hacktoberfest-accepted` label
+- [ ] **VALIDITY**: Not labeled `invalid` (or will get `hacktoberfest-accepted`)
+- [ ] **ACCEPTANCE**: Expecting merge, approval, or `hacktoberfest-accepted` label
+- [ ] **DRAFT STATUS**: This PR is NOT a draft
+- [ ] **GUIDELINES**: Read [Hacktoberfest participation rules](https://hacktoberfest.com/participation/)
+
+### 🔄 Understanding the Process
+- [ ] I understand there's a **7-day review period** after initial acceptance
+- [ ] I understand the review timer resets if any validation fails
+- [ ] I understand 2+ spam PRs will disqualify me from Hacktoberfest
+- [ ] I am eligible for Hacktoberfest 2025 participation
+
+### 🎃 Repository Verification  
+- [ ] This repository has the `hacktoberfest` topic ✅
+- [ ] This repository follows Hacktoberfest values and is not excluded ✅
 
 ## 📝 Additional Notes
 
