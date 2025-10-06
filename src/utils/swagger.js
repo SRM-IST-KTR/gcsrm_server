@@ -199,13 +199,13 @@ const swaggerDocs = (app) => {
                 url: null, // We'll provide the spec directly
             },
             // Configure to use CDN resources
-            customfavIcon: "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.0.1/favicon-32x32.png",
+            customfavIcon: "https://cdn.jsdelivr.net/npm/swagger-ui-dist/favicon-32x32.png",
             customCssUrl: [
-                "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.0.1/swagger-ui.css"
+                "https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui.css"
             ],
             customJs: [
-                "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.0.1/swagger-ui-bundle.js",
-                "https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.0.1/swagger-ui-standalone-preset.js"
+                "https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-bundle.js",
+                "https://cdn.jsdelivr.net/npm/swagger-ui-dist/swagger-ui-standalone-preset.js"
             ]
         };
 
@@ -219,7 +219,7 @@ const swaggerDocs = (app) => {
                 <head>
                     <meta charset="UTF-8">
                     <title>GCSRM API Documentation</title>
-                    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.0.1/swagger-ui.css" />
+                    <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
                     <style>
                         html {
                             box-sizing: border-box;
@@ -238,8 +238,8 @@ const swaggerDocs = (app) => {
                 </head>
                 <body>
                     <div id="swagger-ui"></div>
-                    <script src="https://unpkg.com/swagger-ui-dist@5.0.1/swagger-ui-bundle.js"></script>
-                    <script src="https://unpkg.com/swagger-ui-dist@5.0.1/swagger-ui-standalone-preset.js"></script>
+                    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+                    <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-standalone-preset.js"></script>
                     <script>
                         window.onload = function() {
                             const ui = SwaggerUIBundle({
