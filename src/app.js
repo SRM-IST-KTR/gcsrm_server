@@ -34,14 +34,40 @@ if (process.env.NODE_ENV === 'production') {
     app.use(morgan('dev'));
 }
 
-// Configure helmet to allow Swagger UI to work properly
+// Configure helmet to allow Swagger UI to work properly with CDN resources
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
-            imgSrc: ["'self'", "data:", "https:"],
+            styleSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net"
+            ],
+            scriptSrc: [
+                "'self'",
+                "'unsafe-inline'",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net"
+            ],
+            imgSrc: [
+                "'self'",
+                "data:",
+                "https:",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net"
+            ],
+            fontSrc: [
+                "'self'",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net"
+            ],
+            connectSrc: [
+                "'self'",
+                "https://unpkg.com",
+                "https://cdn.jsdelivr.net"
+            ]
         },
     },
 }));
