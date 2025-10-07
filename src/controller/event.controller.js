@@ -95,10 +95,11 @@ const fetchAll = async (req, res) => {
         if (allEvents.length === 0){ // Check if the array is empty
             return res.status(404).json({message: "no events found"})
         }
-        res.status(200).json({message:"events", events: allEvents})
+        res.status(200).json({ message: "events", events: allEvents })
         }
     
-    catch (error){
+
+    catch (error) {
         res.status(500).json({msg: error.message})
     }
 }
