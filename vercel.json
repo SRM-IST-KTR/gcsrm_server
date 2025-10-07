@@ -1,28 +1,22 @@
 {
     "version": 2,
-    "builds": [
-        {
-            "src": "index.js",
-            "use": "@vercel/node"
-        }
-    ],
-    "routes": [
-        {
-            "src": "/api/swagger-ui.css",
-            "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui.min.css"
-        },
-        {
-            "src": "/api/swagger-ui-bundle.js",
-            "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-bundle.min.js"
-        },
-        {
-            "src": "/api/swagger-ui-standalone-preset.js",
-            "dest": "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/4.15.5/swagger-ui-standalone-preset.min.js"
-        }
-    ],
     "functions": {
         "index.js": {
             "includeFiles": "src/**"
         }
-    }
+    },
+    "rewrites": [
+        {
+            "source": "/api-docs/swagger-ui.css",
+            "destination": "https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css"
+        },
+        {
+            "source": "/api-docs/swagger-ui-bundle.js",
+            "destination": "https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"
+        },
+        {
+            "source": "/api-docs/swagger-ui-standalone-preset.js",
+            "destination": "https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js"
+        }
+    ]
 }
