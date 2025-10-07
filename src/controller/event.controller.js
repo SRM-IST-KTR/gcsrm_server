@@ -32,7 +32,7 @@ const editEvent = async (req, res) => {
         if (!mongoose.Types.ObjectId.isValid(data.id)) {
             return res.status(400).json({message: "this event id is invalid!"});
         }
-        const updatedEvent = await eventSchema.findByIdAndUpdate(data.id, data, { new: true });
+        const updatedEvent = await eventSchema.findByIdAndUpdate(data.id, data, { new: true, runValidators: true, context: 'query' });
         if (!updatedEvent) return res.status(404).json({ message: 'Event not found' });
 
         res.status(200).json({ message: 'Event updated successfully', event: updatedEvent });
@@ -86,9 +86,27 @@ const fetchEvent = async (req, res) => {
     }
 };
 
+const fetchAll = async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+        const allEvents = await eventSchema.find();
+        if (allEvents.length === 0){ // Check if the array is empty
+            return res.status(404).json({message: "no events found"})
+        }
+        res.status(200).json({message:"events", events: allEvents})
+        }
+    
+    catch (error){
+        res.status(500).json({msg: error.message})
+    }
+}
+
 module.exports = {
     createEvent,
     editEvent,
     deleteEvent,
-    fetchEvent
+    fetchEvent,
+    fetchAll
 };
