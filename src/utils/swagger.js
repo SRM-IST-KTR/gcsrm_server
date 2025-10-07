@@ -7,7 +7,7 @@ const options = {
         info: {
             title: "GCSRM API",
             version: "1.0.0",
-            description: "API documentation for GitHub Club SRM Server - handles team members and sponsors management",
+            description: "API documentation for GitHub Club SRM Server - handles team members and sponsors management.\n\n**Testing the API:** Use the 'Current server' option in the servers dropdown above to avoid CORS issues when testing endpoints. Cross-origin requests to external servers may be blocked by browser security policies.",
             contact: {
                 name: "GitHub Club SRM",
                 email: "contact@githubsrm.tech"
@@ -19,12 +19,16 @@ const options = {
         },
         servers: [
             {
+                url: "/api/v1",
+                description: "Current server (same origin - recommended for testing)"
+            },
+            {
                 url: "http://localhost:3000/api/v1",
                 description: "Local development server"
             },
             {
                 url: "https://octacore.githubsrmist.in/api/v1",
-                description: "Production server"
+                description: "Production server (may have CORS restrictions)"
             }
         ],
         components: {
@@ -187,8 +191,38 @@ const options = {
 const swaggerSpec = swaggerJsDoc(options);
 
 const swaggerDocs = (app) => {
-    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-    console.log("Swagger docs available at http://localhost:3000/api-docs");
+    // Enhanced Swagger UI options for better CORS handling
+    const swaggerUiOptions = {
+        customCss: '.swagger-ui .topbar { display: none }',
+        customSiteTitle: "GCSRM API Documentation",
+        swaggerOptions: {
+            // Use the current server as default to avoid CORS issues
+            servers: [
+                {
+                    url: "/api/v1",
+                    description: "Current server (recommended)"
+                }
+            ],
+            // Enable request interception to handle CORS
+            requestInterceptor: function (request) {
+                // Set credentials for same-origin requests
+                if (request.url.startsWith('/') || request.url.includes(window.location.origin)) {
+                    request.credentials = 'same-origin';
+                }
+                return request;
+            },
+            responseInterceptor: function (response) {
+                // Handle CORS errors gracefully
+                if (response.status === 0) {
+                    response.text = 'CORS Error: Cross-origin request blocked. Use the "Current server" option above to test the API from the same origin.';
+                }
+                return response;
+            }
+        }
+    };
+
+    app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerUiOptions));
+    console.log("Swagger docs available at /api-docs");
 };
 
 module.exports = swaggerDocs;
