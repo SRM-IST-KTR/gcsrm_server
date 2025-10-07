@@ -145,13 +145,16 @@ app.get('/healthz', async (req, res) => {
     return next();
 }
 
-// Handle preflight OPTIONS requests for all API routes
-app.options('/api/v1/*', (req, res) => {
-    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    res.sendStatus(204);
+// Handle preflight OPTIONS requests for all API routes using middleware
+app.use('/api/v1', (req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        return res.sendStatus(204);
+    }
+    next();
 });
 
 app.use('/api/v1', ensureDB, routes);
