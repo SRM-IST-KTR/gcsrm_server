@@ -7,4 +7,7 @@ const sponsorRoutes = require('./sponsor.route');
 router.use('/team', teamRoutes);
 router.use('/sponsor', sponsorRoutes);
 
+const eventRoutes = require('./event.route');
+router.use('/event', eventRoutes);
+
 module.exports = router;
