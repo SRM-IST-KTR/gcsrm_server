@@ -11,30 +11,36 @@ This project is participating in **Hacktoberfest 2025**! We welcome contribution
 **CRITICAL**: Before contributing, ensure your PR meets ALL Hacktoberfest validation criteria:
 
 #### ⏰ Timeline & Repository Requirements
+
 - **Create PRs between October 1, 10:00 AM UTC and October 31, 11:59:59 PM UTC**
 - Repository must be public and unarchived ✅
 - PRs created before October 1 don't count, even if merged after
 
 #### 🛡️ Quality & Spam Prevention
+
 - **No spam**: PRs labeled with "spam" won't count
 - **No low-quality**: Automated/meaningless changes will be rejected
 - **2+ spammy PRs = disqualification**
 - Only meaningful contributions accepted
 
 #### ✅ Participation & Labels
+
 - This repo has `hacktoberfest` topic ✅
 - PRs need `hacktoberfest-accepted` label OR merge/approval
 - PRs labeled "invalid" won't count (unless also `hacktoberfest-accepted`)
 
 #### 🎉 Acceptance Criteria
+
 Your PR must be ONE of:
+
 1. **Merged** by maintainers
-2. **Labeled** with `hacktoberfest-accepted`  
+2. **Labeled** with `hacktoberfest-accepted`
 3. **Approved** with overall approving review (not closed)
 
 **Draft PRs don't count!**
 
 #### ⏳ 7-Day Review Period
+
 - After meeting criteria → 7-day review period starts
 - If any check fails → timer resets
 - PRs in review on Oct 31 can continue into November
@@ -80,6 +86,7 @@ Before you begin, ensure you have the following installed:
 ### Development Setup
 
 1. **Fork the repository**
+
    ```bash
    # Click the "Fork" button on GitHub, then clone your fork
    git clone https://github.com/YOUR_USERNAME/gcsrm_server.git
@@ -87,11 +94,13 @@ Before you begin, ensure you have the following installed:
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    # Create a .env file in the root directory
    cp .env.example .env
@@ -99,6 +108,7 @@ Before you begin, ensure you have the following installed:
    ```
 
    Required environment variables:
+
    ```
    PORT=3000
    MONGODB_URI=mongodb://localhost:27017/gcsrm
@@ -106,7 +116,23 @@ Before you begin, ensure you have the following installed:
    # Add other required environment variables
    ```
 
+Additional optional environment variables (Rate limiting):
+
+```
+# Window size in minutes for rate limiting
+RATE_LIMIT_WINDOW_MINUTES=15
+# Default maximum requests per IP per window
+RATE_LIMIT_MAX=100
+# Optional per-category overrides
+RATE_LIMIT_GENERAL_MAX=100
+RATE_LIMIT_AUTH_MAX=5
+RATE_LIMIT_PUBLIC_MAX=200
+# Redis URL for distributed rate limiting (optional)
+# REDIS_URL=redis://:password@redis-host:6379
+```
+
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -143,6 +169,7 @@ We follow the [Conventional Commits](https://conventionalcommits.org/) specifica
 ```
 
 **Types:**
+
 - `feat`: A new feature
 - `fix`: A bug fix
 - `docs`: Documentation only changes
@@ -153,6 +180,7 @@ We follow the [Conventional Commits](https://conventionalcommits.org/) specifica
 - `chore`: Changes to the build process or auxiliary tools
 
 **Examples:**
+
 ```
 feat(auth): add JWT token validation middleware
 fix(database): resolve connection timeout issue
@@ -164,12 +192,14 @@ docs(api): update swagger documentation for user endpoints
 ### JavaScript/Node.js Guidelines
 
 1. **Code Style**
+
    - Use consistent indentation (2 spaces)
    - Use meaningful variable and function names
    - Follow camelCase for variables and functions
    - Follow PascalCase for classes and constructors
 
 2. **File Structure**
+
    ```
    src/
    ├── controllers/     # Route handlers
@@ -181,6 +211,7 @@ docs(api): update swagger documentation for user endpoints
    ```
 
 3. **Code Quality**
+
    - Write self-documenting code
    - Add comments for complex logic
    - Use async/await instead of callbacks
@@ -197,7 +228,7 @@ docs(api): update swagger documentation for user endpoints
 
 ```javascript
 // controllers/example.controller.js
-const ExampleModel = require('../models/example.model');
+const ExampleModel = require("../models/example.model");
 
 /**
  * Get all examples
@@ -211,7 +242,7 @@ const getAllExamples = async (req, res, next) => {
     res.status(200).json({
       success: true,
       data: examples,
-      message: 'Examples retrieved successfully'
+      message: "Examples retrieved successfully",
     });
   } catch (error) {
     next(error);
@@ -219,7 +250,7 @@ const getAllExamples = async (req, res, next) => {
 };
 
 module.exports = {
-  getAllExamples
+  getAllExamples,
 };
 ```
 
@@ -246,16 +277,19 @@ npm run test:coverage
 - Follow the AAA pattern (Arrange, Act, Assert)
 
 Example test structure:
+
 ```javascript
-describe('User Controller', () => {
-  describe('GET /api/users', () => {
-    it('should return all users when valid request', async () => {
+describe("User Controller", () => {
+  describe("GET /api/users", () => {
+    it("should return all users when valid request", async () => {
       // Arrange
-      const mockUsers = [/* mock data */];
-      
+      const mockUsers = [
+        /* mock data */
+      ];
+
       // Act
-      const response = await request(app).get('/api/users');
-      
+      const response = await request(app).get("/api/users");
+
       // Assert
       expect(response.status).toBe(200);
       expect(response.body.success).toBe(true);
@@ -275,6 +309,7 @@ describe('User Controller', () => {
 ### Issue Templates
 
 Please use our issue templates:
+
 - **Bug Report**: For reporting bugs
 - **Feature Request**: For suggesting new features
 - **Documentation**: For documentation improvements
@@ -282,6 +317,7 @@ Please use our issue templates:
 ### Good First Issues
 
 Look for issues labeled with:
+
 - `good first issue`: Perfect for newcomers
 - `help wanted`: We need community help
 - `hacktoberfest`: Hacktoberfest-specific contributions
@@ -291,12 +327,14 @@ Look for issues labeled with:
 ### Before Submitting
 
 1. **Test your changes**
+
    ```bash
    npm test
    npm run dev  # Ensure the server starts without errors
    ```
 
 2. **Update documentation**
+
    - Update README.md if needed
    - Add/update API documentation
    - Update comments in code
@@ -311,10 +349,12 @@ Look for issues labeled with:
 When creating a pull request, please:
 
 1. **Use a descriptive title**
+
    - ✅ "Add user authentication middleware"
    - ❌ "Fix stuff"
 
 2. **Fill out the PR template completely**
+
    - Description of changes
    - Type of change (bug fix, feature, etc.)
    - Testing performed
@@ -339,23 +379,27 @@ When creating a pull request, please:
 ## 🎯 Types of Contributions We Welcome
 
 ### 🐛 Bug Fixes
+
 - Fix existing issues
 - Improve error handling
 - Performance optimizations
 
 ### ✨ Features
+
 - New API endpoints
 - Enhanced middleware
 - Database improvements
 - Authentication/authorization features
 
 ### 📚 Documentation
+
 - API documentation improvements
 - Code comments
 - Setup guides
 - Example usage
 
 ### 🧹 Maintenance
+
 - Code refactoring
 - Dependency updates
 - Test improvements
@@ -366,12 +410,14 @@ When creating a pull request, please:
 We use specific labels for Hacktoberfest validation:
 
 ### 🎯 Validation Labels
+
 - `hacktoberfest`: General Hacktoberfest issues (this repo has the topic ✅)
 - `hacktoberfest-accepted`: **CRITICAL** - Marks PR as accepted for Hacktoberfest
 - `spam`: **WARNING** - Marks PR as spam (disqualifies from Hacktoberfest)
 - `invalid`: **WARNING** - Marks PR as invalid (won't count unless also `hacktoberfest-accepted`)
 
-### 📝 Contribution Labels  
+### 📝 Contribution Labels
+
 - `good first issue`: Beginner-friendly issues
 - `help wanted`: Issues where we need community help
 - `documentation`: Documentation improvements
@@ -379,6 +425,7 @@ We use specific labels for Hacktoberfest validation:
 - `bug`: Bug fixes needed
 
 ### ⚠️ Important Notes
+
 - PRs labeled `spam` are automatically disqualified
 - Users with 2+ spam PRs are banned from Hacktoberfest
 - `hacktoberfest-accepted` overrides `invalid` labels
@@ -403,6 +450,7 @@ We use specific labels for Hacktoberfest validation:
 ### Recognition
 
 Contributors will be:
+
 - Added to our contributors list
 - Mentioned in release notes for significant contributions
 - Featured in our README (for substantial contributions)

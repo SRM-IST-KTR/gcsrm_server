@@ -57,7 +57,7 @@ Your PR/MR must be **ONE** of the following:
 
 **Important**: Draft PRs are NOT considered accepted.
 
-#### ⏳ **7-Day Review Period
+#### ⏳ \*\*7-Day Review Period
 
 - After passing all checks, there's a **7-day review period**
 - If any check fails during this time, the timer resets
@@ -144,17 +144,20 @@ We maintain a list of beginner-friendly issues perfect for newcomers:
 ### Installation
 
 1. **Clone the repository**
+
    ```bash
    git clone https://github.com/SRM-IST-KTR/gcsrm_server.git
    cd gcsrm_server
    ```
 
 2. **Install dependencies**
+
    ```bash
    npm install
    ```
 
 3. **Set up environment variables**
+
    ```bash
    # Create .env file
    cp .env.example .env
@@ -162,6 +165,7 @@ We maintain a list of beginner-friendly issues perfect for newcomers:
    ```
 
 4. **Start the development server**
+
    ```bash
    npm run dev
    ```
@@ -252,6 +256,20 @@ EMAIL_HOST=smtp.gmail.com
 EMAIL_PORT=587
 EMAIL_USER=your_email@gmail.com
 EMAIL_PASS=your_app_password
+
+# Rate limiting configuration (optional)
+# Window size in minutes for rate limiting
+RATE_LIMIT_WINDOW_MINUTES=15
+# Default maximum requests per IP per window
+RATE_LIMIT_MAX=100
+# Optional per-category overrides (optional)
+RATE_LIMIT_GENERAL_MAX=100
+RATE_LIMIT_AUTH_MAX=5
+RATE_LIMIT_PUBLIC_MAX=200
+
+# Redis URL (optional) - if set and rate-limit Redis dependencies are installed,
+# the app will use Redis for distributed rate limiting. Example:
+# REDIS_URL=redis://:password@redis-host:6379
 ```
 
 ### Scripts
@@ -267,6 +285,7 @@ npm start           # Start production server
 ## 🔗 API Endpoints
 
 ### Base URL
+
 ```
 http://localhost:3000/api
 ```
@@ -274,6 +293,7 @@ http://localhost:3000/api
 ### Available Routes
 
 - **Teams**
+
   - `GET /api/teams` - Get all teams
   - `POST /api/teams` - Create a new team
   - `GET /api/teams/:id` - Get team by ID
@@ -287,7 +307,7 @@ http://localhost:3000/api
   - `PUT /api/sponsors/:id` - Update sponsor
   - `DELETE /api/sponsors/:id` - Delete sponsor
 
-*For detailed API documentation with request/response schemas, visit `/api-docs` when the server is running.*
+_For detailed API documentation with request/response schemas, visit `/api-docs` when the server is running._
 
 ## 📄 License
 
@@ -320,4 +340,4 @@ If you have any questions or need help:
 
 **Made with ❤️ for Hacktoberfest 2025 and the open-source community!**
 
-*Happy coding! 🚀*
+_Happy coding! 🚀_
