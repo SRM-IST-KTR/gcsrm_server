@@ -1,0 +1,41 @@
+{
+    "version": 2,
+    "functions": {
+        "index.js": {
+            "includeFiles": "src/**"
+        }
+    },
+    "headers": [
+        {
+            "source": "/api/(.*)",
+            "headers": [
+                {
+                    "key": "Access-Control-Allow-Origin",
+                    "value": "*"
+                },
+                {
+                    "key": "Access-Control-Allow-Methods",
+                    "value": "GET, POST, PUT, DELETE, PATCH, OPTIONS"
+                },
+                {
+                    "key": "Access-Control-Allow-Headers",
+                    "value": "Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma"
+                }
+            ]
+        }
+    ],
+    "rewrites": [
+        {
+            "source": "/api-docs/swagger-ui.css",
+            "destination": "https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui.css"
+        },
+        {
+            "source": "/api-docs/swagger-ui-bundle.js",
+            "destination": "https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-bundle.js"
+        },
+        {
+            "source": "/api-docs/swagger-ui-standalone-preset.js",
+            "destination": "https://unpkg.com/swagger-ui-dist@4.15.5/swagger-ui-standalone-preset.js"
+        }
+    ]
+}

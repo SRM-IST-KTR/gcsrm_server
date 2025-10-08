@@ -10,6 +10,7 @@ const routes = require('./routes');
 const { connectDB, dbHealth } = require('./utils/db');
 const mongoose = require('mongoose');
 const swaggerDocs = require('./utils/swagger');
+const ensureDB = require('./middleware/dbCheck');
 
 const errorHandler = require('./middleware/errorMiddleware');
 const requestLoggingMiddleware = require('./middleware/requestLogging');
@@ -23,9 +24,30 @@ app.use(requestLoggingMiddleware);
 
 app.use(express.json());
 
-app.use(cors({
-    origin: process.env.ORIGIN,
-}));
+// Configure CORS to allow Swagger UI and API testing
+const corsOptions = {
+    origin: process.env.NODE_ENV === 'production'
+        ? [
+            'https://octacore.githubsrmist.in',
+            'https://gcsrm-server.vercel.app',
+            'https://gcsrm-server-*.vercel.app' // Allow preview deployments
+        ]
+        : true, // Allow all origins in development
+    credentials: true,
+    optionsSuccessStatus: 200,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: [
+        'Origin',
+        'X-Requested-With',
+        'Content-Type',
+        'Accept',
+        'Authorization',
+        'Cache-Control',
+        'Pragma'
+    ]
+};
+
+app.use(cors(corsOptions));
 
 // Morgan logging (keep for file logs if needed)
 if (process.env.NODE_ENV === 'production') {
@@ -34,16 +56,19 @@ if (process.env.NODE_ENV === 'production') {
     app.use(morgan('dev'));
 }
 
+// Configure helmet to allow Swagger UI to work properly with CDN resources
 app.use(helmet());
 
 // routes
+
+
 
 app.get('/', (req, res) => {
     res.status(200).json({ message: 'octacore is awesome' });
 });
 
-// health endpoint (cheap for uptime checks)
-app.get('/healthz', async (req, res) => {
+// health endpoint
+app.get('/health', async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             await connectDB();
@@ -62,7 +87,6 @@ app.get('/healthz', async (req, res) => {
 
         res.status(isHealthy ? 200 : 503).json(healthData);
     } catch (e) {
-        // Only log health check errors
         Sentry.logger.error('Health check failed', {
             error: e.message,
         });
@@ -77,16 +101,19 @@ app.get('/healthz', async (req, res) => {
             timestamp: Date.now(),
         });
     }
-}); async function ensureDB(req, res, next) {
-    if (mongoose.connection.readyState !== 1) {
-        try {
-            await connectDB();
-        } catch (e) {
-            return res.status(500).json({ message: 'Database not available', error: e.message });
-        }
-    }
-    return next();
-}
+});
+
+// Handle preflight OPTIONS requests for all API routes using middleware
+// app.use('/api/v1', (req, res, next) => {
+//     if (req.method === 'OPTIONS') {
+//         res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+//         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+//         res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
+//         res.header('Access-Control-Allow-Credentials', 'true');
+//         return res.sendStatus(204);
+//     }
+//     next();
+// });
 
 app.use('/api/v1', ensureDB, routes);
 

@@ -6,13 +6,48 @@ Welcome to the GCSRM Server project! We're excited that you're interested in con
 
 This project is participating in **Hacktoberfest 2025**! We welcome contributions from developers of all skill levels.
 
+### 🔍 Hacktoberfest PR/MR Validation Requirements
+
+**CRITICAL**: Before contributing, ensure your PR meets ALL Hacktoberfest validation criteria:
+
+#### ⏰ Timeline & Repository Requirements
+- **Create PRs between October 1, 10:00 AM UTC and October 31, 11:59:59 PM UTC**
+- Repository must be public and unarchived ✅
+- PRs created before October 1 don't count, even if merged after
+
+#### 🛡️ Quality & Spam Prevention
+- **No spam**: PRs labeled with "spam" won't count
+- **No low-quality**: Automated/meaningless changes will be rejected
+- **2+ spammy PRs = disqualification**
+- Only meaningful contributions accepted
+
+#### ✅ Participation & Labels
+- This repo has `hacktoberfest` topic ✅
+- PRs need `hacktoberfest-accepted` label OR merge/approval
+- PRs labeled "invalid" won't count (unless also `hacktoberfest-accepted`)
+
+#### 🎉 Acceptance Criteria
+Your PR must be ONE of:
+1. **Merged** by maintainers
+2. **Labeled** with `hacktoberfest-accepted`  
+3. **Approved** with overall approving review (not closed)
+
+**Draft PRs don't count!**
+
+#### ⏳ 7-Day Review Period
+- After meeting criteria → 7-day review period starts
+- If any check fails → timer resets
+- PRs in review on Oct 31 can continue into November
+- After 7 days → automatically accepted! 🎉
+
 ### Getting Started for Hacktoberfest
 
 1. Look for issues labeled with `hacktoberfest` or `good first issue`
 2. Read through this contributing guide thoroughly
 3. Fork the repository and create a feature branch
-4. Make your changes following our guidelines
-5. Submit a pull request for review
+4. Make **meaningful, quality** changes following our guidelines
+5. Submit a pull request for review (use our PR template)
+6. Wait for maintainer review and the 7-day acceptance period
 
 ## 📋 Table of Contents
 
@@ -328,15 +363,26 @@ When creating a pull request, please:
 
 ## 🏷️ Hacktoberfest Labels
 
-We use specific labels for Hacktoberfest:
+We use specific labels for Hacktoberfest validation:
 
-- `hacktoberfest`: General Hacktoberfest issues
-- `hacktoberfest-accepted`: Approved contributions
+### 🎯 Validation Labels
+- `hacktoberfest`: General Hacktoberfest issues (this repo has the topic ✅)
+- `hacktoberfest-accepted`: **CRITICAL** - Marks PR as accepted for Hacktoberfest
+- `spam`: **WARNING** - Marks PR as spam (disqualifies from Hacktoberfest)
+- `invalid`: **WARNING** - Marks PR as invalid (won't count unless also `hacktoberfest-accepted`)
+
+### 📝 Contribution Labels  
 - `good first issue`: Beginner-friendly issues
 - `help wanted`: Issues where we need community help
 - `documentation`: Documentation improvements
 - `enhancement`: New features or improvements
 - `bug`: Bug fixes needed
+
+### ⚠️ Important Notes
+- PRs labeled `spam` are automatically disqualified
+- Users with 2+ spam PRs are banned from Hacktoberfest
+- `hacktoberfest-accepted` overrides `invalid` labels
+- Regular Node.js RegEx `/\bspam\b/i` is used to detect spam labels
 
 ## 🚫 What We Don't Accept
 
