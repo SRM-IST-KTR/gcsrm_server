@@ -29,9 +29,11 @@ const corsOptions = {
   origin:
     process.env.NODE_ENV === "production"
       ? [
+      ? [
           "https://octacore.githubsrmist.in",
           "https://gcsrm-server.vercel.app",
-          "https://gcsrm-server-*.vercel.app", // Allow preview deployments
+          /^https:\/\/gcsrm-server-.*\.vercel\.app$/i, // Allow preview deployments
+        ]
         ]
       : true, // Allow all origins in development
   credentials: true,
