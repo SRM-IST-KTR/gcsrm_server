@@ -15,7 +15,8 @@ try {
     process.exit(1);
 }
 
-const PORT = process.env.PORT;
+// Cast PORT to number for proper type handling
+const PORT = parseInt(process.env.PORT, 10);
 
 // Connect to the database and then start the server
 connectDB()

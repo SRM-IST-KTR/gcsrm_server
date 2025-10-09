@@ -4,7 +4,18 @@
  */
 
 // ANSI color codes for terminal output
-const colors = {
+// Disable colors in CI environments for cleaner logs
+const NO_COLOR = process.env.CI === 'true' || process.env.NO_COLOR === '1';
+const colors = NO_COLOR ? {
+  reset: '',
+  bright: '',
+  red: '',
+  green: '',
+  yellow: '',
+  blue: '',
+  cyan: '',
+  gray: ''
+} : {
   reset: '\x1b[0m',
   bright: '\x1b[1m',
   red: '\x1b[31m',
@@ -36,8 +47,12 @@ const configSchema = {
       description: 'Server port number',
       example: '3000',
       default: '3000',
-      validate: (value) => !isNaN(value) && parseInt(value) > 0 && parseInt(value) < 65536,
-      errorMessage: 'PORT must be a valid port number (1-65535)'
+      validate: (value) => {
+        // Ensure the value is a valid integer string (no trailing characters)
+        const portNum = parseInt(value, 10);
+        return /^\d+$/.test(value) && portNum > 0 && portNum < 65536;
+      },
+      errorMessage: 'PORT must be a valid integer port number (1-65535)'
     }
   },
   optional: {
@@ -50,8 +65,17 @@ const configSchema = {
     },
     ORIGIN: {
       description: 'CORS origin configuration',
-      example: '*',
-      default: '*'
+      example: 'https://example.com or *',
+      default: '*',
+      validate: (value) => {
+        // Warn if using wildcard in production
+        const nodeEnv = process.env.NODE_ENV || 'development';
+        if (value === '*' && (nodeEnv === 'production' || nodeEnv === 'prod')) {
+          return false; // This will trigger a warning
+        }
+        return true;
+      },
+      warningMessage: '⚠️  SECURITY WARNING: Using wildcard (*) ORIGIN in production is not recommended. Specify allowed origins explicitly.'
     },
     SENTRY_DSN: {
       description: 'Sentry DSN for error tracking',
@@ -59,6 +83,34 @@ const configSchema = {
     }
   }
 };
+
+/**
+ * Sanitizes sensitive environment variable values for safe logging
+ * @param {string} key - The environment variable name
+ * @param {string} value - The environment variable value
+ * @returns {string} - Sanitized value safe for logging
+ */
+function sanitizeEnv(key, value) {
+  if (!value) return 'Not set';
+
+  // Mask MongoDB credentials in connection string
+  if (key === 'MONGO_URI') {
+    return value.replace(/\/\/([^:]+):([^@]+)@/, '//***:***@');
+  }
+
+  // Mask Sentry DSN
+  if (key === 'SENTRY_DSN') {
+    return value.replace(/\/\/([^@]+)@/, '//***@');
+  }
+
+  // Mask any other variable containing 'KEY', 'SECRET', 'PASSWORD', 'TOKEN'
+  const sensitivePatterns = ['KEY', 'SECRET', 'PASSWORD', 'TOKEN', 'CREDENTIAL'];
+  if (sensitivePatterns.some(pattern => key.toUpperCase().includes(pattern))) {
+    return '***';
+  }
+
+  return value;
+}
 
 /**
  * Validates all environment variables according to the schema
@@ -160,7 +212,7 @@ function validateEnvVariables() {
       console.log(`${colors.red}${colors.bright}  • ${key}${colors.reset}`);
       console.log(`${colors.gray}    Description: ${description}${colors.reset}`);
       if (currentValue) {
-        console.log(`${colors.red}    Current value: ${currentValue}${colors.reset}`);
+        console.log(`${colors.red}    Current value: ${sanitizeEnv(key, currentValue)}${colors.reset}`);
         console.log(`${colors.red}    Error: ${errorMessage}${colors.reset}`);
       } else {
         console.log(`${colors.gray}    Example: ${example}${colors.reset}`);
@@ -187,7 +239,7 @@ function displayConfig() {
 
   const config = {
     'Database': {
-      'MongoDB URI': process.env.MONGO_URI?.replace(/\/\/.*:.*@/, '//***:***@') || 'Not set',
+      'MongoDB URI': sanitizeEnv('MONGO_URI', process.env.MONGO_URI),
       'Database Name': process.env.DB_NAME || 'Not set'
     },
     'Server': {
@@ -196,7 +248,7 @@ function displayConfig() {
       'CORS Origin': process.env.ORIGIN || '*'
     },
     'Monitoring': {
-      'Sentry DSN': process.env.SENTRY_DSN ? 'Configured' : 'Not configured'
+      'Sentry DSN': process.env.SENTRY_DSN ? sanitizeEnv('SENTRY_DSN', process.env.SENTRY_DSN) : 'Not configured'
     }
   };
 
@@ -212,5 +264,6 @@ function displayConfig() {
 module.exports = {
   validateEnvVariables,
   displayConfig,
+  sanitizeEnv,
   configSchema
 };
