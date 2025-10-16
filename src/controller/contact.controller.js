@@ -1,8 +1,5 @@
 const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
-const contactSchema = require('../models/contact.model');
-const mongoose = require('mongoose');
-const { connectDB } = require('../utils/db');
 
 exports.sendContact = async (req, res, next) => {
   // Basic validation
@@ -69,19 +66,6 @@ exports.sendContact = async (req, res, next) => {
     } catch (mailErr) {
       console.error('[contact] sending emails failed:', mailErr && mailErr.message);
       return next(mailErr);
-    }
-
-    if (contactSchema) {
-      try {
-        if (mongoose.connection.readyState !== 1) {
-          await connectDB();
-        }
-        const saveStart = Date.now();
-        await contactSchema.create({ name, email, message, timestamp: new Date() });
-        console.log('[contact] saved to DB, took', Date.now() - saveStart, 'ms');
-      } catch (saveErr) {
-        console.error('Failed to save contact message:', saveErr.message || saveErr);
-      }
     }
 
     return res.status(200).json({
