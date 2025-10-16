@@ -17,8 +17,7 @@ if (!transporter) {
     pool: true,
     maxConnections: 5,
     maxMessages: 100,
-    // logger: true,
-    // debug: true,
+    ...(process.env.NODEMAILER_DEBUG === 'true' ? { logger: true, debug: true } : {}),
   });
 
   global.__nodemailer_transporter = transporter;
