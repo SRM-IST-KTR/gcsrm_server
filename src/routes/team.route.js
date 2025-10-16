@@ -25,7 +25,7 @@ const { fetchTeamMembers, createTeamMember } = require('../controller/team.contr
  *             schema:
  *               type: array
  *               items:
- *                 type: object
+ *                 $ref: '#/components/schemas/Team'
  *       500:
  *         description: Internal server error
  */
@@ -43,7 +43,7 @@ router.get('/', fetchTeamMembers);
  *       content:
  *         application/json:
  *           schema:
- *             type: object
+ *             $ref: '#/components/schemas/TeamInput'
  *     responses:
  *       201:
  *         description: Team member created successfully

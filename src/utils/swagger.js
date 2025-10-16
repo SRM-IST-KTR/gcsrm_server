@@ -102,6 +102,47 @@ const options = {
                         }
                     }
                 },
+                Team: {
+                    type: "object",
+                    required: ["index", "name", "domain", "position", "pictureUrl"],
+                    properties: {
+                        _id: { type: "string", description: "MongoDB ObjectId", example: "507f1f77bcf86cd799439011" },
+                        index: { type: "number", description: "Ordering index for display", example: 1 },
+                        name: { type: "string", description: "Member's full name", example: "Jane Doe" },
+                        domain: { type: "string", description: "Area/domain (e.g., Backend)", example: "Backend" },
+                        position: { type: "string", description: "Role or position", example: "Lead" },
+                        caption: { type: "string", description: "Short caption or tagline", example: "Open source enthusiast" },
+                        joined: { type: "number", description: "Year joined", example: 2023 },
+                        pictureUrl: { type: "string", description: "URL to profile picture", example: "https://example.com/avatar.jpg" },
+                        isCurrent: { type: "boolean", description: "Whether member is currently active", example: true },
+                        socials: {
+                            type: "object",
+                            properties: {
+                                linkedin: { type: "string", example: "https://linkedin.com/in/janedoe" },
+                                github: { type: "string", example: "https://github.com/janedoe" },
+                                instagram: { type: "string", example: "https://instagram.com/janedoe" },
+                                website: { type: "string", example: "https://janedoe.dev" }
+                            }
+                        },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" }
+                    }
+                },
+                TeamInput: {
+                    type: "object",
+                    required: ["index", "name", "domain", "position", "pictureUrl"],
+                    properties: {
+                        index: { type: "number" },
+                        name: { type: "string" },
+                        domain: { type: "string" },
+                        position: { type: "string" },
+                        caption: { type: "string" },
+                        joined: { type: "number" },
+                        pictureUrl: { type: "string" },
+                        isCurrent: { type: "boolean" },
+                        socials: { type: "object" }
+                    }
+                },
                 Error: {
                     type: "object",
                     properties: {
