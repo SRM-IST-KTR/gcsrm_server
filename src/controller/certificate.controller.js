@@ -5,18 +5,7 @@ const { pathToFileURL } = require('url');
 const Event = require('../models/event.model');
 const { connectDB } = require('../utils/db');
 
-// We'll dynamically load a jimp overlay implementation.
-// Prefer a user-provided root-level `jimpOverlay.js` (ESM), otherwise fall back to the server-side CommonJS helper.
 async function loadTextOverlay() {
-  const userOverlay = path.resolve(__dirname, '..', '..', 'jimpOverlay.js');
-  if (fs.existsSync(userOverlay)) {
-    // dynamic import of ESM file
-    const mod = await import(pathToFileURL(userOverlay).href);
-    return mod.default || mod;
-  }
-
-  // fallback to internal CommonJS implementation
-  // eslint-disable-next-line global-require
   return require('../utils/certificates/jimpOverlay');
 }
 
