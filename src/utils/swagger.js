@@ -143,6 +143,99 @@ const options = {
                         socials: { type: "object" }
                     }
                 },
+                Event: {
+                    type: "object",
+                    properties: {
+                        _id: { type: "string", description: "MongoDB ObjectId", example: "507f1f77bcf86cd799439011" },
+                        slug: { type: "string", example: "intro-to-node" },
+                        event_name: { type: "string", example: "Intro to Node.js" },
+                        event_description: { type: "string", example: "Beginner friendly session" },
+                        speakers_details: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string" },
+                                    talk_title: { type: "string" },
+                                    image_url: { type: "string" }
+                                }
+                            }
+                        },
+                        event_date: { type: "string", format: "date-time" },
+                        is_active: { type: "boolean" },
+                        venue: { type: "string" },
+                        sponsors_details: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string" },
+                                    logo_url: { type: "string" },
+                                    tier: { type: "string" }
+                                }
+                            }
+                        },
+                        duration: { type: "number" },
+                        prerequisites: { type: "array", items: { type: "string" } },
+                        cost: { type: "number" },
+                        poster_url: { type: "string" },
+                        registration_url: { type: "string" },
+                        database: { type: "string" },
+                        collection: {
+                            type: "object",
+                            properties: {
+                                participants: { type: "string" },
+                                organizers: { type: "string" },
+                                volunteers: { type: "string" }
+                            }
+                        },
+                        certificate: {
+                            type: "object",
+                            properties: {
+                                organizers: { type: "string" },
+                                participants: { type: "string" },
+                                volunteers: { type: "string" }
+                            }
+                        },
+                        jimp_config: {
+                            type: "object",
+                            properties: {
+                                yOffset: { type: "string" },
+                                color: { type: "string" },
+                                font_size: { type: "string" }
+                            }
+                        },
+                        teamEvent: { type: "boolean" },
+                        teamSize: { type: "number" },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" }
+                    }
+                },
+                EventInput: {
+                    type: "object",
+                    required: ["slug","event_name","event_date","venue","collection","jimp_config","teamEvent"],
+                    properties: {
+                        slug: { type: "string" },
+                        event_name: { type: "string" },
+                        event_description: { type: "string" },
+                        speakers_details: { type: "array", items: { type: "object" } },
+                        event_date: { type: "string", format: "date-time" },
+                        is_active: { type: "boolean" },
+                        venue: { type: "string" },
+                        sponsors_details: { type: "array", items: { type: "object" } },
+                        duration: { type: "number" },
+                        prerequisites: { type: "array", items: { type: "string" } },
+                        cost: { type: "number" },
+                        poster_url: { type: "string" },
+                        registration_url: { type: "string" },
+                        database: { type: "string" },
+                        collection: { type: "object" },
+                        certificate: { type: "object" },
+                        jimp_config: { type: "object" },
+                        teamEvent: { type: "boolean" },
+                        teamSize: { type: "number" }
+                    }
+                },
                 Error: {
                     type: "object",
                     properties: {
