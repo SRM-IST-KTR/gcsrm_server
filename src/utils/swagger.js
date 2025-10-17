@@ -169,6 +169,23 @@ const options = {
                         }
                     }
                 }
+            ,
+                ContactInput: {
+                    type: "object",
+                    required: ["name", "email", "message"],
+                    properties: {
+                        name: { type: "string", description: "Sender's full name", example: "Jane Developer" },
+                        email: { type: "string", description: "Sender's email address", example: "jane@example.com" },
+                        message: { type: "string", description: "Message body", example: "I'd like to know how to contribute." }
+                    }
+                },
+                ContactResponse: {
+                    type: "object",
+                    properties: {
+                        success: { type: "boolean", example: true },
+                        message: { type: "string", example: "Thank you! Your message has been sent successfully. We'll get back to you within 24-48 hours." }
+                    }
+                }
             },
             parameters: {
                 SponsorId: {
