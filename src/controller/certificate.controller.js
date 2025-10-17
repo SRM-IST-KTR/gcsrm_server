@@ -4,10 +4,7 @@ const path = require('path');
 const { pathToFileURL } = require('url');
 const Event = require('../models/event.model');
 const { connectDB } = require('../utils/db');
-
-async function loadTextOverlay() {
-  return require('../utils/certificates/jimpOverlay');
-}
+const textOverlay = require('../utils/certificates/overlay-sharp');
 
 // POST /api/certificates/generate
 const generateCertificate = async (req, res) => {
@@ -63,7 +60,6 @@ const generateCertificate = async (req, res) => {
       FONT_32_BLACK: eventData.jimp_config.fonts?.FONT_32_BLACK || 'https://ik.imagekit.io/githubsrm/fonts/open-sans-32-black/open-sans-32-black.fnt'
     };
 
-    const textOverlay = await loadTextOverlay();
     const overlayResult = await textOverlay(
       userData.name,
       certificateURL,
