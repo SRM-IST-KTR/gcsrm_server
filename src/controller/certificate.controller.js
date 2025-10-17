@@ -53,12 +53,35 @@ const generateCertificate = async (req, res) => {
 
     const fontSize = eventData.jimp_config.font_size || '64';
     const yOffset = eventData.jimp_config.yOffset || '380';
-    const jimpOptions = {
-      FONT_64_WHITE: eventData.jimp_config.fonts?.FONT_64_WHITE || 'https://ik.imagekit.io/githubsrm/fonts/open-sans-64-white/open-sans-64-white.fnt',
-      FONT_64_BLACK: eventData.jimp_config.fonts?.FONT_64_BLACK || 'https://ik.imagekit.io/githubsrm/fonts/open-sans-64-black/open-sans-64-black.fnt',
-      FONT_32_WHITE: eventData.jimp_config.fonts?.FONT_32_WHITE || 'https://ik.imagekit.io/githubsrm/fonts/open-sans-32-white/open-sans-32-white.fnt',
-      FONT_32_BLACK: eventData.jimp_config.fonts?.FONT_32_BLACK || 'https://ik.imagekit.io/githubsrm/fonts/open-sans-32-black/open-sans-32-black.fnt'
-    };
+
+    const fontFamilyKey = (eventData.jimp_config.font_family || '').toString().trim();
+    if (!fontFamilyKey) {
+      return res.status(500).json({ success: false, error: 'jimp_config.font_family is required for dynamic font resolution' });
+    }
+
+    const familyFontEntry = eventData.jimp_config.fonts && eventData.jimp_config.fonts[fontFamilyKey];
+    if (!familyFontEntry) {
+      return res.status(500).json({ success: false, error: `Font URL for family '${fontFamilyKey}' not found in jimp_config.fonts` });
+    }
+
+    // If the family entry is an object with specific keys, prefer its FONT_* entries; otherwise
+    // if it's a string, use the same URL for all keys.
+    const jimpOptions = {};
+    const fontUrlFromFamily = (typeof familyFontEntry === 'string') ? familyFontEntry : null;
+    const familyMap = (typeof familyFontEntry === 'object') ? familyFontEntry : {};
+
+    jimpOptions[`FONT_${fontSize}_WHITE`] = familyMap[`FONT_${fontSize}_WHITE`] || fontUrlFromFamily || null;
+    jimpOptions[`FONT_${fontSize}_BLACK`] = familyMap[`FONT_${fontSize}_BLACK`] || fontUrlFromFamily || null;
+    jimpOptions['FONT_32_WHITE'] = familyMap['FONT_32_WHITE'] || fontUrlFromFamily || null;
+    jimpOptions['FONT_32_BLACK'] = familyMap['FONT_32_BLACK'] || fontUrlFromFamily || null;
+
+    // If required font URLs are still missing, return an error.
+    if (!jimpOptions[`FONT_${fontSize}_WHITE`] || !jimpOptions[`FONT_${fontSize}_BLACK`]) {
+      return res.status(500).json({ success: false, error: `Required font URLs missing for family '${fontFamilyKey}'. Provide either a string URL for the family or FONT_* keys.` });
+    }
+
+    const xOffsetConfig = eventData.jimp_config.xOffset || '0';
+    const uppercaseConfig = !!eventData.jimp_config.uppercase;
 
     const overlayResult = await textOverlay(
       userData.name,
@@ -66,6 +89,8 @@ const generateCertificate = async (req, res) => {
       color,
       fontSize,
       yOffset,
+      xOffsetConfig,
+      uppercaseConfig,
       jimpOptions
     );
 
