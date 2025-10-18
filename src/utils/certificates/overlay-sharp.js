@@ -2,6 +2,15 @@ const sharp = require('sharp');
 const fs = require('fs');
 const path = require('path');
 const https = require('https');
+// try optional opentype dependency for converting text to outlines (vector paths)
+let opentype = null;
+try {
+  opentype = require('opentype.js');
+} catch (e) {
+  // not installed — we'll fall back to embedding fonts or text elements
+  console.log("'opentype.js' not found, proceeding without font outline support.");
+  opentype = null;
+}
 
 // Minimal fetch helper that returns a Buffer for a given URL or local path.
 async function fetchBuffer(src, timeout = 8000) {
@@ -70,16 +79,112 @@ module.exports = async function textOverlay(name, url, color, font_size, yOffset
   const resizedMeta = await sharp(resizedBuffer).metadata();
   const resizedHeight = resizedMeta.height || Math.round(targetWidth * 0.7);
 
-  // load font (some jimp options may point to .fnt descriptor or a font file; attempt to fetch whatever provided)
+    // load font (some jimp options may point to a font file or to a CSS stylesheet like Google Fonts)
     let fontBuf = null;
+    let detectedFontUrl = null; // if we fetch a secondary URL from CSS
     try {
-      fontBuf = await fetchBuffer(jimpOptions[fontKey]);
+      const raw = await fetchBuffer(jimpOptions[fontKey]);
+      if (raw) {
+        // Heuristic: if the fetched payload looks like text/CSS and contains url(...) then
+        // treat it as a stylesheet (Google Fonts) and extract the first referenced font file URL.
+        const asText = raw.toString('utf8');
+        if (/@font-face|url\(/i.test(asText)) {
+          const m = asText.match(/url\(([^)]+)\)/i);
+          if (m && m[1]) {
+            let fontFileUrl = m[1].trim().replace(/['"]/g, '');
+            // handle protocol-relative URLs
+            if (fontFileUrl.startsWith('//')) fontFileUrl = 'https:' + fontFileUrl;
+            // remember for mime detection
+            detectedFontUrl = fontFileUrl;
+            try {
+              fontBuf = await fetchBuffer(fontFileUrl);
+            } catch (e) {
+              // failed to fetch referenced font file; fall back to using raw (CSS) as null
+              fontBuf = null;
+            }
+          } else {
+            // stylesheet fetched but no url found
+            fontBuf = null;
+          }
+        } else {
+          // raw binary font data
+          fontBuf = raw;
+        }
+      }
     } catch (err) {
       // Not fatal; continue without embedded font
       fontBuf = null;
     }
 
+    // If the fetched resource looked like a stylesheet, try to extract all url(...) entries
+    // and prefer a TTF/OTF if present. Otherwise fall back to the first url found.
+    if (!fontBuf && jimpOptions[fontKey]) {
+      try {
+        const raw2 = await fetchBuffer(jimpOptions[fontKey]);
+        if (raw2) {
+          const asText2 = raw2.toString('utf8');
+          if (/@font-face|url\(/i.test(asText2)) {
+            const urls = [];
+            let m;
+            const re = /url\(([^)]+)\)/ig;
+            while ((m = re.exec(asText2)) !== null) {
+              let u = m[1].trim().replace(/['"]/g, '');
+              if (u.startsWith('//')) u = 'https:' + u;
+              urls.push(u);
+            }
+            if (urls.length) {
+              // prefer ttf/otf, then woff, then woff2, otherwise first
+              const pick = urls.find(u => /\.ttf(\?|$)/i.test(u)) || urls.find(u => /\.otf(\?|$)/i.test(u)) || urls.find(u => /\.woff(\?|$)/i.test(u)) || urls.find(u => /\.woff2(\?|$)/i.test(u)) || urls[0];
+              if (pick) {
+                detectedFontUrl = pick;
+                try {
+                  fontBuf = await fetchBuffer(pick);
+                } catch (e) {
+                  fontBuf = null;
+                }
+              }
+            }
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
     const fontB64 = fontBuf ? fontBuf.toString('base64') : null;
+
+    // Determine mime-type and format string for @font-face. Prefer the detectedFontUrl extension,
+    // otherwise try to infer nothing and default to ttf/truetype.
+    function mimeAndFormatFromUrl(url) {
+      if (!url) return { mime: 'font/ttf', format: 'truetype' };
+      const lower = url.split('?')[0].toLowerCase();
+      if (lower.endsWith('.woff2')) return { mime: 'font/woff2', format: 'woff2' };
+      if (lower.endsWith('.woff')) return { mime: 'font/woff', format: 'woff' };
+      if (lower.endsWith('.otf')) return { mime: 'font/otf', format: 'opentype' };
+      if (lower.endsWith('.ttf')) return { mime: 'font/ttf', format: 'truetype' };
+      // default
+      return { mime: 'font/ttf', format: 'truetype' };
+    }
+
+    const detectedUrlForMime = detectedFontUrl || (jimpOptions[fontKey] || '');
+    const { mime: fontMime, format: fontFormat } = mimeAndFormatFromUrl(detectedUrlForMime);
+
+    // DEBUG: report font discovery details so user can verify what was embedded
+    try {
+      const srcLabel = (detectedFontUrl && detectedFontUrl === (path.resolve(__dirname, '../../../PlaywriteVariableFont.ttf'))) ? 'local-override' : (detectedFontUrl ? 'fetched' : 'none');
+      const fontBufLen = fontBuf ? fontBuf.length : 0;
+      console.log(`[CERT-FONT] source=${srcLabel} detectedUrl=${detectedUrlForMime} mime=${fontMime} format=${fontFormat} size=${fontBufLen}`);
+    } catch (e) {
+      // ignore logging errors
+    }
+
+    // Strict mode: require opentype.js and a fetched font buffer to produce outlines.
+    if (!opentype) {
+      return { buffer: null, error: true, error_message: 'opentype.js is required for strict outline rendering' };
+    }
+    if (!fontBuf) {
+      return { buffer: null, error: true, error_message: 'Font file could not be fetched for outline rendering' };
+    }
 
     // Build SVG overlay with embedded font (if available)
   const fontSizePx = parseInt(String(font_size), 10) || 64;
@@ -103,33 +208,89 @@ module.exports = async function textOverlay(name, url, color, font_size, yOffset
   if (textY < 0) textY = 0;
   if (textY > overlayHeight) textY = overlayHeight;
 
-    const fontFace = fontB64 ? `@font-face{font-family:UserFont; src: url('data:font/ttf;base64,${fontB64}') format('truetype');}` : '';
+  const fontFace = fontB64 ? `@font-face{font-family:UserFont; src: url('data:${fontMime};base64,${fontB64}') format('${fontFormat}');}` : '';
 
     // Apply uppercase if requested
     const renderedName = uppercase ? String(name || '').toUpperCase() : String(name || '');
 
-    // Compute x position: support text_align and xOffset. If align=center, use 50% plus xOff pixels (via translate).
-    // For left/right, compute pixel positions relative to the image width.
-    let textElement = '';
-    if (align === 'center') {
-      // Use translate to nudge horizontally by xOff while keeping center anchoring
-      textElement = `<text x="50%" y="${textY}" class="name" transform="translate(${xOff},0)">${escapeXml(renderedName)}</text>`;
-    } else if (align === 'left') {
-      const leftX = Math.max(0, 0 + xOff + 20); // small padding
-      textElement = `<text x="${leftX}" y="${textY}" class="name" text-anchor="start">${escapeXml(renderedName)}</text>`;
-    } else if (align === 'right') {
-      const rightX = Math.max(0, targetWidth - xOff - 20);
-      textElement = `<text x="${rightX}" y="${textY}" class="name" text-anchor="end">${escapeXml(renderedName)}</text>`;
-    } else {
-      // default to center
-      textElement = `<text x="50%" y="${textY}" class="name" transform="translate(${xOff},0)">${escapeXml(renderedName)}</text>`;
-    }
+    // Convert the text to SVG path outlines using opentype (strict)
+    let svg = null;
+    try {
+      const font = opentype.parse(fontBuf.buffer ? fontBuf.buffer : fontBuf);
+      // Create a path at origin (0,0) using the font size
+      const path = font.getPath(renderedName, 0, fontSizePx, fontSizePx);
 
-    const svg = `<?xml version="1.0" encoding="UTF-8"?>\
+        // compute bounding box from path commands
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const cmd of path.commands) {
+          if (typeof cmd.x === 'number') {
+            minX = Math.min(minX, cmd.x);
+            maxX = Math.max(maxX, cmd.x);
+          }
+          if (typeof cmd.y === 'number') {
+            minY = Math.min(minY, cmd.y);
+            maxY = Math.max(maxY, cmd.y);
+          }
+          if (typeof cmd.x1 === 'number') {
+            minX = Math.min(minX, cmd.x1);
+            maxX = Math.max(maxX, cmd.x1);
+          }
+          if (typeof cmd.y1 === 'number') {
+            minY = Math.min(minY, cmd.y1);
+            maxY = Math.max(maxY, cmd.y1);
+          }
+          if (typeof cmd.x2 === 'number') {
+            minX = Math.min(minX, cmd.x2);
+            maxX = Math.max(maxX, cmd.x2);
+          }
+          if (typeof cmd.y2 === 'number') {
+            minY = Math.min(minY, cmd.y2);
+            maxY = Math.max(maxY, cmd.y2);
+          }
+        }
+        if (!isFinite(minX)) { minX = 0; minY = 0; maxX = 0; maxY = 0; }
+        const bboxWidth = maxX - minX;
+        const bboxHeight = maxY - minY;
+
+        // compute target x position based on alignment and xOff
+        let tx = 0;
+        if (align === 'center') {
+          tx = Math.round((targetWidth - bboxWidth) / 2 - minX + xOff);
+        } else if (align === 'left') {
+          tx = Math.round(0 + xOff + 20 - minX);
+        } else if (align === 'right') {
+          tx = Math.round(targetWidth - xOff - 20 - bboxWidth - minX);
+        } else {
+          tx = Math.round((targetWidth - bboxWidth) / 2 - minX + xOff);
+        }
+
+        // vertical center the path at textY
+        const ty = Math.round(textY - (minY + bboxHeight / 2));
+
+        // convert path to SVG path data
+        const pathData = path.toPathData ? path.toPathData() : (() => {
+          // fallback: build path d manually
+          const parts = [];
+          for (const c of path.commands) {
+            if (c.type === 'M') parts.push(`M ${c.x} ${c.y}`);
+            else if (c.type === 'L') parts.push(`L ${c.x} ${c.y}`);
+            else if (c.type === 'C') parts.push(`C ${c.x1} ${c.y1} ${c.x2} ${c.y2} ${c.x} ${c.y}`);
+            else if (c.type === 'Q') parts.push(`Q ${c.x1} ${c.y1} ${c.x} ${c.y}`);
+            else if (c.type === 'Z') parts.push('Z');
+          }
+          return parts.join(' ');
+        })();
+
+        svg = `<?xml version="1.0" encoding="UTF-8"?>\
 <svg xmlns="http://www.w3.org/2000/svg" width="${targetWidth}" height="${overlayHeight}">\
-  <style>${fontFace} .name{ font-family: ${fontB64 ? 'UserFont' : 'sans-serif'}; font-size: ${fontSizePx}px; fill: ${fill}; dominant-baseline: middle; }</style>\
-  ${textElement}\
+  <g fill="${fill}">\
+    <path d="${pathData}" transform="translate(${tx},${ty})" />\
+  </g>\
 </svg>`;
+        try { console.log(`[CERT-FONT] outlines=used bbox=${Math.round(bboxWidth)}x${Math.round(bboxHeight)} tx=${tx} ty=${ty}`); } catch(e) {}
+    } catch (outlineErr) {
+      return { buffer: null, error: true, error_message: `opentype outline generation failed: ${outlineErr && outlineErr.message ? outlineErr.message : String(outlineErr)}` };
+    }
 
     const svgBuffer = Buffer.from(svg);
 
