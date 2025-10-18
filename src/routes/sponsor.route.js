@@ -12,7 +12,7 @@ const { fetchSponsor, createSponsor, updateSponsor, deleteSponsor } = require('.
 
 /**
  * @swagger
- * /sponsor:
+ * /sponsors:
  *   get:
  *     summary: Retrieve all sponsors
  *     description: Get a list of all sponsors sorted by tier (ascending order). This endpoint returns sponsors for display on the website.
@@ -46,7 +46,7 @@ router.get('/', fetchSponsor);
 
 /**
  * @swagger
- * /sponsor:
+ * /sponsors:
  *   post:
  *     summary: Create a new sponsor
  *     description: Add a new sponsor to the database. All fields are required.
@@ -133,7 +133,7 @@ router.post('/', createSponsor);
 
 /**
  * @swagger
- * /sponsor/{id}:
+ * /sponsors/{id}:
  *   put:
  *     summary: Update an existing sponsor
  *     description: Update sponsor information by ID. Only provided fields will be updated.
@@ -174,7 +174,7 @@ router.put('/:id', updateSponsor);
 
 /**
  * @swagger
- * /sponsor/{id}:
+ * /sponsors/{id}:
  *   delete:
  *     summary: Delete a sponsor
  *     description: Remove a sponsor from the database by ID.
