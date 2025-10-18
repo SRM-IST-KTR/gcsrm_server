@@ -13,7 +13,7 @@ const { fetchAll, fetchEvent, createEvent, editEvent, deleteEvent } = require('.
 
 /**
  * @swagger
- * /event:
+ * /events:
  *   get:
  *     summary: Retrieve all events
  *     description: Get a list of all events. Returns 404 if no events are found.
@@ -48,7 +48,7 @@ router.get('/', fetchAll);
 
 /**
  * @swagger
- * /event/{id}:
+ * /events/{id}:
  *   get:
  *     summary: Retrieve a single event by ID
  *     description: Get detailed information about an event by its MongoDB ObjectId.
@@ -97,7 +97,7 @@ router.get('/:id', fetchEvent);
 
 /**
  * @swagger
- * /event/createEvent:
+ * /events/createEvent:
  *   post:
  *     summary: Create a new event
  *     description: Add a new event to the database. The request body should include an object with a `data` field that contains the event data matching the Event schema.
@@ -160,7 +160,7 @@ router.post('/createEvent', createEvent);
 
 /**
  * @swagger
- * /event/editEvent:
+ * /events/editEvent:
  *   put:
  *     summary: Edit an existing event
  *     description: Update event fields. The request body should include an object with a `data` field containing the event data; `data.id` must be the event's ObjectId.
@@ -219,7 +219,7 @@ router.put('/editEvent', editEvent);
 
 /**
  * @swagger
- * /event/deleteEvent/{id}:
+ * /events/deleteEvent/{id}:
  *   delete:
  *     summary: Delete an event by ID
  *     description: Remove an event from the database by its ObjectId.
