@@ -29,6 +29,7 @@ const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? [
             'https://octacore.githubsrmist.in',
+            'https://octacore-beta.githubsrmist.in',
             'https://gcsrm-server.vercel.app',
             'https://gcsrm-server-*.vercel.app' // Allow preview deployments
         ]
@@ -115,7 +116,7 @@ app.get('/health', async (req, res) => {
 //     next();
 // });
 
-app.use('/api/v1', ensureDB, routes);
+app.use('/api', ensureDB, routes);
 
 // Initialize Swagger documentation
 swaggerDocs(app);
