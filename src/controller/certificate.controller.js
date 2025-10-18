@@ -3,6 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { pathToFileURL } = require('url');
+const { validationResult } = require('express-validator');
 const Event = require('../models/event.model');
 const IssuedCertificate = require('../models/certificate.model');
 const { connectDB } = require('../utils/db');
@@ -10,11 +11,17 @@ const textOverlay = require('../utils/certificates/overlay-sharp');
 
 const generateCertificate = async (req, res) => {
   try {
-    const { email, event, type, format } = req.body;
-
-    if (!email || !event || !type) {
-      return res.status(400).json({ success: false, error: 'All fields are required.' });
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
     }
+
+    const { email, event, type, format } = req.body;
 
     // Supported formats: 'base64' (default), 'image', 'pdf'
     const responseFormat = (format || 'base64').toLowerCase();
@@ -282,11 +289,17 @@ const generateCertificate = async (req, res) => {
 
 const verifyCertificate = async (req, res) => {
   try {
-    const { certificateId } = req.params;
-
-    if (!certificateId) {
-      return res.status(400).json({ success: false, error: 'Certificate ID is required' });
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
     }
+
+    const { certificateId } = req.params;
 
     if (mongoose.connection.readyState !== 1) {
       await connectDB();
@@ -354,12 +367,18 @@ const verifyCertificate = async (req, res) => {
 
 const downloadCertificate = async (req, res) => {
   try {
+    // Check for validation errors from express-validator
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation failed',
+        details: errors.array()
+      });
+    }
+
     const { certificateId } = req.params;
     const { format } = req.query; // 'png' or 'pdf'
-
-    if (!certificateId) {
-      return res.status(400).json({ success: false, error: 'Certificate ID is required' });
-    }
 
     if (mongoose.connection.readyState !== 1) {
       await connectDB();

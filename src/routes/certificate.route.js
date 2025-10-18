@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { body, param, query } = require('express-validator');
 
 const { generateCertificate, verifyCertificate, downloadCertificate } = require('../controller/certificate.controller');
 
@@ -152,7 +153,30 @@ const { generateCertificate, verifyCertificate, downloadCertificate } = require(
  *                   success: false
  *                   error: "Image processing failed"
  */
-router.post('/generate', generateCertificate);
+router.post('/generate',
+    [
+        body('email')
+            .trim()
+            .notEmpty().withMessage('Email is required')
+            .isEmail().withMessage('Valid email address is required')
+            .normalizeEmail(),
+        body('event')
+            .trim()
+            .notEmpty().withMessage('Event slug is required')
+            .isSlug().withMessage('Invalid event slug format'),
+        body('type')
+            .trim()
+            .notEmpty().withMessage('Certificate type is required')
+            .isIn(['participants', 'organizers', 'volunteers', 'speakers', 'winners'])
+            .withMessage('Invalid certificate type'),
+        body('format')
+            .optional()
+            .trim()
+            .isIn(['base64', 'image', 'pdf'])
+            .withMessage('Invalid format. Must be "base64", "image", or "pdf"')
+    ],
+    generateCertificate
+);
 
 /**
  * @swagger
@@ -273,7 +297,15 @@ router.post('/generate', generateCertificate);
  *                   example: "Internal Server Error"
  */
 
-router.get('/verify/:certificateId', verifyCertificate);
+router.get('/verify/:certificateId',
+    [
+        param('certificateId')
+            .trim()
+            .notEmpty().withMessage('Certificate ID is required')
+            .matches(/^[A-Z0-9-]+$/).withMessage('Invalid certificate ID format')
+    ],
+    verifyCertificate
+);
 
 /**
  * @swagger
@@ -441,6 +473,19 @@ router.get('/verify/:certificateId', verifyCertificate);
  *                   success: false
  *                   error: "Failed to regenerate certificate"
  */
-router.get('/download/:certificateId', downloadCertificate);
+router.get('/download/:certificateId',
+    [
+        param('certificateId')
+            .trim()
+            .notEmpty().withMessage('Certificate ID is required')
+            .matches(/^[A-Z0-9-]+$/).withMessage('Invalid certificate ID format'),
+        query('format')
+            .optional()
+            .trim()
+            .isIn(['png', 'pdf'])
+            .withMessage('Invalid format. Must be "png" or "pdf"')
+    ],
+    downloadCertificate
+);
 
 module.exports = router;
