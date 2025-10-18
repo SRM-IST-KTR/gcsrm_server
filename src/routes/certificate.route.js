@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { body, param, query } = require('express-validator');
 
-const { generateCertificate, verifyCertificate, downloadCertificate } = require('../controller/certificate.controller');
-
+// const { generateCertificate, verifyCertificate, downloadCertificate } = require('../controller/certificate.controller');
+const { generateCertificate } = require('../controller/certificates/generate.controller');
+const { verifyCertificate } = require('../controller/certificates/verify.controller');
+const { downloadCertificate } = require('../controller/certificates/download.controller');
 /**
  * @swagger
  * /certificate/generate:
