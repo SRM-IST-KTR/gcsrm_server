@@ -7,10 +7,10 @@ const options = {
         info: {
             title: "GCSRM API",
             version: "1.0.0",
-            description: "API documentation for GitHub Club SRM Server - handles team members and sponsors management.\n\n**Testing the API:** Use the 'Current server' option in the servers dropdown above to avoid CORS issues when testing endpoints. Cross-origin requests to external servers may be blocked by browser security policies.",
+            description: "API documentation for GitHub SRM Community Server - handles team members and sponsors management.\n\n**Testing the API:** Use the 'Current server' option in the servers dropdown above to avoid CORS issues when testing endpoints. Cross-origin requests to external servers may be blocked by browser security policies.",
             contact: {
-                name: "GitHub Club SRM",
-                email: "contact@githubsrm.tech"
+                name: "GitHub SRM Community",
+                email: "community@githubsrmist.in"
             },
             license: {
                 name: "ISC",
