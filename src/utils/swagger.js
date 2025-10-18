@@ -102,6 +102,140 @@ const options = {
                         }
                     }
                 },
+                Team: {
+                    type: "object",
+                    required: ["index", "name", "domain", "position", "pictureUrl"],
+                    properties: {
+                        _id: { type: "string", description: "MongoDB ObjectId", example: "507f1f77bcf86cd799439011" },
+                        index: { type: "number", description: "Ordering index for display", example: 1 },
+                        name: { type: "string", description: "Member's full name", example: "Jane Doe" },
+                        domain: { type: "string", description: "Area/domain (e.g., Backend)", example: "Backend" },
+                        position: { type: "string", description: "Role or position", example: "Lead" },
+                        caption: { type: "string", description: "Short caption or tagline", example: "Open source enthusiast" },
+                        joined: { type: "number", description: "Year joined", example: 2023 },
+                        pictureUrl: { type: "string", description: "URL to profile picture", example: "https://example.com/avatar.jpg" },
+                        isCurrent: { type: "boolean", description: "Whether member is currently active", example: true },
+                        socials: {
+                            type: "object",
+                            properties: {
+                                linkedin: { type: "string", example: "https://linkedin.com/in/janedoe" },
+                                github: { type: "string", example: "https://github.com/janedoe" },
+                                instagram: { type: "string", example: "https://instagram.com/janedoe" },
+                                website: { type: "string", example: "https://janedoe.dev" }
+                            }
+                        },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" }
+                    }
+                },
+                TeamInput: {
+                    type: "object",
+                    required: ["index", "name", "domain", "position", "pictureUrl"],
+                    properties: {
+                        index: { type: "number" },
+                        name: { type: "string" },
+                        domain: { type: "string" },
+                        position: { type: "string" },
+                        caption: { type: "string" },
+                        joined: { type: "number" },
+                        pictureUrl: { type: "string" },
+                        isCurrent: { type: "boolean" },
+                        socials: { type: "object" }
+                    }
+                },
+                Event: {
+                    type: "object",
+                    properties: {
+                        _id: { type: "string", description: "MongoDB ObjectId", example: "507f1f77bcf86cd799439011" },
+                        slug: { type: "string", example: "intro-to-node" },
+                        event_name: { type: "string", example: "Intro to Node.js" },
+                        event_description: { type: "string", example: "Beginner friendly session" },
+                        speakers_details: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string" },
+                                    talk_title: { type: "string" },
+                                    image_url: { type: "string" }
+                                }
+                            }
+                        },
+                        event_date: { type: "string", format: "date-time" },
+                        is_active: { type: "boolean" },
+                        venue: { type: "string" },
+                        sponsors_details: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    name: { type: "string" },
+                                    logo_url: { type: "string" },
+                                    tier: { type: "string" }
+                                }
+                            }
+                        },
+                        duration: { type: "number" },
+                        prerequisites: { type: "array", items: { type: "string" } },
+                        cost: { type: "number" },
+                        poster_url: { type: "string" },
+                        registration_url: { type: "string" },
+                        database: { type: "string" },
+                        collection: {
+                            type: "object",
+                            properties: {
+                                participants: { type: "string" },
+                                organizers: { type: "string" },
+                                volunteers: { type: "string" }
+                            }
+                        },
+                        certificate: {
+                            type: "object",
+                            properties: {
+                                organizers: { type: "string" },
+                                participants: { type: "string" },
+                                volunteers: { type: "string" }
+                            }
+                        },
+                        jimp_config: {
+                            type: "object",
+                            properties: {
+                                yOffset: { type: "string" },
+                                color: { type: "string" },
+                                font_size: { type: "string" }
+                            }
+                        },
+                        teamEvent: { type: "boolean" },
+                        teamSize: { type: "number" },
+                        createdAt: { type: "string", format: "date-time" },
+                        updatedAt: { type: "string", format: "date-time" }
+                    }
+                },
+                EventInput: {
+                    type: "object",
+                    required: ["slug","event_name","event_date","venue","collection","jimp_config","teamEvent"],
+                    properties: {
+                        slug: { type: "string" },
+                        event_name: { type: "string" },
+                        event_description: { type: "string" },
+                        speakers_details: { type: "array", items: { type: "object" } },
+                        event_date: { type: "string", format: "date-time" },
+                        is_active: { type: "boolean" },
+                        venue: { type: "string" },
+                        sponsors_details: { type: "array", items: { type: "object" } },
+                        duration: { type: "number" },
+                        prerequisites: { type: "array", items: { type: "string" } },
+                        cost: { type: "number" },
+                        poster_url: { type: "string" },
+                        registration_url: { type: "string" },
+                        database: { type: "string" },
+                        collection: { type: "object" },
+                        certificate: { type: "object" },
+                        jimp_config: { type: "object" },
+                        teamEvent: { type: "boolean" },
+                        teamSize: { type: "number" }
+                    }
+                },
                 Error: {
                     type: "object",
                     properties: {
@@ -126,6 +260,23 @@ const options = {
                             description: "Success message",
                             example: "Sponsor deleted successfully"
                         }
+                    }
+                }
+            ,
+                ContactInput: {
+                    type: "object",
+                    required: ["name", "email", "message"],
+                    properties: {
+                        name: { type: "string", description: "Sender's full name", example: "Jane Developer" },
+                        email: { type: "string", description: "Sender's email address", example: "jane@example.com" },
+                        message: { type: "string", description: "Message body", example: "I'd like to know how to contribute." }
+                    }
+                },
+                ContactResponse: {
+                    type: "object",
+                    properties: {
+                        success: { type: "boolean", example: true },
+                        message: { type: "string", example: "Thank you! Your message has been sent successfully. We'll get back to you within 24-48 hours." }
                     }
                 }
             },
