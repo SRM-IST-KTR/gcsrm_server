@@ -11,6 +11,6 @@ router.use('/team', teamRoutes);
 router.use('/sponsors', sponsorRoutes);
 router.use('/events', eventRoutes);
 router.use('/contact', contactRoutes);
-router.use('/certificates', certificateRoutes);
+router.use('/certificate', certificateRoutes);
 
 module.exports = router;

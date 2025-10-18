@@ -19,15 +19,15 @@ const options = {
         },
         servers: [
             {
-                url: "/api/v1",
+                url: "/api",
                 description: "Current server (same origin - recommended for testing)"
             },
             {
-                url: "http://localhost:3000/api/v1",
+                url: "http://localhost:3000/api",
                 description: "Local development server"
             },
             {
-                url: "https://octacore.githubsrmist.in/api/v1",
+                url: "https://octacore.githubsrmist.in/api",
                 description: "Production server (may have CORS restrictions)"
             }
         ],
@@ -213,7 +213,7 @@ const options = {
                 },
                 EventInput: {
                     type: "object",
-                    required: ["slug","event_name","event_date","venue","collection","jimp_config","teamEvent"],
+                    required: ["slug", "event_name", "event_date", "venue", "collection", "jimp_config", "teamEvent"],
                     properties: {
                         slug: { type: "string" },
                         event_name: { type: "string" },
@@ -262,7 +262,7 @@ const options = {
                         }
                     }
                 }
-            ,
+                ,
                 ContactInput: {
                     type: "object",
                     required: ["name", "email", "message"],
@@ -277,6 +277,168 @@ const options = {
                     properties: {
                         success: { type: "boolean", example: true },
                         message: { type: "string", example: "Thank you! Your message has been sent successfully. We'll get back to you within 24-48 hours." }
+                    }
+                },
+                CertificateGenerateInput: {
+                    type: "object",
+                    required: ["email", "event", "type", "format"],
+                    properties: {
+                        email: {
+                            type: "string",
+                            format: "email",
+                            description: "Email address of the participant",
+                            example: "john.doe@example.com"
+                        },
+                        event: {
+                            type: "string",
+                            description: "Event slug identifier",
+                            example: "intro-to-node"
+                        },
+                        type: {
+                            type: "string",
+                            description: "Type of certificate (plural form for collection)",
+                            enum: ["participants", "organizers", "volunteers", "speakers", "winners"],
+                            example: "participants"
+                        },
+                        format: {
+                            type: "string",
+                            description: "Response format for the certificate",
+                            enum: ["base64", "image", "pdf"],
+                            default: "base64",
+                            example: "base64"
+                        }
+                    }
+                },
+                CertificateBase64Response: {
+                    type: "object",
+                    properties: {
+                        success: { type: "boolean", example: true },
+                        certificateId: { type: "string", example: "INTRO-TO-NODE-2025-X7B9K2" },
+                        participantName: { type: "string", example: "John Doe" },
+                        eventSlug: { type: "string", example: "intro-to-node" },
+                        certificateType: { type: "string", example: "participant" },
+                        issueDate: { type: "string", format: "date-time", example: "2025-10-18T10:30:00.000Z" },
+                        verified: { type: "boolean", example: true },
+                        base64Image: {
+                            type: "string",
+                            description: "Base64-encoded PNG image with data URI prefix",
+                            example: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."
+                        },
+                        downloadUrl: {
+                            type: "string",
+                            description: "URL to download the certificate",
+                            example: "/api/certificate/download/INTRO-TO-NODE-2025-X7B9K2"
+                        }
+                    }
+                },
+                IssuedCertificate: {
+                    type: "object",
+                    properties: {
+                        certificateId: {
+                            type: "string",
+                            description: "Unique certificate identifier",
+                            example: "INTRO-TO-NODE-2025-X7B9K2"
+                        },
+                        participantName: {
+                            type: "string",
+                            description: "Name of the certificate recipient",
+                            example: "John Doe"
+                        },
+                        participantEmail: {
+                            type: "string",
+                            format: "email",
+                            description: "Email of the certificate recipient",
+                            example: "john.doe@example.com"
+                        },
+                        eventSlug: {
+                            type: "string",
+                            description: "Event identifier",
+                            example: "intro-to-node"
+                        },
+                        certificateType: {
+                            type: "string",
+                            enum: ["participant", "organizer", "volunteer", "speaker", "winner"],
+                            description: "Type of certificate",
+                            example: "participant"
+                        },
+                        issueDate: {
+                            type: "string",
+                            format: "date-time",
+                            description: "Date when certificate was issued",
+                            example: "2025-10-18T10:30:00.000Z"
+                        },
+                        digitalSignature: {
+                            type: "string",
+                            description: "HMAC-SHA256 signature for verification",
+                            example: "a3c5f9e8b2d4..."
+                        },
+                        isRevoked: {
+                            type: "boolean",
+                            description: "Whether certificate has been revoked",
+                            example: false
+                        },
+                        revokedAt: {
+                            type: "string",
+                            format: "date-time",
+                            nullable: true,
+                            description: "Date when certificate was revoked"
+                        },
+                        revokedReason: {
+                            type: "string",
+                            nullable: true,
+                            description: "Reason for certificate revocation"
+                        },
+                        metadata: {
+                            type: "object",
+                            description: "Additional certificate metadata",
+                            properties: {
+                                eventName: { type: "string", example: "Intro to Node.js" },
+                                generatedAt: { type: "string", format: "date-time" }
+                            }
+                        }
+                    }
+                },
+                CertificateVerifyResponse: {
+                    type: "object",
+                    properties: {
+                        success: { type: "boolean", example: true },
+                        verified: { type: "boolean", example: true },
+                        status: {
+                            type: "string",
+                            enum: ["valid", "revoked", "tampered"],
+                            example: "valid"
+                        },
+                        message: {
+                            type: "string",
+                            example: "Certificate is valid and verified"
+                        },
+                        certificate: {
+                            type: "object",
+                            properties: {
+                                certificateId: { type: "string", example: "INTRO-TO-NODE-2025-X7B9K2" },
+                                participantName: { type: "string", example: "John Doe" },
+                                eventSlug: { type: "string", example: "intro-to-node" },
+                                certificateType: { type: "string", example: "participant" },
+                                issueDate: { type: "string", format: "date-time" },
+                                eventName: { type: "string", example: "Intro to Node.js" }
+                            }
+                        },
+                        security: {
+                            type: "object",
+                            properties: {
+                                signatureVerified: { type: "boolean", example: true },
+                                message: { type: "string", example: "Digital signature verified successfully" }
+                            }
+                        },
+                        revokedAt: {
+                            type: "string",
+                            format: "date-time",
+                            description: "Present only if certificate is revoked"
+                        },
+                        revokedReason: {
+                            type: "string",
+                            description: "Present only if certificate is revoked"
+                        }
                     }
                 }
             },
