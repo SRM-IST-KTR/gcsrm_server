@@ -46,7 +46,11 @@ const fetchTeamMembers = async (req, res) => {
             });
         }
 
-        res.status(200).json(members);
+        res.status(200).json({
+            success: true,
+            count: members.length,
+            data: members
+        });
     }
     catch (err) {
         const totalDuration = Date.now() - startTime;
@@ -65,7 +69,10 @@ const fetchTeamMembers = async (req, res) => {
             }
         });
 
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 };
 
@@ -113,7 +120,10 @@ const createTeamMember = async (req, res) => {
             });
         }
 
-        res.status(201).json(savedMember);
+        res.status(201).json({
+            success: true,
+            data: savedMember
+        });
     }
     catch (err) {
         const totalDuration = Date.now() - startTime;
@@ -137,7 +147,10 @@ const createTeamMember = async (req, res) => {
             }
         });
 
-        res.status(500).json({ message: err.message });
+        res.status(500).json({
+            success: false,
+            error: err.message
+        });
     }
 };
 

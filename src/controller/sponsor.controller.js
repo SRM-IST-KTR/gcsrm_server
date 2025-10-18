@@ -46,7 +46,11 @@ const fetchSponsor = async (req, res) => {
             });
         }
 
-        res.status(200).json(sponsors);
+        res.status(200).json({
+            success: true,
+            count: sponsors.length,
+            data: sponsors
+        });
     }
     catch (err) {
         const totalDuration = Date.now() - startTime;
@@ -67,8 +71,8 @@ const fetchSponsor = async (req, res) => {
 
         // Return 500 Internal Server Error for database or server issues
         res.status(500).json({
-            message: 'Internal server error while fetching sponsors',
-            error: err.message
+            success: false,
+            error: 'Internal server error while fetching sponsors'
         });
     }
 };
@@ -104,7 +108,8 @@ const createSponsor = async (req, res) => {
             });
 
             return res.status(400).json({
-                message: 'Missing required fields',
+                success: false,
+                error: 'Missing required fields',
                 required: ['name', 'logo', 'alt', 'tier', 'link'],
                 provided: Object.keys(req.body)
             });
@@ -136,7 +141,10 @@ const createSponsor = async (req, res) => {
             });
         }
 
-        res.status(201).json(savedSponsor);
+        res.status(201).json({
+            success: true,
+            data: savedSponsor
+        });
     }
     catch (err) {
         const totalDuration = Date.now() - startTime;
@@ -152,8 +160,9 @@ const createSponsor = async (req, res) => {
             });
 
             return res.status(400).json({
-                message: 'Validation failed',
-                errors: Object.keys(err.errors).map(key => ({
+                success: false,
+                error: 'Validation failed',
+                details: Object.keys(err.errors).map(key => ({
                     field: key,
                     message: err.errors[key].message
                 }))
@@ -181,8 +190,8 @@ const createSponsor = async (req, res) => {
 
         // Return 500 Internal Server Error for unexpected errors
         res.status(500).json({
-            message: 'Internal server error while creating sponsor',
-            error: err.message
+            success: false,
+            error: 'Internal server error while creating sponsor'
         });
     }
 };
@@ -216,7 +225,10 @@ const updateSponsor = async (req, res) => {
                 duration: `${totalDuration}ms`,
             });
 
-            return res.status(400).json({ message: 'Invalid sponsor ID format' });
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid sponsor ID format'
+            });
         }
 
         const updateStart = Date.now();
@@ -236,7 +248,10 @@ const updateSponsor = async (req, res) => {
                 duration: `${totalDuration}ms`,
             });
 
-            return res.status(404).json({ message: 'Sponsor not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'Sponsor not found'
+            });
         }
 
         // Log successful update with metrics
@@ -258,7 +273,10 @@ const updateSponsor = async (req, res) => {
             });
         }
 
-        res.status(200).json(updatedSponsor);
+        res.status(200).json({
+            success: true,
+            data: updatedSponsor
+        });
     }
     catch (err) {
         const totalDuration = Date.now() - startTime;
@@ -275,8 +293,9 @@ const updateSponsor = async (req, res) => {
             });
 
             return res.status(400).json({
-                message: 'Validation failed',
-                errors: Object.keys(err.errors).map(key => ({
+                success: false,
+                error: 'Validation failed',
+                details: Object.keys(err.errors).map(key => ({
                     field: key,
                     message: err.errors[key].message
                 }))
@@ -303,8 +322,8 @@ const updateSponsor = async (req, res) => {
 
         // Return 500 Internal Server Error for unexpected errors
         res.status(500).json({
-            message: 'Internal server error while updating sponsor',
-            error: err.message
+            success: false,
+            error: 'Internal server error while updating sponsor'
         });
     }
 };
@@ -337,7 +356,10 @@ const deleteSponsor = async (req, res) => {
                 duration: `${totalDuration}ms`,
             });
 
-            return res.status(400).json({ message: 'Invalid sponsor ID format' });
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid sponsor ID format'
+            });
         }
 
         const deleteStart = Date.now();
@@ -354,7 +376,10 @@ const deleteSponsor = async (req, res) => {
                 duration: `${totalDuration}ms`,
             });
 
-            return res.status(404).json({ message: 'Sponsor not found' });
+            return res.status(404).json({
+                success: false,
+                error: 'Sponsor not found'
+            });
         }
 
         // Log successful deletion with metrics
@@ -376,8 +401,11 @@ const deleteSponsor = async (req, res) => {
             });
         }
 
-        // Return 204 No Content for successful deletion (no response body needed)
-        res.status(204).send();
+        // Return 200 with success message for successful deletion
+        res.status(200).json({
+            success: true,
+            message: 'Sponsor deleted successfully'
+        });
     }
     catch (err) {
         const totalDuration = Date.now() - startTime;
@@ -393,8 +421,8 @@ const deleteSponsor = async (req, res) => {
             });
 
             return res.status(400).json({
-                message: 'Invalid sponsor ID format',
-                provided: req.params.id
+                success: false,
+                error: 'Invalid sponsor ID format'
             });
         }
 
@@ -415,8 +443,8 @@ const deleteSponsor = async (req, res) => {
 
         // Return 500 Internal Server Error for unexpected errors
         res.status(500).json({
-            message: 'Internal server error while deleting sponsor',
-            error: err.message
+            success: false,
+            error: 'Internal server error while deleting sponsor'
         });
     }
 };

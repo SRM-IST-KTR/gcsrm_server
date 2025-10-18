@@ -10,14 +10,23 @@ const createEvent = async (req, res) => {
         }
 
         const { data } = req.body;
-        if (!data) return res.status(400).json({ message: "No data provided" });
+        if (!data) return res.status(400).json({
+            success: false,
+            error: "No data provided"
+        });
 
         const eventnew = new eventSchema(data);
         const saved = await eventnew.save();
 
-        res.status(201).json({ message: 'Event created successfully', event: saved });
+        res.status(201).json({
+            success: true,
+            data: saved
+        });
     } catch (error) {
-        res.status(500).json({ msg: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 };
 
@@ -28,16 +37,31 @@ const editEvent = async (req, res) => {
         }
 
         const { data } = req.body;
-        if (!data || !data.id) return res.status(400).json({ message: "No event ID provided" });
+        if (!data || !data.id) return res.status(400).json({
+            success: false,
+            error: "No event ID provided"
+        });
         if (!mongoose.Types.ObjectId.isValid(data.id)) {
-            return res.status(400).json({message: "this event id is invalid!"});
+            return res.status(400).json({
+                success: false,
+                error: "Invalid event ID format"
+            });
         }
         const updatedEvent = await eventSchema.findByIdAndUpdate(data.id, data, { new: true, runValidators: true, context: 'query' });
-        if (!updatedEvent) return res.status(404).json({ message: 'Event not found' });
+        if (!updatedEvent) return res.status(404).json({
+            success: false,
+            error: 'Event not found'
+        });
 
-        res.status(200).json({ message: 'Event updated successfully', event: updatedEvent });
+        res.status(200).json({
+            success: true,
+            data: updatedEvent
+        });
     } catch (error) {
-        res.status(500).json({ msg: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 };
 
@@ -48,16 +72,31 @@ const deleteEvent = async (req, res) => {
         }
 
         const { id } = req.params;
-        if (!id) return res.status(400).json({ message: "No event ID provided" });
+        if (!id) return res.status(400).json({
+            success: false,
+            error: "No event ID provided"
+        });
         if (!mongoose.Types.ObjectId.isValid(id)) {
-            return res.status(400).json({ message: "Invalid event ID format" });
+            return res.status(400).json({
+                success: false,
+                error: "Invalid event ID format"
+            });
         }
         const deletedevent = await eventSchema.findByIdAndDelete(id);
-        if (!deletedevent) return res.status(404).json({ message: 'Event not found' });
+        if (!deletedevent) return res.status(404).json({
+            success: false,
+            error: 'Event not found'
+        });
 
-        res.status(200).json({ message: 'Event deleted successfully', event: deletedevent });
+        res.status(200).json({
+            success: true,
+            message: 'Event deleted successfully'
+        });
     } catch (error) {
-        res.status(500).json({ msg: error.message });
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 };
 
@@ -68,21 +107,36 @@ const fetchEvent = async (req, res) => {
         }
 
         const { id } = req.params;
-        if (!id){
-            return res.status(400).json({message: "No event ID provided"});
+        if (!id) {
+            return res.status(400).json({
+                success: false,
+                error: "No event ID provided"
+            });
         }
-        if (!mongoose.Types.ObjectId.isValid(id)){
-            return res.status(400).json({message: "Invalid event ID format"});
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                error: "Invalid event ID format"
+            });
         }
 
         const fetchedevent = await eventSchema.findById(id);
-        if (!fetchedevent){
-            return res.status(404).json({message: "no such event found with that id!"});
+        if (!fetchedevent) {
+            return res.status(404).json({
+                success: false,
+                error: "Event not found"
+            });
         }
-        res.status(200).json({message: "event fetched successfully", event: fetchedevent});
+        res.status(200).json({
+            success: true,
+            data: fetchedevent
+        });
     }
-    catch (error){
-        res.status(500).json({msg: error.message});
+    catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
     }
 };
 
@@ -92,15 +146,25 @@ const fetchAll = async (req, res) => {
             await connectDB();
         }
         const allEvents = await eventSchema.find();
-        if (allEvents.length === 0){ // Check if the array is empty
-            return res.status(404).json({message: "no events found"})
+        if (allEvents.length === 0) { // Check if the array is empty
+            return res.status(404).json({
+                success: false,
+                error: "No events found"
+            })
         }
-        res.status(200).json({ message: "events", events: allEvents })
-        }
-    
+        res.status(200).json({
+            success: true,
+            count: allEvents.length,
+            data: allEvents
+        })
+    }
+
 
     catch (error) {
-        res.status(500).json({msg: error.message})
+        res.status(500).json({
+            success: false,
+            error: error.message
+        })
     }
 }
 
