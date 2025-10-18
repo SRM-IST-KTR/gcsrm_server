@@ -4,13 +4,12 @@ This document explains how to use the certificate generation and verification sy
 
 ## Features
 
-✅ **Generate Certificates** - Create personalized certificates with custom fonts and styling  
-✅ **Multiple Output Formats** - Support for base64, PNG image, and PDF formats  
-✅ **Google Fonts Support** - Use any Google Font via CSS links  
-✅ **Certificate Tracking** - Each certificate gets a unique ID for verification  
-✅ **Digital Signatures** - Certificates are cryptographically signed for authenticity  
-✅ **Revocation Support** - Ability to revoke certificates if needed  
-✅ **Serverless Compatible** - Works in serverless environments (Vercel, AWS Lambda, etc.)  
+✅ **Generate Certificates** - Create personalized certificates with custom fonts and styling
+✅ **Multiple Output Formats** - Support for base64, PNG image, and PDF formats
+✅ **Google Fonts Support** - Use any Google Font via CSS links
+✅ **Certificate Tracking** - Each certificate gets a unique ID for verification
+✅ **Digital Signatures** - Certificates are cryptographically signed for authenticity
+✅ **Revocation Support** - Ability to revoke certificates if needed
 
 ---
 
@@ -34,6 +33,7 @@ Generates a personalized certificate for a participant with support for multiple
 ```
 
 **Parameters:**
+
 - `email` (required): Participant's email address
 - `event` (required): Event slug
 - `type` (required): Certificate type (`participants`, `organizers`, `volunteers`, `speakers`, `winners`)
@@ -56,6 +56,7 @@ Generates a personalized certificate for a participant with support for multiple
 **Image Response (format: "image"):**
 
 Returns PNG image directly with headers:
+
 - `Content-Type: image/png`
 - `Content-Disposition: inline; filename="certificate-{id}.png"`
 - `X-Certificate-Id: {certificateId}`
@@ -63,6 +64,7 @@ Returns PNG image directly with headers:
 **PDF Response (format: "pdf"):**
 
 Returns PDF document directly with headers:
+
 - `Content-Type: application/pdf`
 - `Content-Disposition: inline; filename="certificate-{id}.pdf"`
 - `X-Certificate-Id: {certificateId}`
@@ -141,6 +143,7 @@ GET /api/certificates/download/HACKATHON-2024-X7B9K2?format=pdf
 ```
 
 **Parameters:**
+
 - `certificateId` (required): The unique certificate ID
 - `format` (optional): Output format - `png` (default) or `pdf`
 
@@ -149,12 +152,14 @@ GET /api/certificates/download/HACKATHON-2024-X7B9K2?format=pdf
 Returns the certificate file directly with headers:
 
 **PNG Download:**
+
 - `Content-Type: image/png`
 - `Content-Disposition: attachment; filename="certificate-{id}-{name}.png"`
 - `X-Certificate-Id: {certificateId}`
 - `X-Certificate-Verified: true`
 
 **PDF Download:**
+
 - `Content-Type: application/pdf`
 - `Content-Disposition: attachment; filename="certificate-{id}-{name}.pdf"`
 - `X-Certificate-Id: {certificateId}`
@@ -170,20 +175,6 @@ Each event in MongoDB should have the following structure:
 
 ```json
 {
-  "_id": { "$oid": "68f26435e4578dac0882e0e4" },
-  "slug": "hackathon-2024",
-  "event_name": "Annual Hackathon 2024",
-  "database": "hackathon_prod",
-  "collection": {
-    "participants": "participants",
-    "organizers": "organizers",
-    "volunteers": "volunteers"
-  },
-  "certificate": {
-    "participants": "https://res.cloudinary.com/yourcloud/image/upload/certificate.jpg",
-    "organizers": "https://res.cloudinary.com/yourcloud/image/upload/organizer-cert.jpg",
-    "volunteers": ""
-  },
   "jimp_config": {
     "color": "white",
     "font_size": "72",
@@ -204,6 +195,7 @@ Each event in MongoDB should have the following structure:
 ### Font Configuration Options
 
 #### 1. Google Fonts CSS Link (Recommended)
+
 ```json
 "fonts": {
   "Rouge Script": "https://fonts.googleapis.com/css2?family=Rouge+Script&display=swap",
@@ -211,26 +203,19 @@ Each event in MongoDB should have the following structure:
 }
 ```
 
-#### 2. Direct Font File URL
-```json
-"fonts": {
-  "Poppins": "https://fonts.gstatic.com/s/poppins/v20/pxiEyp8kv8JHgFVrFJDUc1NECPY.ttf",
-  "Birthstone": "https://fonts.gstatic.com/s/birthstone/v16/8AtsGs2xO4yLRhy87sv_LLDzjDXaDzIUAA.woff2"
-}
-```
-
 ### jimp_config Parameters
 
-| Parameter | Type | Description | Example |
-|-----------|------|-------------|---------|
-| `color` | String | Text color | `"white"` or `"black"` |
-| `font_size` | String | Font size in pixels | `"72"`, `"64"`, `"48"` |
-| `font_family` | String | Font family name (must exist in `fonts` object) | `"Rouge Script"` |
-| `text_align` | String | Text alignment | `"center"`, `"left"`, `"right"` |
-| `xOffset` | String | Horizontal offset in pixels | `"-100"`, `"0"`, `"50"` |
-| `yOffset` | String | Vertical offset in pixels | `"-10"`, `"100"`, `"0"` |
-| `uppercase` | Boolean | Convert name to uppercase | `true` or `false` |
-| `fonts` | Object | Font definitions | See examples above |
+
+| Parameter     | Type    | Description                                    | Example                         |
+| ------------- | ------- | ---------------------------------------------- | ------------------------------- |
+| `color`       | String  | Text color                                     | `"white"` or `"black"`          |
+| `font_size`   | String  | Font size in pixels                            | `"72"`, `"64"`, `"48"`          |
+| `font_family` | String  | Font family name (must exist in`fonts` object) | `"Rouge Script"`                |
+| `text_align`  | String  | Text alignment                                 | `"center"`, `"left"`, `"right"` |
+| `xOffset`     | String  | Horizontal offset in pixels                    | `"-100"`, `"0"`, `"50"`         |
+| `yOffset`     | String  | Vertical offset in pixels                      | `"-10"`, `"100"`, `"0"`         |
+| `uppercase`   | Boolean | Convert name to uppercase                      | `true` or `false`               |
+| `fonts`       | Object  | Font definitions                               | See examples above              |
 
 ---
 
@@ -259,24 +244,6 @@ Each generated certificate is saved in MongoDB with this structure:
 }
 ```
 
-### Certificate ID Format
-
-Certificate IDs follow this pattern: `{EVENT-SLUG}-{YEAR}-{RANDOM}`
-
-**Example:** `HACKATHON-2024-X7B9K2`
-
-**Components:**
-- `HACKATHON` - Event slug (uppercase, special characters replaced with hyphens)
-- `2024` - Year of issuance
-- `X7B9K2` - 6-character random alphanumeric code for uniqueness
-
-**Examples:**
-- `JINGLE-MANIA-2024-A1B2C3`
-- `TECH-FEST-2024-X7Y8Z9`
-- `SUMMER-HACKATHON-2024-Q5R6S7`
-
----
-
 ## Usage Examples
 
 ### Example 1: Generate Certificate (Base64 JSON Response)
@@ -297,7 +264,6 @@ const data = await response.json();
 console.log('Certificate ID:', data.certificateId);
 // Display certificate image: <img src={data.certificate} />
 ```
-
 ### Example 2: Generate Certificate (Direct Image)
 
 ```javascript
@@ -317,7 +283,6 @@ const blob = await response.blob();
 const imageUrl = URL.createObjectURL(blob);
 // Display: <img src={imageUrl} />
 ```
-
 ### Example 3: Generate Certificate (PDF)
 
 ```javascript
@@ -338,7 +303,6 @@ const pdfUrl = URL.createObjectURL(blob);
 // Display in iframe: <iframe src={pdfUrl} />
 // Or download: <a href={pdfUrl} download="certificate.pdf">Download</a>
 ```
-
 ### Example 4: Verify a Certificate
 
 ```javascript
@@ -353,7 +317,6 @@ if (data.verified && data.security.signatureVerified) {
   console.log('❌ Invalid or revoked certificate');
 }
 ```
-
 ### Example 5: Download Certificate as PDF
 
 ```javascript
@@ -373,7 +336,6 @@ if (response.ok) {
   a.click();
 }
 ```
-
 ### Example 6: Revoke a Certificate (Backend)
 
 ```javascript
@@ -417,8 +379,8 @@ Each certificate is signed using **HMAC-SHA256** with a server-side secret salt.
 ```
 {certificateId}|{participantName}|{email}|{eventSlug}|{certificateType}|{issueDate}|{secret}
 ```
-
 **Security Features:**
+
 - **HMAC-SHA256** - Keyed-hash message authentication code (more secure than plain SHA256)
 - **Secret Salt** - Server-side secret from `process.env.CERTIFICATE_SECRET`
 - **Tamper Detection** - Any modification to certificate data invalidates the signature
@@ -430,14 +392,14 @@ This ensures certificate authenticity and prevents forgery or tampering.
 
 ## Security Considerations
 
-✅ **Unique Certificate IDs** - Each certificate has a unique, non-guessable ID (EVENT-SLUG-YEAR-RANDOM)  
-✅ **HMAC-SHA256 Signatures** - Cryptographic signatures prevent forgery and tampering  
-✅ **Secret Salt** - Server-side secret key required for signature generation  
-✅ **Signature Verification** - Recomputed signatures must match stored signatures  
-✅ **Revocation Support** - Invalid certificates can be revoked with reason tracking  
-✅ **Email Verification** - Only registered participants can generate certificates  
-✅ **Database Validation** - Certificate must exist in event-specific database  
-✅ **Tamper Detection** - Any modification to certificate data is detected during verification  
+✅ **Unique Certificate IDs** - Each certificate has a unique, non-guessable ID (EVENT-SLUG-YEAR-RANDOM)
+✅ **HMAC-SHA256 Signatures** - Cryptographic signatures prevent forgery and tampering
+✅ **Secret Salt** - Server-side secret key required for signature generation
+✅ **Signature Verification** - Recomputed signatures must match stored signatures
+✅ **Revocation Support** - Invalid certificates can be revoked with reason tracking
+✅ **Email Verification** - Only registered participants can generate certificates
+✅ **Database Validation** - Certificate must exist in event-specific database
+✅ **Tamper Detection** - Any modification to certificate data is detected during verification
 
 **Important:** Ensure `CERTIFICATE_SECRET` environment variable is set to a strong, random value in production!
 
@@ -446,17 +408,20 @@ This ensures certificate authenticity and prevents forgery or tampering.
 ## Troubleshooting
 
 ### Certificate Not Generated
+
 - **Check** if event exists with the provided slug
 - **Check** if participant email exists in event database
 - **Check** if certificate template URL is accessible
 - **Check** if font URLs are valid and accessible
 
 ### Font Not Applied
+
 - **Check** if font family name matches key in `fonts` object
 - **Check** if Google Fonts CSS link is valid
 - **Check** server logs for font loading errors
 
 ### Verification Fails
+
 - **Check** if certificate ID is correct (case-sensitive)
 - **Check** if certificate was actually generated (not just previewed)
 - **Check** if certificate has been revoked
@@ -470,7 +435,6 @@ Make sure to set the following environment variable in your `.env` file:
 ```bash
 CERTIFICATE_SECRET=your-super-secret-random-string-here
 ```
-
 **Security Note:** Use a strong, random string (at least 32 characters). Never commit this to version control!
 
 ---
@@ -478,18 +442,19 @@ CERTIFICATE_SECRET=your-super-secret-random-string-here
 ## Quick Start
 
 1. **Generate a certificate:**
+
    ```bash
    curl -X POST http://localhost:3000/api/certificates/generate \
      -H "Content-Type: application/json" \
      -d '{"email":"user@example.com","event":"hackathon-2024","type":"participants","format":"pdf"}'
    ```
-
 2. **Verify a certificate:**
+
    ```bash
    curl http://localhost:3000/api/certificates/verify/HACKATHON-2024-X7B9K2
    ```
-
 3. **Download a certificate:**
+
    ```bash
    curl http://localhost:3000/api/certificates/download/HACKATHON-2024-X7B9K2?format=pdf \
      --output certificate.pdf
