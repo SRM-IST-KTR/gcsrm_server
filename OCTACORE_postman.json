@@ -1,0 +1,665 @@
+{
+    "info": {
+        "_postman_id": "gcsrm-server-octacore",
+        "name": "GCSRM Server API",
+        "description": "Complete API collection for GitHub Community SRM Server. This collection includes endpoints for managing team members, sponsors, events, contact forms, and certificates.",
+        "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+        "_exporter_id": "gcsrm-server"
+    },
+    "item": [
+        {
+            "name": "Team",
+            "item": [
+                {
+                    "name": "Get All Team Members",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/team",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "team"
+                            ]
+                        },
+                        "description": "Retrieve all team members from the database."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Team Member By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/team/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "team",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the team member"
+                                }
+                            ]
+                        },
+                        "description": "Retrieve a single team member's details using their unique ID."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Team Member",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"domain\": \"Technical\",\n  \"position\": \"Lead\",\n  \"image\": \"https://example.com/image.jpg\",\n  \"github\": \"https://github.com/johndoe\",\n  \"linkedin\": \"https://linkedin.com/in/johndoe\",\n  \"twitter\": \"https://twitter.com/johndoe\",\n  \"index\": 1\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/team",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "team"
+                            ]
+                        },
+                        "description": "Add a new team member to the database."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Team Member",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe Updated\",\n  \"domain\": \"Technical\",\n  \"position\": \"Director\",\n  \"image\": \"https://example.com/image-updated.jpg\",\n  \"github\": \"https://github.com/johndoe\",\n  \"linkedin\": \"https://linkedin.com/in/johndoe\",\n  \"twitter\": \"https://twitter.com/johndoe\",\n  \"index\": 2\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/team/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "team",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the team member"
+                                }
+                            ]
+                        },
+                        "description": "Update an existing team member's information. All fields (name, domain, position) are required."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Team Member",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/team/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "team",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the team member"
+                                }
+                            ]
+                        },
+                        "description": "Remove a team member from the database."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Team management endpoints for GitHub Club SRM"
+        },
+        {
+            "name": "Sponsors",
+            "item": [
+                {
+                    "name": "Get All Sponsors",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/sponsors",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "sponsors"
+                            ]
+                        },
+                        "description": "Get a list of all sponsors sorted by tier (ascending order)."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Sponsor",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"GitHub\",\n  \"logo\": \"https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png\",\n  \"alt\": \"GitHub Logo\",\n  \"tier\": \"Gold\",\n  \"link\": \"https://github.com\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/sponsors",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "sponsors"
+                            ]
+                        },
+                        "description": "Add a new sponsor to the database. All fields are required."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Update Sponsor",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"GitHub Updated\",\n  \"tier\": \"Platinum\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/sponsors/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "sponsors",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the sponsor"
+                                }
+                            ]
+                        },
+                        "description": "Update sponsor information by ID. Only provided fields will be updated."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Sponsor",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/sponsors/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "sponsors",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the sponsor"
+                                }
+                            ]
+                        },
+                        "description": "Remove a sponsor from the database by ID."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Sponsor management endpoints for GitHub Club SRM"
+        },
+        {
+            "name": "Events",
+            "item": [
+                {
+                    "name": "Get All Events",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/events",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events"
+                            ]
+                        },
+                        "description": "Get a list of all events."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Event By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/events/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the event"
+                                }
+                            ]
+                        },
+                        "description": "Get detailed information about an event by its MongoDB ObjectId."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Create Event",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"data\": {\n    \"slug\": \"intro-to-node\",\n    \"event_name\": \"Intro to Node.js\",\n    \"event_description\": \"Beginner friendly session on Node.js fundamentals\",\n    \"event_date\": \"2025-10-20T10:00:00.000Z\",\n    \"venue\": \"SRM Main Hall\",\n    \"teamEvent\": false,\n    \"collection\": {\n      \"participants\": \"participants\",\n      \"organizers\": \"organizers\",\n      \"volunteers\": \"volunteers\"\n    },\n    \"jimp_config\": {\n      \"yOffset\": \"10\",\n      \"color\": \"#000000\",\n      \"font_size\": \"32\"\n    }\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/events/createEvent",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                "createEvent"
+                            ]
+                        },
+                        "description": "Add a new event to the database. The request body should include an object with a `data` field containing the event data."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Edit Event",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"data\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"event_name\": \"Intro to Node.js - Updated\",\n    \"event_description\": \"Updated description for Node.js workshop\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/events/editEvent",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                "editEvent"
+                            ]
+                        },
+                        "description": "Update event fields. The request body should include an object with a `data` field containing the event data; `data.id` must be the event's ObjectId."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Delete Event",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/events/deleteEvent/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                "deleteEvent",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the event"
+                                }
+                            ]
+                        },
+                        "description": "Remove an event from the database by its ObjectId."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Event management endpoints for GitHub Club SRM"
+        },
+        {
+            "name": "Contact",
+            "item": [
+                {
+                    "name": "Send Contact Message",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"Jane Developer\",\n  \"email\": \"jane@example.com\",\n  \"message\": \"I would like to contribute to the project. Please let me know how to get started.\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/contact",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "contact"
+                            ]
+                        },
+                        "description": "Send a contact message. Accepts a name, email and message and sends an email to the community admin and a confirmation to the sender."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Contact form endpoint for users to send messages to the GitHub Community SRM team"
+        },
+        {
+            "name": "Certificates",
+            "item": [
+                {
+                    "name": "Generate Certificate (Base64)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"john.doe@example.com\",\n  \"event\": \"intro-to-node\",\n  \"type\": \"participants\",\n  \"format\": \"base64\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/certificate/generate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "certificate",
+                                "generate"
+                            ]
+                        },
+                        "description": "Generate a certificate for a participant of a specific event. Returns certificate as base64-encoded data URI with metadata."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Generate Certificate (Image)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"jane.smith@example.com\",\n  \"event\": \"hackathon-2025\",\n  \"type\": \"organizers\",\n  \"format\": \"image\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/certificate/generate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "certificate",
+                                "generate"
+                            ]
+                        },
+                        "description": "Generate a certificate and return as raw PNG image file."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Generate Certificate (PDF)",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"email\": \"volunteer@example.com\",\n  \"event\": \"workshop-react\",\n  \"type\": \"volunteers\",\n  \"format\": \"pdf\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/certificate/generate",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "certificate",
+                                "generate"
+                            ]
+                        },
+                        "description": "Generate a certificate and return as PDF document."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Verify Certificate",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/certificate/verify/:certificateId",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "certificate",
+                                "verify",
+                                ":certificateId"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "certificateId",
+                                    "value": "INTRO-TO-NODE-2025-X7B9K2",
+                                    "description": "Unique certificate identifier (format: EVENT-SLUG-YEAR-RANDOMCODE)"
+                                }
+                            ]
+                        },
+                        "description": "Verify the authenticity of a certificate using its unique certificate ID. Checks certificate existence, digital signature validity, and revocation status."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download Certificate (PNG)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/certificate/download/:certificateId?format=png",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "certificate",
+                                "download",
+                                ":certificateId"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "png",
+                                    "description": "Download format (png or pdf)"
+                                }
+                            ],
+                            "variable": [
+                                {
+                                    "key": "certificateId",
+                                    "value": "INTRO-TO-NODE-2025-X7B9K2",
+                                    "description": "Unique certificate identifier"
+                                }
+                            ]
+                        },
+                        "description": "Download a verified certificate in PNG format. Verifies certificate authenticity before download."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Download Certificate (PDF)",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/certificate/download/:certificateId?format=pdf",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "certificate",
+                                "download",
+                                ":certificateId"
+                            ],
+                            "query": [
+                                {
+                                    "key": "format",
+                                    "value": "pdf",
+                                    "description": "Download format (png or pdf)"
+                                }
+                            ],
+                            "variable": [
+                                {
+                                    "key": "certificateId",
+                                    "value": "INTRO-TO-NODE-2025-X7B9K2",
+                                    "description": "Unique certificate identifier"
+                                }
+                            ]
+                        },
+                        "description": "Download a verified certificate in PDF format. Verifies certificate authenticity before download."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Certificate generation, verification, and download endpoints"
+        }
+    ],
+    "variable": [
+        {
+            "key": "base_url",
+            "value": "http://localhost:3000",
+            "type": "string",
+            "description": "Base URL for API requests (default: local_url)"
+        },
+        {
+            "key": "local_url",
+            "value": "http://localhost:3000",
+            "type": "string",
+            "description": "Local development server URL"
+        },
+        {
+            "key": "production_url",
+            "value": "https://octacore.githubsrmist.in",
+            "type": "string",
+            "description": "Production server URL"
+        },
+        {
+            "key": "beta_url",
+            "value": "https://octacore-beta.githubsrmist.in",
+            "type": "string",
+            "description": "Beta/staging server URL"
+        },
+        {
+            "key": "x-vercel-protection-bypass",
+            "value": "XXXXXXXXXXX",
+            "type": "string",
+            "description": "Vercel protection bypass header value"
+        }
+    ]
+}
