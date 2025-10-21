@@ -1,8 +1,9 @@
 
 const express = require('express');
+const { body, param } = require('express-validator');
 
 const router = express.Router();
-const { fetchAll, fetchEvent, createEvent, editEvent, deleteEvent } = require('../controller/event.controller');
+const { fetchAll, fetchEvent, createEvent, editEvent, deleteEvent, registerInEvent } = require('../controller/event.controller');
 
 /**
  * @swagger
@@ -262,5 +263,186 @@ router.put('/editEvent', editEvent);
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.delete('/deleteEvent/:id', deleteEvent);
+
+/**
+ * @swagger
+ * /events/register:
+ *   post:
+ *     summary: Register for an event
+ *     description: Register a participant for an event using the event slug. Sends a confirmation email after successful registration.
+ *     tags: [Events]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - regNo
+ *               - email
+ *               - phn
+ *               - dept
+ *               - slug
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 description: Full name of the participant
+ *                 minLength: 2
+ *                 maxLength: 100
+ *                 example: "John Doe"
+ *               regNo:
+ *                 type: string
+ *                 description: University registration number
+ *                 example: "RA2111003010001"
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 description: Valid email address
+ *                 example: "john.doe@srmist.edu.in"
+ *               phn:
+ *                 type: string
+ *                 description: Phone number (10 digits)
+ *                 pattern: '^[0-9]{10}$'
+ *                 example: "9876543210"
+ *               dept:
+ *                 type: string
+ *                 description: Department name
+ *                 example: "CSE"
+ *               slug:
+ *                 type: string
+ *                 description: Event slug identifier
+ *                 example: "intro-to-node"
+ *     responses:
+ *       201:
+ *         description: Registration successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Registration successful! A confirmation email has been sent."
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     participantId:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     regNo:
+ *                       type: string
+ *                     event:
+ *                       type: object
+ *                       properties:
+ *                         name:
+ *                           type: string
+ *                         slug:
+ *                           type: string
+ *                         date:
+ *                           type: string
+ *                           format: date-time
+ *                         venue:
+ *                           type: string
+ *       400:
+ *         description: Bad request - validation error or duplicate registration
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *             examples:
+ *               missingFields:
+ *                 value:
+ *                   success: false
+ *                   error: "All fields are required: name, regNo, email, phn, dept, slug"
+ *               duplicateEmail:
+ *                 value:
+ *                   success: false
+ *                   error: "This email is already registered for this event"
+ *               duplicateRegNo:
+ *                 value:
+ *                   success: false
+ *                   error: "This registration number is already registered for this event"
+ *               eventNotActive:
+ *                 value:
+ *                   success: false
+ *                   error: "This event is not currently accepting registrations"
+ *               eventPassed:
+ *                 value:
+ *                   success: false
+ *                   error: "This event has already passed"
+ *       404:
+ *         description: Event not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Event not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ */
+router.post('/register',
+    [
+        body('name')
+            .trim()
+            .notEmpty()
+            .withMessage('Name is required')
+            .isLength({ min: 2, max: 100 })
+            .withMessage('Name must be between 2 and 100 characters')
+            .matches(/^[a-zA-Z\s.'-]+$/)
+            .withMessage('Name can only contain letters, spaces, and common punctuation'),
+        body('regNo')
+            .trim()
+            .notEmpty().withMessage('Registration number is required')
+            .isLength({ min: 15, max: 15 }).withMessage('Registration number must be exactly 15 characters')
+            .matches(/^RA[0-9]{13}$/i).withMessage('Registration number must start with RA followed by 13 digits'),
+        body('email')
+            .trim()
+            .notEmpty().withMessage('Email is required')
+            .isEmail().withMessage('Valid email address is required')
+            .normalizeEmail(),
+        body('phn')
+            .trim()
+            .notEmpty().withMessage('Phone number is required')
+            .matches(/^[0-9]{10}$/).withMessage('Phone number must be 10 digits'),
+        body('dept')
+            .trim()
+            .notEmpty().withMessage('Department is required')
+            .isLength({ min: 2, max: 50 }).withMessage('Department must be between 2 and 50 characters'),
+        body('slug')
+            .trim()
+            .notEmpty().withMessage('Event slug is required')
+            .isSlug().withMessage('Invalid event slug format')
+    ],
+    registerInEvent
+);
 
 module.exports = router;
