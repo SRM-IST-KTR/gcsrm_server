@@ -84,8 +84,6 @@ const taskSchema = new mongoose.Schema({
 });
 
 taskSchema.index({ domain: 1, year: 1 });
-taskSchema.index({ subdomain: 1 });
-taskSchema.index({ deadline: 1 });
 
 // Export a function that returns the model for a given connection
 function getTaskModel(connection) {
