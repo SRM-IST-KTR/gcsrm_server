@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registration Confirmation</title>
+</head>
+
+<body
+    style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
+    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4; padding: 20px;">
+        <tr>
+            <td align="center">
+                <table width="600" cellpadding="0" cellspacing="0" border="0"
+                    style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td
+                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">GitHub Club SRM
+                            </h1>
+                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Registration
+                                Confirmed</p>
+                        </td>
+                    </tr>
+
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px 30px;">
+                            <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Hi {{PARTICIPANT_NAME}}! 👋
+                            </h2>
+                            <p style="color: #555555; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
+                                You're all set for <strong>{{EVENT_NAME}}</strong>!
+                            </p>
+
+                            <!-- Event Details Box -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                                style="background-color: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">
+                                            📅 Event Details</p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Event:</strong> {{EVENT_NAME}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Date:</strong> {{EVENT_DATE}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Time:</strong> {{EVENT_TIME}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Venue:</strong> {{EVENT_VENUE}}
+                                        </p>
+
+                                        {{EVENT_DURATION}}
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Registration Details -->
+                            <table width="100%" cellpadding="0" cellspacing="0" border="0"
+                                style="background-color: #fff9e6; border-left: 4px solid #ffd700; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                                <tr>
+                                    <td>
+                                        <p
+                                            style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">
+                                            ✅ Your Registration</p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Name:</strong> {{PARTICIPANT_NAME}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Registration No:</strong> {{PARTICIPANT_REGNO}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Email:</strong> {{PARTICIPANT_EMAIL}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Phone:</strong> {{PARTICIPANT_PHONE}}
+                                        </p>
+
+                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
+                                            <strong>Department:</strong> {{PARTICIPANT_DEPT}}
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            {{EVENT_DESCRIPTION}}
+
+                            {{EVENT_PREREQUISITES}}
+
+                            <!-- Important Notes -->
+                            <div style="background-color: #e3f2fd; border-radius: 6px; padding: 20px; margin: 20px 0;">
+                                <p style="margin: 0 0 10px 0; color: #1976d2; font-size: 16px; font-weight: 600;">⚠️
+                                    Important Notes:</p>
+                                <ul
+                                    style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
+                                    <li>Please arrive 10 minutes before the event starts</li>
+                                    <li>Bring your college ID card for verification</li>
+                                    <li>Keep this email for reference</li>
+                                    {{EVENT_COST}}
+                                </ul>
+                            </div>
+
+                            <p style="color: #555555; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">
+                                If you have any questions or need to cancel your registration, please contact us.
+                            </p>
+
+                            <p style="color: #555555; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">
+                                Looking forward to seeing you there! 🚀
+                            </p>
+                        </td>
+                    </tr>
+
+                    <!-- Footer -->
+                    <tr>
+                        <td
+                            style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                            <p style="color: #888888; margin: 0 0 10px 0; font-size: 14px;">
+                                <strong>GitHub Club SRM</strong>
+                            </p>
+                            <p style="color: #888888; margin: 0 0 15px 0; font-size: 12px;">
+                                Building the future, one commit at a time
+                            </p>
+                            <div style="margin: 15px 0;">
+                                <a href="https://github.com/SRM-IST-KTR"
+                                    style="color: #667eea; text-decoration: none; margin: 0 10px; font-size: 12px;">GitHub</a>
+                                <a href="https://www.linkedin.com/company/github-srmist"
+                                    style="color: #667eea; text-decoration: none; margin: 0 10px; font-size: 12px;">LinkedIn</a>
+                                <a href="https://twitter.com/githubsrmist"
+                                    style="color: #667eea; text-decoration: none; margin: 0 10px; font-size: 12px;">Twitter</a>
+                            </div>
+                            <p style="color: #aaaaaa; margin: 15px 0 0 0; font-size: 11px;">
+                                © {{CURRENT_YEAR}} GitHub Club SRM. All rights reserved.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
