@@ -3,6 +3,154 @@ const { connectDB } = require('../utils/db');
 const eventSchema = require('../models/event.model');
 const Sentry = require('@sentry/node');
 
+const fetchAll = async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+
+        Sentry.logger.info('Fetching all events', {
+            operation: 'fetchAll',
+            ip: req.ip || req.connection?.remoteAddress
+        });
+
+        const queryStart = Date.now();
+        const allEvents = await eventSchema.find().sort({ event_date: -1 });
+        const queryDuration = Date.now() - queryStart;
+
+        if (allEvents.length === 0) { // Check if the array is empty
+            Sentry.logger.info('No events found in database', {
+                operation: 'fetchAll'
+            });
+
+            return res.status(404).json({
+                success: false,
+                error: "No events found"
+            });
+        }
+
+        const totalDuration = Date.now() - startTime;
+
+        Sentry.logger.info('All events fetched successfully', {
+            operation: 'fetchAll',
+            count: allEvents.length,
+            queryDuration: `${queryDuration}ms`,
+            totalDuration: `${totalDuration}ms`
+        });
+
+        // Log slow database queries (over 200ms)
+        if (queryDuration > 200) {
+            Sentry.logger.warn('Slow database query', {
+                operation: 'fetchAll',
+                query: 'events.find()',
+                duration: `${queryDuration}ms`,
+                count: allEvents.length
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            count: allEvents.length,
+            data: allEvents
+        });
+    }
+    catch (error) {
+        Sentry.captureException(error, {
+            tags: {
+                operation: 'fetchAll'
+            }
+        });
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
+const fetchEvent = async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+
+        const { id } = req.params;
+        if (!id) {
+            Sentry.captureMessage('Event fetch failed - no event ID provided', {
+                level: 'warning',
+                tags: {
+                    operation: 'fetchEvent',
+                    validation: 'failed'
+                }
+            });
+
+            return res.status(400).json({
+                success: false,
+                error: "No event ID provided"
+            });
+        }
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            Sentry.captureMessage('Event fetch failed - invalid ID format', {
+                level: 'warning',
+                tags: {
+                    operation: 'fetchEvent',
+                    validation: 'failed'
+                },
+                extra: {
+                    providedId: id
+                }
+            });
+
+            return res.status(400).json({
+                success: false,
+                error: "Invalid event ID format"
+            });
+        }
+
+        const fetchedevent = await eventSchema.findById(id);
+        if (!fetchedevent) {
+            Sentry.captureMessage('Event not found', {
+                level: 'info',
+                tags: {
+                    operation: 'fetchEvent',
+                    eventId: id
+                }
+            });
+
+            return res.status(404).json({
+                success: false,
+                error: "Event not found"
+            });
+        }
+
+        Sentry.logger.info('Event fetched successfully', {
+            operation: 'fetchEvent',
+            eventId: id,
+            eventSlug: fetchedevent.slug
+        });
+
+        res.status(200).json({
+            success: true,
+            data: fetchedevent
+        });
+    }
+    catch (error) {
+        Sentry.captureException(error, {
+            tags: {
+                operation: 'fetchEvent',
+                eventId: req.params?.id
+            }
+        });
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
 const createEvent = async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -234,52 +382,48 @@ const deleteEvent = async (req, res) => {
     }
 };
 
-const fetchEvent = async (req, res) => {
+const registerInEvent = async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
             await connectDB();
         }
 
-        const { id } = req.params;
-        if (!id) {
-            Sentry.captureMessage('Event fetch failed - no event ID provided', {
-                level: 'warning',
-                tags: {
-                    operation: 'fetchEvent',
-                    validation: 'failed'
-                }
-            });
+        const { name, regNo, email, phn, dept, slug } = req.body;
 
-            return res.status(400).json({
-                success: false,
-                error: "No event ID provided"
-            });
-        }
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            Sentry.captureMessage('Event fetch failed - invalid ID format', {
+        // Validate required fields
+        if (!name || !regNo || !email || !phn || !dept || !slug) {
+            Sentry.captureMessage('Event registration failed - missing required fields', {
                 level: 'warning',
                 tags: {
-                    operation: 'fetchEvent',
+                    operation: 'registerInEvent',
                     validation: 'failed'
                 },
                 extra: {
-                    providedId: id
+                    providedFields: { name: !!name, regNo: !!regNo, email: !!email, phn: !!phn, dept: !!dept, slug: !!slug }
                 }
             });
 
             return res.status(400).json({
                 success: false,
-                error: "Invalid event ID format"
+                error: "All fields are required: name, regNo, email, phn, dept, slug"
             });
         }
 
-        const fetchedevent = await eventSchema.findById(id);
-        if (!fetchedevent) {
-            Sentry.captureMessage('Event not found', {
-                level: 'info',
+        Sentry.logger.info('Processing event registration', {
+            operation: 'registerInEvent',
+            eventSlug: slug,
+            email: email
+        });
+
+        // Find the event by slug
+        const event = await eventSchema.findOne({ slug });
+
+        if (!event) {
+            Sentry.captureMessage('Event registration failed - event not found', {
+                level: 'warning',
                 tags: {
-                    operation: 'fetchEvent',
-                    eventId: id
+                    operation: 'registerInEvent',
+                    eventSlug: slug
                 }
             });
 
@@ -289,103 +433,188 @@ const fetchEvent = async (req, res) => {
             });
         }
 
-        Sentry.logger.info('Event fetched successfully', {
-            operation: 'fetchEvent',
-            eventId: id,
-            eventSlug: fetchedevent.slug
-        });
-
-        res.status(200).json({
-            success: true,
-            data: fetchedevent
-        });
-    }
-    catch (error) {
-        Sentry.captureException(error, {
-            tags: {
-                operation: 'fetchEvent',
-                eventId: req.params?.id
-            }
-        });
-
-        res.status(500).json({
-            success: false,
-            error: error.message
-        });
-    }
-};
-
-const fetchAll = async (req, res) => {
-    const startTime = Date.now();
-
-    try {
-        if (mongoose.connection.readyState !== 1) {
-            await connectDB();
-        }
-
-        Sentry.logger.info('Fetching all events', {
-            operation: 'fetchAll',
-            ip: req.ip || req.connection?.remoteAddress
-        });
-
-        const queryStart = Date.now();
-        const allEvents = await eventSchema.find();
-        const queryDuration = Date.now() - queryStart;
-
-        if (allEvents.length === 0) { // Check if the array is empty
-            Sentry.logger.info('No events found in database', {
-                operation: 'fetchAll'
+        // Check if event is active
+        if (!event.is_active) {
+            Sentry.captureMessage('Event registration failed - event not active', {
+                level: 'info',
+                tags: {
+                    operation: 'registerInEvent',
+                    eventSlug: slug
+                }
             });
 
-            return res.status(404).json({
+            return res.status(400).json({
                 success: false,
-                error: "No events found"
+                error: "This event is not currently accepting registrations"
             });
         }
 
-        const totalDuration = Date.now() - startTime;
+        // Check if event has already passed
+        if (new Date(event.event_date) < new Date()) {
+            Sentry.captureMessage('Event registration failed - event has passed', {
+                level: 'info',
+                tags: {
+                    operation: 'registerInEvent',
+                    eventSlug: slug,
+                    eventDate: event.event_date
+                }
+            });
 
-        Sentry.logger.info('All events fetched successfully', {
-            operation: 'fetchAll',
-            count: allEvents.length,
-            queryDuration: `${queryDuration}ms`,
-            totalDuration: `${totalDuration}ms`
+            return res.status(400).json({
+                success: false,
+                error: "This event has already passed"
+            });
+        }
+
+        const { database, collection } = event;
+        const participantsCollection = collection.participants;
+
+        // Connect to the event-specific database
+        const db = mongoose.connection.useDb(database);
+
+        // Define participant schema
+        const participantSchema = new mongoose.Schema({
+            name: { type: String, required: true },
+            regNo: { type: String, required: true },
+            email: { type: String, required: true },
+            phn: { type: String, required: true },
+            dept: { type: String, required: true },
+            rsvp: { type: Boolean, default: false },
+            checkin: { type: Boolean, default: false },
+            snacks: { type: Boolean, default: false }
+        }, { timestamps: true });
+
+        // Get or create the Participant model for this collection
+        const Participant = db.models[participantsCollection] || db.model(participantsCollection, participantSchema);
+
+        // Check if email already registered
+        const existingParticipantByEmail = await Participant.findOne({ email: { $eq: email } });
+
+        if (existingParticipantByEmail) {
+            Sentry.captureMessage('Event registration failed - duplicate email', {
+                level: 'info',
+                tags: {
+                    operation: 'registerInEvent',
+                    eventSlug: slug
+                },
+                extra: {
+                    email: email
+                }
+            });
+
+            return res.status(400).json({
+                success: false,
+                error: "This email is already registered for this event"
+            });
+        }
+
+        // Check if registration number already registered
+        const existingParticipantByRegNo = await Participant.findOne({ regNo: { $eq: regNo } });
+
+        if (existingParticipantByRegNo) {
+            Sentry.captureMessage('Event registration failed - duplicate registration number', {
+                level: 'info',
+                tags: {
+                    operation: 'registerInEvent',
+                    eventSlug: slug
+                },
+                extra: {
+                    regNo: regNo
+                }
+            });
+
+            return res.status(400).json({
+                success: false,
+                error: "This registration number is already registered for this event"
+            });
+        }
+
+        // Create new participant
+        const newParticipant = new Participant({
+            name,
+            regNo,
+            email,
+            phn,
+            dept
         });
 
-        // Log slow database queries (over 200ms)
-        if (queryDuration > 200) {
-            Sentry.logger.warn('Slow database query', {
-                operation: 'fetchAll',
-                query: 'events.find()',
-                duration: `${queryDuration}ms`,
-                count: allEvents.length
+        await newParticipant.save();
+
+        Sentry.logger.info('Participant registered successfully', {
+            operation: 'registerInEvent',
+            eventSlug: slug,
+            participantId: newParticipant._id.toString(),
+            email: email
+        });
+
+        // Send registration confirmation email
+        try {
+            const { sendRegistrationEmail } = require('../utils/email/registration');
+            await sendRegistrationEmail(newParticipant, event);
+
+            Sentry.logger.info('Registration email sent successfully', {
+                operation: 'registerInEvent',
+                eventSlug: slug,
+                email: email
+            });
+        } catch (emailError) {
+            // Log email error but don't fail the registration
+            Sentry.captureException(emailError, {
+                tags: {
+                    operation: 'registerInEvent',
+                    subOperation: 'sendEmail',
+                    eventSlug: slug
+                },
+                extra: {
+                    participantId: newParticipant._id.toString()
+                }
+            });
+
+            Sentry.logger.warn('Failed to send registration email, but registration was successful', {
+                operation: 'registerInEvent',
+                eventSlug: slug,
+                error: emailError.message
             });
         }
 
-        res.status(200).json({
+        res.status(201).json({
             success: true,
-            count: allEvents.length,
-            data: allEvents
+            message: "Registration successful! A confirmation email has been sent.",
+            data: {
+                participantId: newParticipant._id,
+                name: newParticipant.name,
+                email: newParticipant.email,
+                regNo: newParticipant.regNo,
+                event: {
+                    name: event.event_name,
+                    slug: event.slug,
+                    date: event.event_date,
+                    venue: event.venue
+                }
+            }
         });
     }
     catch (error) {
         Sentry.captureException(error, {
             tags: {
-                operation: 'fetchAll'
+                operation: 'registerInEvent'
+            },
+            extra: {
+                body: req.body
             }
         });
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: error.message || "Internal Server Error"
         });
     }
-};
-
+}
 module.exports = {
+    fetchAll,
+    fetchEvent,
     createEvent,
     editEvent,
     deleteEvent,
-    fetchEvent,
-    fetchAll
+    registerInEvent
 };
