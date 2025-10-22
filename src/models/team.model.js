@@ -12,17 +12,34 @@ const teamSchema = new mongoose.Schema({
     },
     domain: {
         type: String,
+        enum: [
+            "Alumni",
+            "President",
+            "Vice President",
+            "Technical",
+            "Creatives",
+            "Corporate"
+        ],
         required: true
     },
     position: {
         type: String,
+        enum: [
+            "Alumni",
+            "President",
+            "Vice President",
+            "Director",
+            "Associate",
+            "Member"
+        ],
         required: true
     },
     caption: {
         type: String,
     },
     joined: {
-        type: Number
+        type: Number,
+        required: true
     },
     pictureUrl: {
         type: String,
@@ -30,12 +47,13 @@ const teamSchema = new mongoose.Schema({
     },
     isCurrent: {
         type: Boolean,
+        required: true
     },
     socials: {
-        linkedin: { type: String },
-        github: { type: String },
-        instagram: { type: String },
-        website: { type: String }
+        linkedin: { type: String, required: true },
+        github: { type: String, required: true },
+        instagram: { type: String},
+        website: { type: String}
     }
 },
     { timestamps: true }
