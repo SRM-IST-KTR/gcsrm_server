@@ -70,8 +70,6 @@ const participantSchema = new mongoose.Schema({
 participantSchema.index({ domain: 1, year: 1 });
 participantSchema.index({ status: 1 });
 participantSchema.index({ name: 'text' });
-participantSchema.index({ email: 1 }, { unique: true });
-participantSchema.index({ registrationNumber: 1 }, { unique: true });
 
 // Export a function that returns the model for a given connection
 function getParticipantUserModel(connection) {

@@ -74,33 +74,28 @@ const eventSchema = new mongoose.Schema({
         default: '',
     },
     collection: {
-        type: {
-            participants: { type: String, required: true, trim: true },
-            organizers: { type: String, required: true, trim: true },
-            volunteers: { type: String, required: true, trim: true },
-        },
-        required: true,
+        participants: { type: String, required: true, trim: true },
+        organizers: { type: String, required: true, trim: true },
+        volunteers: { type: String, required: true, trim: true },
     },
     certificate: {
-        type: {
-            organizers: { type: String, default: '' },
-            participants: { type: String, default: '' },
-            volunteers: { type: String, default: '' },
-        },
-        default: {},
+        organizers: { type: String, default: '' },
+        participants: { type: String, default: '' },
+        volunteers: { type: String, default: '' },
     },
     jimp_config: {
-        type: {
-            yOffset: { type: String, required: true },
-            color: { type: String, required: true },
-            font_size: { type: String, required: true },
-            font_family: { type: String, required: false, default: 'Poppins' },
-            text_align: { type: String, required: false, default: 'center' },
-            xOffset: { type: String, required: false, default: '0' },
-            uppercase: { type: Boolean, required: false, default: false },
-            fonts: { type: Object, required: false, default: {} },
+        yOffset: { type: String, required: true, default: '-10' },
+        color: { type: String, required: true },
+        font_size: { type: String, required: true },
+        font_family: { type: String, required: false, default: 'Quintessential' },
+        text_align: { type: String, required: false, default: 'center' },
+        xOffset: { type: String, required: false, default: '-10' },
+        uppercase: { type: Boolean, required: false, default: false },
+        fonts: {
+            type: Object, required: false, default: {
+                Quintessential: "https://fonts.googleapis.com/css2?family=Quintessential&display=swap"
+            }
         },
-        required: true,
     },
     teamEvent: {
         type: Boolean,
@@ -108,7 +103,7 @@ const eventSchema = new mongoose.Schema({
     },
     teamSize: {
         type: Number,
-        required: function() { return this.teamEvent; },
+        required: function () { return this.teamEvent; },
         min: 1
     }
 }, {
