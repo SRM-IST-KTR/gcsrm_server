@@ -21,7 +21,7 @@
   "homepage": "https://github.com/djdiptayan1/gcsrm_server#readme",
   "dependencies": {
     "@sentry/node": "^10.15.0",
-    "@sentry/profiling-node": "^10.15.0",
+    "@sentry/profiling-node": "^10.17.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
     "express": "^5.1.0",
