@@ -21,7 +21,7 @@ A robust and scalable backend server for GitHub Club SRM (GCSRM) built with Node
   - [Contact](#contact)
 - [Development](#-development)
 - [Deployment](#-deployment)
-- [Contributing](#-contributing)
+
 - [License](#-license)
 - [Support](#-support)
 
@@ -275,8 +275,7 @@ gcsrm_server/
 ├── vercel.json                     # Vercel deployment config
 ├── .env                           # Environment variables (not in repo)
 ├── .env.example                   # Environment template
-├── CONTRIBUTING.md                 # Contribution guidelines
-├── CODE_OF_CONDUCT.md             # Community guidelines
+
 └── README.md                       # Project documentation
 ```
 
@@ -390,7 +389,6 @@ Need help? We're here for you!
 
 - 📖 **API Documentation**: Visit `/api-docs` when the server is running
 - 📋 **Certificate System**: See [CERTIFICATE_SYSTEM.md](CERTIFICATE_SYSTEM.md)
-- 🎃 **Hacktoberfest Guide**: See [HACKTOBERFEST_GUIDE.md](HACKTOBERFEST_GUIDE.md)
 
 ### Get in Touch
 
@@ -447,9 +445,9 @@ We use **Sentry** for:
 
 <div align="center">
 
-**Built with ❤️ by GitHub Club SRM**
+**Built with ❤️ by GitHub Community SRM**
 
-**[Website](https://githubsrmist.in)** • **[GitHub](https://github.com/SRM-IST-KTR)** • **[LinkedIn](https://www.linkedin.com/company/githubsrmist/)**
+**[Website](https://githubsrmist.in)** • **[GitHub](https://github.com/SRM-IST-KTR)** • **[LinkedIn](https://www.linkedin.com/company/githubsrm/)**
 
 ⭐ Star us on GitHub — it motivates us a lot!
 

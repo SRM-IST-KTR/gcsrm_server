@@ -79,7 +79,7 @@ const getParticipantTasks = async (req, res, next) => {
 
         // Find the participant
         const queryStart = Date.now();
-        const participant = await ParticipantUser.findOne({ email });
+        const participant = await ParticipantUser.findOne({ email }).lean();
         const participantQueryDuration = Date.now() - queryStart;
 
         if (!participant) {

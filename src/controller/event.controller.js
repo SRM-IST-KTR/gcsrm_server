@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 const eventSchema = require('../models/event.model');
+const { getParticipantModel } = require('../models/participant.model');
 const Sentry = require('@sentry/node');
 
 const fetchAll = async (req, res) => {
@@ -17,7 +18,7 @@ const fetchAll = async (req, res) => {
         });
 
         const queryStart = Date.now();
-        const allEvents = await eventSchema.find().sort({ event_date: -1 });
+        const allEvents = await eventSchema.find().sort({ event_date: -1 }).lean();
         const queryDuration = Date.now() - queryStart;
 
         if (allEvents.length === 0) { // Check if the array is empty
@@ -109,7 +110,7 @@ const fetchEvent = async (req, res) => {
             });
         }
 
-        const fetchedevent = await eventSchema.findById(id);
+        const fetchedevent = await eventSchema.findById(id).lean();
         if (!fetchedevent) {
             Sentry.captureMessage('Event not found', {
                 level: 'info',
@@ -416,7 +417,7 @@ const registerInEvent = async (req, res) => {
         });
 
         // Find the event by slug
-        const event = await eventSchema.findOne({ slug });
+        const event = await eventSchema.findOne({ slug }).lean();
 
         if (!event) {
             Sentry.captureMessage('Event registration failed - event not found', {
@@ -472,20 +473,8 @@ const registerInEvent = async (req, res) => {
         // Connect to the event-specific database
         const db = mongoose.connection.useDb(database);
 
-        // Define participant schema
-        const participantSchema = new mongoose.Schema({
-            name: { type: String, required: true },
-            regNo: { type: String, required: true },
-            email: { type: String, required: true },
-            phn: { type: String, required: true },
-            dept: { type: String, required: true },
-            rsvp: { type: Boolean, default: false },
-            checkin: { type: Boolean, default: false },
-            snacks: { type: Boolean, default: false }
-        }, { timestamps: true });
-
         // Get or create the Participant model for this collection
-        const Participant = db.models[participantsCollection] || db.model(participantsCollection, participantSchema);
+        const Participant = getParticipantModel(db, participantsCollection);
 
         // Check if email already registered
         const existingParticipantByEmail = await Participant.findOne({ email: { $eq: email } });

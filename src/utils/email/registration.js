@@ -3,6 +3,32 @@ const Sentry = require('@sentry/node');
 const fs = require('fs');
 const path = require('path');
 
+// Cache the email template at module load time to avoid synchronous I/O during runtime
+let registrationTemplateCache = null;
+
+/**
+ * Load template into cache (called once at module initialization)
+ */
+const loadTemplateCache = () => {
+    try {
+        const templatePath = path.join(__dirname, 'templates', 'registration.html');
+        registrationTemplateCache = fs.readFileSync(templatePath, 'utf-8');
+        Sentry.logger.info('Email template cached successfully', {
+            operation: 'loadTemplateCache',
+            templatePath: templatePath
+        });
+    } catch (error) {
+        Sentry.logger.error('Failed to cache email template', {
+            operation: 'loadTemplateCache',
+            error: error.message
+        });
+        // Template will be loaded on-demand if cache fails
+    }
+};
+
+// Initialize template cache when module loads
+loadTemplateCache();
+
 /**
  * Load and parse email template
  * @param {string} templateName - Name of the template file
@@ -10,16 +36,21 @@ const path = require('path');
  * @returns {string} Parsed HTML
  */
 const loadTemplate = (templateName, replacements) => {
-    const templatePath = path.join(__dirname, 'templates', templateName);
-    let template = fs.readFileSync(templatePath, 'utf-8');
-    
+    // Use cached template or fall back to synchronous read if cache is not available
+    let template = registrationTemplateCache;
+
+    if (!template) {
+        const templatePath = path.join(__dirname, 'templates', templateName);
+        template = fs.readFileSync(templatePath, 'utf-8');
+    }
+
     // Replace all placeholders
     Object.keys(replacements).forEach(key => {
         const placeholder = `{{${key}}}`;
         const value = replacements[key] || '';
         template = template.replace(new RegExp(placeholder, 'g'), value);
     });
-    
+
     return template;
 };
 
@@ -37,19 +68,19 @@ const sendRegistrationEmail = async (participant, event) => {
             month: 'long',
             day: 'numeric'
         });
-        
+
         const eventTime = new Date(event.event_date).toLocaleTimeString('en-IN', {
             hour: '2-digit',
             minute: '2-digit'
         });
-        
+
         // Prepare duration HTML
-        const durationHtml = event.duration 
+        const durationHtml = event.duration
             ? `<p style="margin: 10px 0; color: #555555; font-size: 14px;">
                 <strong>Duration:</strong> ${event.duration} minutes
                </p>`
             : '';
-        
+
         // Prepare description HTML
         const descriptionHtml = event.event_description
             ? `<div style="margin: 20px 0;">
@@ -57,7 +88,7 @@ const sendRegistrationEmail = async (participant, event) => {
                 <p style="color: #555555; font-size: 14px; line-height: 1.6; margin: 0;">${event.event_description}</p>
                </div>`
             : '';
-        
+
         // Prepare prerequisites HTML
         const prerequisitesHtml = event.prerequisites && event.prerequisites.length > 0
             ? `<div style="margin: 20px 0;">
@@ -67,12 +98,12 @@ const sendRegistrationEmail = async (participant, event) => {
                 </ul>
                </div>`
             : '';
-        
+
         // Prepare cost HTML
-        const costHtml = event.cost > 0 
+        const costHtml = event.cost > 0
             ? `<li>Event Fee: ₹${event.cost}</li>`
             : '<li>This is a free event</li>';
-        
+
         // Prepare template replacements
         const replacements = {
             PARTICIPANT_NAME: participant.name,
@@ -90,10 +121,10 @@ const sendRegistrationEmail = async (participant, event) => {
             EVENT_COST: costHtml,
             CURRENT_YEAR: new Date().getFullYear().toString()
         };
-        
+
         // Load and parse HTML template
         const htmlContent = loadTemplate('registration.html', replacements);
-        
+
         const emailContent = {
             from: process.env.ZOHO_SMTP_USER || process.env.SENDER_EMAIL,
             to: participant.email,
