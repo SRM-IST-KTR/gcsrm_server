@@ -400,6 +400,35 @@
                         "description": "Remove an event from the database by its ObjectId."
                     },
                     "response": []
+                },
+                {
+                    "name": "Register for Event",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"regNo\": \"RA2111003010001\",\n  \"email\": \"john.doe@srmist.edu.in\",\n  \"phn\": \"9876543210\",\n  \"dept\": \"CSE\",\n  \"slug\": \"intro-to-node\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/events/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                "register"
+                            ]
+                        },
+                        "description": "Register a participant for an event. Sends a confirmation email after successful registration. All fields are required: name, regNo (15 characters starting with RA), email, phn (10 digits), dept, and slug."
+                    },
+                    "response": []
                 }
             ],
             "description": "Event management endpoints for GitHub Club SRM"
@@ -628,6 +657,135 @@
                 }
             ],
             "description": "Certificate generation, verification, and download endpoints"
+        },
+        {
+            "name": "Recruitment",
+            "item": [
+                {
+                    "name": "Apply for Recruitment",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john.doe@srmist.edu.in\",\n  \"registrationNumber\": \"RA2111003010001\",\n  \"phone\": \"9876543210\",\n  \"year\": \"1\",\n  \"domain\": \"Technical\",\n  \"degreeWithBranch\": \"B.Tech CSE\",\n  \"links\": {\n    \"github\": \"https://github.com/johndoe\",\n    \"demo\": \"https://demo.example.com\",\n    \"deployment\": \"https://app.example.com\"\n  }\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/recruitment/apply",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "recruitment",
+                                "apply"
+                            ]
+                        },
+                        "description": "Apply for GitHub Club SRM recruitment. Required fields: name, email, registrationNumber (RA followed by 13 digits), phone (10 digits), year (1 or 2), domain (Technical/Creatives/Corporate), degreeWithBranch. Optional: links object with github, demo, deployment URLs."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Participant Tasks",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/recruitment?email=john.doe@srmist.edu.in",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "recruitment"
+                            ],
+                            "query": [
+                                {
+                                    "key": "email",
+                                    "value": "john.doe@srmist.edu.in",
+                                    "description": "Email of the participant"
+                                }
+                            ]
+                        },
+                        "description": "Get tasks assigned to a specific participant based on their email, domain, and year. Returns personalized task list with completion status."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get All Tasks",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/recruitment/tasks?domain=Technical&year=1",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "recruitment",
+                                "tasks"
+                            ],
+                            "query": [
+                                {
+                                    "key": "domain",
+                                    "value": "Technical",
+                                    "description": "Filter by domain (Technical/Creatives/Corporate)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "year",
+                                    "value": "1",
+                                    "description": "Filter by year (1/2/both)",
+                                    "disabled": true
+                                },
+                                {
+                                    "key": "taskType",
+                                    "value": "",
+                                    "description": "Filter by task type",
+                                    "disabled": true
+                                }
+                            ]
+                        },
+                        "description": "Get all recruitment tasks with optional filters for domain, year, and taskType. Returns a list of all tasks matching the criteria."
+                    },
+                    "response": []
+                },
+                {
+                    "name": "Get Task By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [],
+                        "url": {
+                            "raw": "{{base_url}}/api/recruitment/tasks/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "recruitment",
+                                "tasks",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the task"
+                                }
+                            ]
+                        },
+                        "description": "Get detailed information about a specific task by its MongoDB ObjectId."
+                    },
+                    "response": []
+                }
+            ],
+            "description": "Recruitment management endpoints for GitHub Club SRM applications and tasks"
         }
     ],
     "variable": [
