@@ -200,7 +200,7 @@ const fetchTeamMemberById = async (req, res) => {
         });
 
         const queryStart = Date.now();
-        const member = await teamSchema.findById(id);
+        const member = await teamSchema.findById(id).lean();
         const queryDuration = Date.now() - queryStart;
 
         if (!member) {
@@ -299,71 +299,6 @@ const updateTeamMember = async (req, res) => {
             });
         }
 
-        // Validate required fields
-        const { name, domain, position } = req.body;
-        if (!name || !domain || !position) {
-            Sentry.captureMessage('Team member update failed - missing required fields', {
-                level: 'warning',
-                tags: {
-                    operation: 'updateTeamMember',
-                    validation: 'failed'
-                },
-                extra: {
-                    memberId: id,
-                    providedFields: Object.keys(req.body)
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                error: "Name, domain, and position are required fields"
-            });
-        }
-
-        // Validate enum values
-        const validDomains = ['President', 'Vice President', 'Technical', 'Corporate', 'Creatives'];
-        const validPositions = ['President', 'Vice President', 'Director', 'Member', 'Lead', 'Associate', 'Admin', 'Alumni'];
-
-        if (!validDomains.includes(domain)) {
-            Sentry.captureMessage('Team member update failed - invalid domain', {
-                level: 'warning',
-                tags: {
-                    operation: 'updateTeamMember',
-                    validation: 'failed'
-                },
-                extra: {
-                    memberId: id,
-                    providedDomain: domain,
-                    validDomains
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                error: `Invalid domain. Must be one of: ${validDomains.join(', ')}`
-            });
-        }
-
-        if (!validPositions.includes(position)) {
-            Sentry.captureMessage('Team member update failed - invalid position', {
-                level: 'warning',
-                tags: {
-                    operation: 'updateTeamMember',
-                    validation: 'failed'
-                },
-                extra: {
-                    memberId: id,
-                    providedPosition: position,
-                    validPositions
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                error: `Invalid position. Must be one of: ${validPositions.join(', ')}`
-            });
-        }
-
         Sentry.logger.info('Updating team member', {
             operation: 'updateTeamMember',
             memberId: id,
@@ -371,7 +306,7 @@ const updateTeamMember = async (req, res) => {
         });
 
         // Find the team member first
-        const existingMember = await teamSchema.findById(id);
+        const existingMember = await teamSchema.findById(id).lean();
         if (!existingMember) {
             Sentry.captureMessage('Team member not found for update', {
                 level: 'warning',

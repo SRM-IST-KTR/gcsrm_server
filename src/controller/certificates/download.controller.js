@@ -104,7 +104,7 @@ const downloadCertificate = async (req, res) => {
             });
         }
 
-        const eventData = await Event.findOne({ slug: certificate.eventSlug });
+        const eventData = await Event.findOne({ slug: certificate.eventSlug }).lean();
         if (!eventData) {
             Sentry.captureMessage('Event not found for certificate download', {
                 level: 'error',

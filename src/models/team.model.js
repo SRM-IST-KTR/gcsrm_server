@@ -29,8 +29,10 @@ const teamSchema = new mongoose.Schema({
             "President",
             "Vice President",
             "Director",
+            "Lead",
             "Associate",
-            "Member"
+            "Member",
+            "Admin"
         ],
         required: true
     },
@@ -52,8 +54,8 @@ const teamSchema = new mongoose.Schema({
     socials: {
         linkedin: { type: String, required: true },
         github: { type: String, required: true },
-        instagram: { type: String},
-        website: { type: String}
+        instagram: { type: String },
+        website: { type: String }
     }
 },
     { timestamps: true }
