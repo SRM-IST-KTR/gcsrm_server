@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { validationResult } = require('express-validator');
 const Event = require('../../models/event.model');
 const IssuedCertificate = require('../../models/certificate.model');
+const { getParticipantModel } = require('../../models/participant.model');
 const { connectDB } = require('../../utils/db');
 const textOverlay = require('../../utils/certificates/overlay-sharp');
 const Sentry = require('@sentry/node');
@@ -58,7 +59,7 @@ const generateCertificate = async (req, res) => {
             await connectDB();
         }
 
-        const eventData = await Event.findOne({ slug: event });
+        const eventData = await Event.findOne({ slug: event }).lean();
         if (!eventData) {
             Sentry.captureMessage('Event not found for certificate generation', {
                 level: 'warning',
@@ -114,14 +115,10 @@ const generateCertificate = async (req, res) => {
         }
 
         const db = mongoose.connection.useDb(eventData.database);
-        const userSchema = new mongoose.Schema({
-            name: { type: String, required: true },
-            email: { type: String, required: true },
-            checkin: { type: Boolean, default: false }
-        }, { suppressReservedKeysWarning: true });
 
-        const User = db.model(eventData.collection[type], userSchema);
-        const userData = await User.findOne({ email });
+        // Use the getParticipantModel function to avoid redefining schema on every request
+        const User = getParticipantModel(db, eventData.collection[type]);
+        const userData = await User.findOne({ email }).lean();
         if (!userData) {
             Sentry.captureMessage('User not found for certificate generation', {
                 level: 'warning',
