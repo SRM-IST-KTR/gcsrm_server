@@ -3,7 +3,7 @@ const express = require('express');
 const { body, param } = require('express-validator');
 
 const router = express.Router();
-const { fetchAll, fetchEvent, createEvent, editEvent, deleteEvent, registerInEvent } = require('../controller/event.controller');
+const { fetchAll, fetchEvent, fetchEventSlug, createEvent, editEvent, deleteEvent, registerInEvent } = require('../controller/event.controller');
 
 /**
  * @swagger
@@ -46,6 +46,41 @@ const { fetchAll, fetchEvent, createEvent, editEvent, deleteEvent, registerInEve
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.get('/', fetchAll);
+
+/**
+ * @swagger
+ * /events/slug/{slug}:
+ *   get:
+ *     summary: Retrieve a single event by slug
+ *     description: Fetch event details using the unique slug identifier.
+ *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: slug
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Slug identifier for the event
+ *     responses:
+ *       200:
+ *         description: Event fetched successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   $ref: '#/components/schemas/Event'
+ *       400:
+ *         description: Invalid slug provided
+ *       404:
+ *         description: Event not found
+ *       500:
+ *         $ref: '#/components/responses/InternalServerError'
+ */
+router.get('/slug/:slug', fetchEventSlug);
 
 /**
  * @swagger

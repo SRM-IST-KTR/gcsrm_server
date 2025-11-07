@@ -152,6 +152,75 @@ const fetchEvent = async (req, res) => {
     }
 };
 
+const fetchEventSlug = async (req, res) => {
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+
+        const { slug } = req.params;
+        if (!slug) {
+            Sentry.captureMessage('Event fetch failed - no event slug provided', {
+                level: 'warning',
+                tags: {
+                    operation: 'fetchEventSlug',
+                    validation: 'failed'
+                }
+            });
+
+            return res.status(400).json({
+                success: false,
+                error: 'No event slug provided'
+            });
+        }
+
+        const normalizedSlug = slug.toString().trim();
+
+        // Use case-insensitive regex to match slugs regardless of case
+        const fetchedEvent = await eventSchema.findOne({
+            slug: { $regex: new RegExp(`^${normalizedSlug}$`, 'i') }
+        }).lean();
+        if (!fetchedEvent) {
+            Sentry.captureMessage('Event not found by slug', {
+                level: 'info',
+                tags: {
+                    operation: 'fetchEventSlug',
+                    eventSlug: normalizedSlug
+                }
+            });
+
+            return res.status(404).json({
+                success: false,
+                error: 'Event not found'
+            });
+        }
+
+        Sentry.logger.info('Event fetched successfully by slug', {
+            operation: 'fetchEventSlug',
+            eventSlug: normalizedSlug,
+            eventId: fetchedEvent._id?.toString()
+        });
+
+        res.status(200).json({
+            success: true,
+            data: fetchedEvent
+        });
+    }
+    catch (error) {
+        Sentry.captureException(error, {
+            tags: {
+                operation: 'fetchEventSlug',
+                eventSlug: req.params?.slug
+            }
+        });
+
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+};
+
 const createEvent = async (req, res) => {
     try {
         if (mongoose.connection.readyState !== 1) {
@@ -602,6 +671,7 @@ const registerInEvent = async (req, res) => {
 module.exports = {
     fetchAll,
     fetchEvent,
+    fetchEventSlug,
     createEvent,
     editEvent,
     deleteEvent,
