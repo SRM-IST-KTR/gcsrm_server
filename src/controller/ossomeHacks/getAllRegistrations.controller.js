@@ -1,7 +1,18 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
-const OssomeHacks = require('../../models/ossomehacks.model');
+const ossomeHacksSchema = require('../../models/ossomehacks.model');
+const { getEventStatus } = require('../../utils/hackStatusHelper');
 const Sentry = require('@sentry/node');
+
+/**
+ * Get or create OssomeHacks model for a specific database and collection
+ */
+const getOssomeHacksModel = (db, collectionName) => {
+    if (db.models[collectionName]) {
+        return db.models[collectionName];
+    }
+    return db.model(collectionName, ossomeHacksSchema.schema);
+};
 
 /**
  * Get all registrations (Admin)
@@ -24,10 +35,28 @@ const getAllRegistrations = async (req, res) => {
             query.school = new RegExp(school, 'i');
         }
 
+        // Get event configuration
+        const hackStatus = await getOssomeHacksStatus();
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete.'
+            });
+        }
+
+        // Connect to event-specific database
+        const db = mongoose.connection.useDb(eventDbName);
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
+
         const skip = (parseInt(page) - 1) * parseInt(limit);
 
         Sentry.logger.info('Fetching all registrations', {
             operation: 'getAllRegistrations',
+            database: eventDbName,
+            collection: eventCollectionName,
             query: query,
             page: page,
             limit: limit
@@ -75,8 +104,25 @@ const getRegistrationStats = async (req, res) => {
             await connectDB();
         }
 
+        // Get event configuration
+        const hackStatus = await getOssomeHacksStatus();
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete.'
+            });
+        }
+
+        // Connect to event-specific database
+        const db = mongoose.connection.useDb(eventDbName);
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
+
         Sentry.logger.info('Fetching registration statistics', {
-            operation: 'getRegistrationStats'
+            operation: 'getRegistrationStats',
+            database: eventDbName
         });
 
         const [
@@ -162,6 +208,22 @@ const exportRegistrations = async (req, res) => {
         }
 
         const { status } = req.query;
+
+        // Get event configuration
+        const hackStatus = await getOssomeHacksStatus();
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete.'
+            });
+        }
+
+        // Connect to event-specific database
+        const db = mongoose.connection.useDb(eventDbName);
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
         const query = status ? { registrationStatus: status } : {};
 
         Sentry.logger.info('Exporting registrations', {
