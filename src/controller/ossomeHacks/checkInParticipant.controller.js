@@ -1,7 +1,15 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
-const OssomeHacks = require('../../models/ossomehacks.model');
+const ossomeHacksSchema = require('../../models/ossomehacks.model');
+const { getEventStatus } = require('../../utils/hackStatusHelper');
 const Sentry = require('@sentry/node');
+
+const getOssomeHacksModel = (db, collectionName) => {
+    if (db.models[collectionName]) {
+        return db.models[collectionName];
+    }
+    return db.model(collectionName, ossomeHacksSchema.schema);
+};
 
 /**
  * Check-in participant
@@ -21,6 +29,22 @@ const checkInParticipant = async (req, res) => {
                 error: 'Invalid registration ID format'
             });
         }
+
+        // Get event configuration
+        const hackStatus = await getEventStatus('ossomehacks3');
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete.'
+            });
+        }
+
+        // Connect to event-specific database
+        const db = mongoose.connection.useDb(eventDbName);
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
 
         const registration = await OssomeHacks.findById(id);
 
