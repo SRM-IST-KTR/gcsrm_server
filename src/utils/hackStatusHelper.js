@@ -4,27 +4,34 @@ const Event = require('../models/event.model');
 const Sentry = require('@sentry/node');
 
 /**
- * Get OssomeHacks registration status and event details
+ * Get event registration status and details
+ * @param {string} slug - Event slug to look up
  * @returns {Object} { event, status, isOpen, registrationStartDate, registrationEndDate, message, timeRemaining }
  * @throws {Error} If event not found or database error
  */
-const getOssomeHacksStatus = async () => {
+const getEventStatus = async (slug) => {
     if (mongoose.connection.readyState !== 1) {
         await connectDB();
     }
 
-    // Fetch OssomeHacks event from database
-    const ossomeHacksEvent = await Event.findOne({ slug: 'ossomehacks3' }).lean();
+    // Fetch event from database by slug
+    const event = await Event.findOne({ slug }).lean();
 
-    if (!ossomeHacksEvent) {
-        const error = new Error('OssomeHacks event not found in database');
+    if (!event) {
+        const error = new Error(`Event with slug '${slug}' not found in database`);
         error.statusCode = 404;
         throw error;
     }
 
+    if (!event.is_active) {
+        const error = new Error('Event registration is currently not active');
+        error.statusCode = 403;
+        throw error;
+    }
+
     const now = new Date();
-    const registrationStartDate = new Date(ossomeHacksEvent.Registration_startDate);
-    const registrationEndDate = new Date(ossomeHacksEvent.Registration_endDate);
+    const registrationStartDate = new Date(event.Registration_startDate);
+    const registrationEndDate = new Date(event.Registration_endDate);
 
     let status;
     let message;
@@ -60,7 +67,6 @@ const getOssomeHacksStatus = async () => {
         isOpen = true;
     }
 
-    // Calculate time remaining
     let timeRemaining = null;
     if (status === 'not_started') {
         const msRemaining = registrationStartDate.getTime() - now.getTime();
@@ -79,7 +85,7 @@ const getOssomeHacksStatus = async () => {
     }
 
     return {
-        event: ossomeHacksEvent,
+        event,
         status,
         isOpen,
         registrationStartDate,
@@ -99,7 +105,6 @@ const getOssomeHacksStatus = async () => {
 const validateRegistrationPeriod = (registrationStartDate, registrationEndDate, submissionTime = null) => {
     const now = new Date();
 
-    // Check if registration hasn't started
     if (now.getTime() < registrationStartDate.getTime()) {
         const startDateFormatted = registrationStartDate.toLocaleDateString('en-US', {
             year: 'numeric',
@@ -114,7 +119,6 @@ const validateRegistrationPeriod = (registrationStartDate, registrationEndDate, 
         };
     }
 
-    // Check if registration has ended
     if (now.getTime() > registrationEndDate.getTime()) {
         return {
             isValid: false,
@@ -123,7 +127,6 @@ const validateRegistrationPeriod = (registrationStartDate, registrationEndDate, 
         };
     }
 
-    // Validate submission timestamp if provided
     if (submissionTime) {
         const submissionDate = new Date(submissionTime);
         if (submissionDate.getTime() > registrationEndDate.getTime()) {
@@ -143,6 +146,6 @@ const validateRegistrationPeriod = (registrationStartDate, registrationEndDate, 
 };
 
 module.exports = {
-    getOssomeHacksStatus,
+    getEventStatus,
     validateRegistrationPeriod
 };
