@@ -26,6 +26,14 @@ const eventSchema = new mongoose.Schema({
         }],
         default: [],
     },
+    Registration_startDate: {
+        type: Date,
+        required: true,
+    },
+    Registration_endDate: {
+        type: Date,
+        required: true,
+    },
     event_date: {
         type: Date,
         required: true,
