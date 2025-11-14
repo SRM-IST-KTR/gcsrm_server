@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const Sentry = require('@sentry/node');
-const { getOssomeHacksStatus } = require('../../utils/hackStatusHelper');
+const { getEventStatus } = require('../../utils/hackStatusHelper');
 
 /**
  * Check registration status for OssomeHacks
@@ -14,7 +14,7 @@ const HackStatus = async (req, res) => {
         }
 
         // Use reusable helper to get status
-        const hackStatus = await getOssomeHacksStatus();
+        const hackStatus = await getEventStatus('ossomehacks3');
 
         Sentry.logger.info('Registration status checked', {
             operation: 'HackStatus',
