@@ -1,13 +1,16 @@
 const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
-const OssomeHacks = require('../../models/ossomehacks.model');
+const ossomeHacksSchema = require('../../models/ossomehacks.model');
 const Sentry = require('@sentry/node');
-const { getOssomeHacksStatus, validateRegistrationPeriod } = require('../../utils/hackStatusHelper');
+const { getEventStatus, validateRegistrationPeriod } = require('../../utils/hackStatusHelper');
 
-/**
- * Register a new participant for OssomeHacks
- * POST /ossomehacks/register
- */
+const getOssomeHacksModel = (db, collectionName) => {
+    if (db.models[collectionName]) {
+        return db.models[collectionName];
+    }
+    return db.model(collectionName, ossomeHacksSchema.schema);
+};
+
 const registerParticipant = async (req, res) => {
     const startTime = Date.now();
 
@@ -16,10 +19,9 @@ const registerParticipant = async (req, res) => {
             await connectDB();
         }
 
-        // Get registration status using reusable helper
         let hackStatus;
         try {
-            hackStatus = await getOssomeHacksStatus();
+            hackStatus = await getEventStatus('ossomehacks3');
         } catch (error) {
             if (error.statusCode === 404) {
                 Sentry.captureMessage('OssomeHacks event not found in database', {
@@ -34,12 +36,22 @@ const registerParticipant = async (req, res) => {
                     error: 'Event configuration not found. Please contact support.'
                 });
             }
+            if (error.statusCode === 403) {
+                Sentry.logger.info('Registration attempted for inactive event', {
+                    operation: 'registerParticipant',
+                    attemptTime: new Date()
+                });
+
+                return res.status(403).json({
+                    success: false,
+                    error: error.message
+                });
+            }
             throw error;
         }
 
         const registrationData = req.body;
 
-        // Validate registration period using reusable helper
         const periodValidation = validateRegistrationPeriod(
             hackStatus.registrationStartDate,
             hackStatus.registrationEndDate,
@@ -59,16 +71,38 @@ const registerParticipant = async (req, res) => {
             });
         }
 
-        // Remove submissionTime from registrationData before saving to database
         const { submissionTime, ...cleanedRegistrationData } = registrationData;
+
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            Sentry.captureMessage('Event missing database or collection configuration', {
+                level: 'error',
+                tags: {
+                    operation: 'registerParticipant',
+                    eventSlug: hackStatus.event.slug
+                }
+            });
+
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete. Please contact support.'
+            });
+        }
 
         Sentry.logger.info('Processing OssomeHacks registration', {
             operation: 'registerParticipant',
             email: cleanedRegistrationData.email,
-            school: cleanedRegistrationData.school
+            school: cleanedRegistrationData.school,
+            database: eventDbName,
+            collection: eventCollectionName
         });
 
-        // Check if email already exists
+        const db = mongoose.connection.useDb(eventDbName);
+
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
+
         const existingParticipant = await OssomeHacks.findOne({
             email: cleanedRegistrationData.email.toLowerCase().trim()
         });
@@ -133,6 +167,8 @@ const registerParticipant = async (req, res) => {
             registrationId: savedRegistration._id.toString(),
             email: savedRegistration.email,
             school: savedRegistration.school,
+            database: eventDbName,
+            collection: eventCollectionName,
             duration: `${totalDuration}ms`
         });
 
@@ -158,7 +194,6 @@ const registerParticipant = async (req, res) => {
         });
 
     } catch (error) {
-        // Handle validation errors
         if (error.name === 'ValidationError') {
             const errors = Object.values(error.errors).map(err => err.message);
 
@@ -180,7 +215,6 @@ const registerParticipant = async (req, res) => {
             });
         }
 
-        // Handle duplicate key error
         if (error.code === 11000) {
             Sentry.captureMessage('Duplicate key error during registration', {
                 level: 'warning',
@@ -231,6 +265,20 @@ const getRegistrationById = async (req, res) => {
             });
         }
 
+        const hackStatus = await getOssomeHacksStatus();
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete.'
+            });
+        }
+
+        const db = mongoose.connection.useDb(eventDbName);
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
+
         const registration = await OssomeHacks.findById(id).lean();
 
         if (!registration) {
@@ -242,7 +290,8 @@ const getRegistrationById = async (req, res) => {
 
         Sentry.logger.info('Registration fetched', {
             operation: 'getRegistrationById',
-            registrationId: id
+            registrationId: id,
+            database: eventDbName
         });
 
         res.status(200).json({
@@ -276,6 +325,21 @@ const getRegistrationByEmail = async (req, res) => {
         }
 
         const { email } = req.params;
+
+        // Get event configuration to determine database
+        const hackStatus = await getEventStatus('ossomehacks3');
+        const eventDbName = hackStatus.event.database;
+        const eventCollectionName = hackStatus.event.collection.participants;
+
+        if (!eventDbName || !eventCollectionName) {
+            return res.status(500).json({
+                success: false,
+                error: 'Event database configuration is incomplete.'
+            });
+        }
+
+        const db = mongoose.connection.useDb(eventDbName);
+        const OssomeHacks = getOssomeHacksModel(db, eventCollectionName);
 
         const registration = await OssomeHacks.findOne({
             email: email.toLowerCase().trim()
