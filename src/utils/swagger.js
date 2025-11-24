@@ -236,6 +236,177 @@ const options = {
                         teamSize: { type: "number" }
                     }
                 },
+                OssomeHacksRegistration: {
+                    type: "object",
+                    description: "OssomeHacks Registration Model based on MLH guidelines",
+                    properties: {
+                        firstName: { type: "string", example: "John", minLength: 1, maxLength: 100 },
+                        lastName: { type: "string", example: "Doe", minLength: 1, maxLength: 100 },
+                        email: { type: "string", format: "email", example: "john@example.com" },
+                        phoneNumber: { type: "string", example: "+1 234 567 890", pattern: "^[0-9+\\-() ]{10,20}$" },
+                        age: { type: "number", example: 19, minimum: 13, maximum: 100 },
+
+                        school: { type: "string", example: "SRM University", minLength: 1, maxLength: 200 },
+                        levelOfStudy: {
+                            type: "string",
+                            example: "Undergraduate University (3+ year)",
+                            enum: [
+                                'Less than Secondary / High School',
+                                'Secondary / High School',
+                                'Undergraduate University (2 year - community college or similar)',
+                                'Undergraduate University (3+ year)',
+                                'Graduate University (Masters, Professional, Doctoral, etc)',
+                                'Code School / Bootcamp',
+                                'Other Vocational / Trade Program or Apprenticeship',
+                                'Post Doctorate',
+                                'Other',
+                                "I'm not currently a student",
+                                'Prefer not to answer'
+                            ]
+                        },
+                        graduationYear: { type: "number", example: 2027, minimum: 2025, maximum: 2035 },
+                        major: { type: "string", example: "Computer Science", maxLength: 100 },
+
+                        countryOfResidence: { type: "string", example: "India" },
+
+                        linkedInUrl: { type: "string", example: "https://linkedin.com/in/example", pattern: "^(https?:\\/\\/)?(www\\.)?linkedin\\.com\\/.*$|^$" },
+                        githubUsername: { type: "string", example: "johndoe", maxLength: 39, pattern: "^[a-zA-Z0-9-]{1,39}$" },
+
+                        gender: {
+                            type: "string",
+                            example: "Man",
+                            enum: ["Man","Woman","Non-Binary","Prefer to self-describe","Prefer not to answer"]
+                        },
+                        genderSelfDescribe: { type: "string", example: "", maxLength: 100 },
+
+                        pronouns: {
+                            type: "string",
+                            example: "He/Him",
+                            enum: ["She/Her","He/Him","They/Them","She/They","He/They","Prefer not to answer","Other"]
+                        },
+                        pronounsOther: { type: "string", example: "", maxLength: 50 },
+
+                        hackathonsAttended: { type: "number", example: 2, minimum: 0, maximum: 100 },
+                        programmingExperience: {
+                            type: "string",
+                            example: "Intermediate (1-3 years)",
+                            enum: [
+                                'Beginner (0-1 years)',
+                                'Intermediate (1-3 years)',
+                                'Advanced (3-5 years)',
+                                'Expert (5+ years)'
+                            ]
+                        },
+
+                        teamName: { type: "string", example: "HackMasters", maxLength: 100 },
+                        lookingForTeam: { type: "boolean", example: false },
+
+                        mlhCodeOfConductAgreed: { type: "boolean", example: true, description: "Must be true to register" },
+                        mlhPrivacyPolicyAgreed: { type: "boolean", example: true, description: "Must be true to register" },
+                        mlhEmailSubscription: { type: "boolean", example: true },
+
+                        whyAttend: { type: "string", example: "I want to build cool projects", maxLength: 1000 },
+                        projectIdea: { type: "string", example: "AI-based recycling sorter", maxLength: 1000 },
+
+                        emergencyContactName: { type: "string", example: "Jane Doe", maxLength: 100 },
+                        emergencyContactPhone: { type: "string", example: "+1 987 654 3210", pattern: "^[0-9+\\-() ]{10,20}$|^$" },
+                        emergencyContactRelationship: { type: "string", example: "Mother", maxLength: 50 },
+
+                        registrationStatus: {
+                            type: "string",
+                            example: "pending",
+                            enum: ["pending","confirmed","checked-in","cancelled","waitlisted"]
+                        },
+                        applicationNotes: { type: "string", example: "", maxLength: 1000 },
+                        referralSource: {
+                            type: "string",
+                            example: "Social Media",
+                            enum: ["Social Media","Friend","Professor/Teacher","MLH","School Club","Previous Event","Other"]
+                        },
+                        checkInTime: { type: "string", format: "date-time" },
+                        registeredAt: { type: "string", format: "date-time" },
+                        lastUpdated: { type: "string", format: "date-time" }
+                    }
+                },
+                OssomeHacksRegistrationInput: {
+                    type: "object",
+                    required: ["firstName","lastName","email","phoneNumber","age","school","levelOfStudy","countryOfResidence","gender","mlhCodeOfConductAgreed","mlhPrivacyPolicyAgreed"],
+                    properties: {
+                        firstName: { type: "string", minLength: 1, maxLength: 100 },
+                        lastName: { type: "string", minLength: 1, maxLength: 100 },
+                        email: { type: "string", format: "email" },
+                        phoneNumber: { type: "string", pattern: "^[0-9+\\-() ]{10,20}$" },
+                        age: { type: "number", minimum: 13, maximum: 100 },
+
+                        school: { type: "string", minLength: 1, maxLength: 200 },
+                        levelOfStudy: {
+                            type: "string",
+                            enum: [
+                                'Less than Secondary / High School',
+                                'Secondary / High School',
+                                'Undergraduate University (2 year - community college or similar)',
+                                'Undergraduate University (3+ year)',
+                                'Graduate University (Masters, Professional, Doctoral, etc)',
+                                'Code School / Bootcamp',
+                                'Other Vocational / Trade Program or Apprenticeship',
+                                'Post Doctorate',
+                                'Other',
+                                "I'm not currently a student",
+                                'Prefer not to answer'
+                            ]
+                        },
+                        graduationYear: { type: "number", minimum: 2025, maximum: 2035 },
+                        major: { type: "string", maxLength: 100 },
+
+                        countryOfResidence: { type: "string" },
+
+                        linkedInUrl: { type: "string", pattern: "^(https?:\\/\\/)?(www\\.)?linkedin\\.com\\/.*$|^$" },
+                        githubUsername: { type: "string", maxLength: 39, pattern: "^[a-zA-Z0-9-]{1,39}$" },
+
+                        gender: {
+                            type: "string",
+                            enum: ["Man","Woman","Non-Binary","Prefer to self-describe","Prefer not to answer"]
+                        },
+                        genderSelfDescribe: { type: "string", maxLength: 100 },
+
+                        pronouns: {
+                            type: "string",
+                            enum: ["She/Her","He/Him","They/Them","She/They","He/They","Prefer not to answer","Other"]
+                        },
+                        pronounsOther: { type: "string", maxLength: 50 },
+
+                        hackathonsAttended: { type: "number", minimum: 0, maximum: 100 },
+                        programmingExperience: {
+                            type: "string",
+                            enum: [
+                                'Beginner (0-1 years)',
+                                'Intermediate (1-3 years)',
+                                'Advanced (3-5 years)',
+                                'Expert (5+ years)'
+                            ]
+                        },
+
+                        teamName: { type: "string", maxLength: 100 },
+                        lookingForTeam: { type: "boolean" },
+
+                        mlhCodeOfConductAgreed: { type: "boolean" },
+                        mlhPrivacyPolicyAgreed: { type: "boolean" },
+                        mlhEmailSubscription: { type: "boolean" },
+
+                        whyAttend: { type: "string", maxLength: 1000 },
+                        projectIdea: { type: "string", maxLength: 1000 },
+
+                        emergencyContactName: { type: "string", maxLength: 100 },
+                        emergencyContactPhone: { type: "string", pattern: "^[0-9+\\-() ]{10,20}$|^$" },
+                        emergencyContactRelationship: { type: "string", maxLength: 50 },
+
+                        referralSource: {
+                            type: "string",
+                            enum: ["Social Media","Friend","Professor/Teacher","MLH","School Club","Previous Event","Other"]
+                        },
+                        applicationNotes: { type: "string", maxLength: 1000 }
+                    }
+                },
                 Error: {
                     type: "object",
                     properties: {
