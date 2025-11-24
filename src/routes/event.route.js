@@ -3,7 +3,8 @@ const express = require('express');
 const { body, param } = require('express-validator');
 
 const router = express.Router();
-const { fetchAll, fetchEvent, fetchEventSlug, createEvent, editEvent, deleteEvent, registerInEvent } = require('../controller/event.controller');
+const { fetchAll, fetchEvent, fetchEventSlug, createEvent, editEvent, deleteEvent } = require('../controller/events/event.controller');
+const { registerInEvent } = require('../controller/events/register.controller');
 
 /**
  * @swagger
