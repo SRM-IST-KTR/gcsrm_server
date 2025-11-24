@@ -3,7 +3,8 @@ const express = require('express');
 const { body, param } = require('express-validator');
 
 const router = express.Router();
-const { fetchAll, fetchEvent, fetchEventSlug, createEvent, editEvent, deleteEvent, registerInEvent } = require('../controller/event.controller');
+const { fetchAll, fetchEvent, fetchEventSlug, createEvent, editEvent, deleteEvent } = require('../controller/events/event.controller');
+const { registerInEvent } = require('../controller/events/register.controller');
 
 /**
  * @swagger
@@ -196,29 +197,28 @@ router.post('/createEvent', createEvent);
 
 /**
  * @swagger
- * /events/editEvent:
+ * /events/{id}:
  *   put:
  *     summary: Edit an existing event
- *     description: Update event fields. The request body should include an object with a `data` field containing the event data; `data.id` must be the event's ObjectId.
+ *     description: Update event fields. The request body should include the event data directly.
  *     tags: [Events]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: MongoDB ObjectId of the event to update
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               data:
- *                 type: object
- *                 properties:
- *                   id:
- *                     type: string
- *                     description: Event ObjectId to update
- *                   # additional properties follow the EventInput schema
+ *             $ref: '#/components/schemas/EventInput'
  *           example:
- *             data:
- *               id: "507f1f77bcf86cd799439011"
- *               event_name: "Intro to Node.js - Updated"
+ *             event_name: "Intro to Node.js - Updated"
+ *             venue: "SRM Mini Hall 1"
  *     responses:
  *       200:
  *         description: Event updated successfully
@@ -251,7 +251,7 @@ router.post('/createEvent', createEvent);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.put('/editEvent', editEvent);
+router.put('/:id', editEvent);
 
 /**
  * @swagger
