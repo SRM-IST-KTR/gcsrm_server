@@ -14,7 +14,14 @@
                     "name": "Get All Team Members",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/team",
                             "host": [
@@ -33,7 +40,14 @@
                     "name": "Get Team Member By ID",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/team/:id",
                             "host": [
@@ -64,6 +78,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -92,6 +112,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -124,7 +150,14 @@
                     "name": "Delete Team Member",
                     "request": {
                         "method": "DELETE",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/team/:id",
                             "host": [
@@ -157,7 +190,14 @@
                     "name": "Get All Sponsors",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/sponsors",
                             "host": [
@@ -180,6 +220,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -208,6 +254,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -240,7 +292,14 @@
                     "name": "Delete Sponsor",
                     "request": {
                         "method": "DELETE",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/sponsors/:id",
                             "host": [
@@ -273,7 +332,14 @@
                     "name": "Get All Events",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/events",
                             "host": [
@@ -289,10 +355,52 @@
                     "response": []
                 },
                 {
+                    "name": "Get Event By Slug",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/events/slug/:slug",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "events",
+                                "slug",
+                                ":slug"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "slug",
+                                    "value": "intro-to-node",
+                                    "description": "Event slug"
+                                }
+                            ]
+                        },
+                        "description": "Fetch event details using the unique slug identifier."
+                    },
+                    "response": []
+                },
+                {
                     "name": "Get Event By ID",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/events/:id",
                             "host": [
@@ -323,6 +431,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -352,6 +466,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -359,14 +479,21 @@
                             "raw": "{\n  \"data\": {\n    \"id\": \"507f1f77bcf86cd799439011\",\n    \"event_name\": \"Intro to Node.js - Updated\",\n    \"event_description\": \"Updated description for Node.js workshop\"\n  }\n}"
                         },
                         "url": {
-                            "raw": "{{base_url}}/api/events/editEvent",
+                            "raw": "{{base_url}}/api/events/:id",
                             "host": [
                                 "{{base_url}}"
                             ],
                             "path": [
                                 "api",
                                 "events",
-                                "editEvent"
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "MongoDB ObjectId of the event"
+                                }
                             ]
                         },
                         "description": "Update event fields. The request body should include an object with a `data` field containing the event data; `data.id` must be the event's ObjectId."
@@ -377,7 +504,14 @@
                     "name": "Delete Event",
                     "request": {
                         "method": "DELETE",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/events/deleteEvent/:id",
                             "host": [
@@ -409,6 +543,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -444,6 +584,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -478,6 +624,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -507,6 +659,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -536,6 +694,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -561,7 +725,14 @@
                     "name": "Verify Certificate",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/certificate/verify/:certificateId",
                             "host": [
@@ -589,7 +760,14 @@
                     "name": "Download Certificate (PNG)",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/certificate/download/:certificateId?format=png",
                             "host": [
@@ -624,7 +802,14 @@
                     "name": "Download Certificate (PDF)",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/certificate/download/:certificateId?format=pdf",
                             "host": [
@@ -669,6 +854,12 @@
                             {
                                 "key": "Content-Type",
                                 "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
                             }
                         ],
                         "body": {
@@ -694,7 +885,14 @@
                     "name": "Get Participant Tasks",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/recruitment?email=john.doe@srmist.edu.in",
                             "host": [
@@ -720,7 +918,14 @@
                     "name": "Get All Tasks",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/recruitment/tasks?domain=Technical&year=1",
                             "host": [
@@ -760,7 +965,14 @@
                     "name": "Get Task By ID",
                     "request": {
                         "method": "GET",
-                        "header": [],
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
                         "url": {
                             "raw": "{{base_url}}/api/recruitment/tasks/:id",
                             "host": [
@@ -786,6 +998,343 @@
                 }
             ],
             "description": "Recruitment management endpoints for GitHub Club SRM applications and tasks"
+        },
+        {
+            "name": "OssomeHacks",
+            "item": [
+                {
+                    "name": "Get Registration Status",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/registration-status",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "registration-status"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Register Participant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"firstName\": \"John\",\n  \"lastName\": \"Doe\",\n  \"email\": \"john@example.com\",\n  \"phoneNumber\": \"+1-555-123-4567\",\n  \"age\": 20,\n  \"school\": \"MIT\",\n  \"levelOfStudy\": \"Undergraduate University (3+ year)\",\n  \"countryOfResidence\": \"United States\",\n  \"gender\": \"Man\",\n  \"mlhCodeOfConductAgreed\": \"true\",\n  \"mlhPrivacyPolicyAgreed\": \"true\",\n  \"mlhEmailSubscription\": \"true\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/register",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "register"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get All Registrations",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/registrations?status=pending&page=1&limit=50",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "registrations"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "pending",
+                                    "description": "Filter by status"
+                                },
+                                {
+                                    "key": "page",
+                                    "value": "1",
+                                    "description": "Page number"
+                                },
+                                {
+                                    "key": "limit",
+                                    "value": "50",
+                                    "description": "Items per page"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Registration By ID",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/registrations/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "registrations",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "Registration ID"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Registration By Email",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/registrations/email/:email",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "registrations",
+                                "email",
+                                ":email"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "email",
+                                    "value": "john@example.com",
+                                    "description": "Participant Email"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Update Registration",
+                    "request": {
+                        "method": "PUT",
+                        "header": [
+                            {
+                                "key": "Content-Type",
+                                "value": "application/json"
+                            },
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "body": {
+                            "mode": "raw",
+                            "raw": "{\n  \"status\": \"confirmed\"\n}"
+                        },
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/registrations/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "registrations",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "Registration ID"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Delete Registration",
+                    "request": {
+                        "method": "DELETE",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/registrations/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "registrations",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "Registration ID"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Check-In Participant",
+                    "request": {
+                        "method": "POST",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/check-in/:id",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "check-in",
+                                ":id"
+                            ],
+                            "variable": [
+                                {
+                                    "key": "id",
+                                    "value": "507f1f77bcf86cd799439011",
+                                    "description": "Registration ID"
+                                }
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Get Stats",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/stats",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "stats"
+                            ]
+                        }
+                    }
+                },
+                {
+                    "name": "Export Registrations",
+                    "request": {
+                        "method": "GET",
+                        "header": [
+                            {
+                                "key": "x-vercel-protection-bypass",
+                                "value": "XXXXXXXXXXX",
+                                "type": "string",
+                                "description": "Vercel protection bypass header value"
+                            }
+                        ],
+                        "url": {
+                            "raw": "{{base_url}}/api/ossomehacks/export?status=confirmed",
+                            "host": [
+                                "{{base_url}}"
+                            ],
+                            "path": [
+                                "api",
+                                "ossomehacks",
+                                "export"
+                            ],
+                            "query": [
+                                {
+                                    "key": "status",
+                                    "value": "confirmed",
+                                    "description": "Filter by status"
+                                }
+                            ]
+                        }
+                    }
+                }
+            ],
+            "description": "OssomeHacks hackathon registration and management endpoints"
         }
     ],
     "variable": [
