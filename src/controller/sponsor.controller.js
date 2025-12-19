@@ -22,8 +22,22 @@ const fetchSponsor = async (req, res) => {
         const queryStart = Date.now();
         const sponsors = await sponsorSchema
             .find()
-            .sort({ tier: 1 })
             .lean();
+
+        // Define tier priority
+        const tierPriority = {
+            platinum: 1,
+            gold: 2,
+            silver: 3,
+            bronze: 4
+        };
+
+        // Sort sponsors by tier priority
+        sponsors.sort((a, b) => {
+            const tierA = a.tier?.toLowerCase() || '';
+            const tierB = b.tier?.toLowerCase() || '';
+            return (tierPriority[tierA] || 99) - (tierPriority[tierB] || 99);
+        });
 
         const queryDuration = Date.now() - queryStart;
         const totalDuration = Date.now() - startTime;
@@ -40,7 +54,7 @@ const fetchSponsor = async (req, res) => {
         if (queryDuration > 200) {
             Sentry.logger.warn('Slow database query', {
                 operation: 'fetchSponsor',
-                query: 'sponsors.find().sort({tier:1})',
+                query: 'sponsors.find()',
                 duration: `${queryDuration}ms`,
                 count: sponsors.length,
             });
