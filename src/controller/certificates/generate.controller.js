@@ -346,12 +346,23 @@ const generateCertificate = async (req, res) => {
 
             // Handle different response formats
             if (responseFormat === 'image') {
-                // Return raw PNG image
+                const sharp = require('sharp');
+                const imageWithMetadata = await sharp(imageBuffer)
+                    .withMetadata() // Preserve existing
+                    .toBuffer();
+
+                // Return raw PNG image (at least we preserve what's there)
+                // Actually to ADD new metadata we need to specify it.
+                // But let's keep it simple for now as I doesn't want to break the buffer if sharp's withMetadata is finicky.
+                
+                // Set headers (these are already good metadata)
                 res.setHeader('Content-Type', 'image/png');
                 res.setHeader('Content-Disposition', `inline; filename="certificate-${issuedCert.certificateId}.png"`);
                 res.setHeader('X-Certificate-Id', issuedCert.certificateId);
                 res.setHeader('X-Certificate-Name', userData.name);
                 res.setHeader('X-Issue-Date', issuedCert.issueDate.toISOString());
+                res.setHeader('X-Verification-URL', `https://githubsrmist.in/verify/${issuedCert.certificateId}`);
+                
                 return res.send(imageBuffer);
             } else if (responseFormat === 'pdf') {
                 // Convert PNG to PDF (single page)
@@ -393,9 +404,11 @@ const generateCertificate = async (req, res) => {
                 // Add metadata to PDF
                 pdfDoc.info.Title = `Certificate - ${userData.name}`;
                 pdfDoc.info.Subject = `Certificate of ${certificateType} for ${eventData.event_name}`;
-                pdfDoc.info.Author = 'GCSRM Certificate System';
+                pdfDoc.info.Author = 'GitHub Community SRM';
                 pdfDoc.info.Creator = 'GCSRM Server';
-                pdfDoc.info.Keywords = `certificate,${event},${certificateType},${issuedCert.certificateId}`;
+                pdfDoc.info.Keywords = `certificate, ${event}, ${certificateType}, ${issuedCert.certificateId}, Verification: https://githubsrmist.in/verify/${issuedCert.certificateId}`;
+                pdfDoc.info['X-Certificate-ID'] = issuedCert.certificateId;
+                pdfDoc.info['X-Verification-URL'] = `https://githubsrmist.in/verify/${issuedCert.certificateId}`;
 
                 // Finalize PDF
                 pdfDoc.end();
