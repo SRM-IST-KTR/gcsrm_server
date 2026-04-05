@@ -161,7 +161,7 @@ router.post('/generate',
             .trim()
             .notEmpty().withMessage('Email is required')
             .isEmail().withMessage('Valid email address is required')
-            .normalizeEmail(),
+            .normalizeEmail({ gmail_remove_dots: false }),
         body('event')
             .trim()
             .notEmpty().withMessage('Event slug is required')
