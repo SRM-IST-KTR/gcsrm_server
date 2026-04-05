@@ -463,7 +463,7 @@ router.post('/register',
             .trim()
             .notEmpty().withMessage('Email is required')
             .isEmail().withMessage('Valid email address is required')
-            .normalizeEmail(),
+            .normalizeEmail({ gmail_remove_dots: false }),
         body('phn')
             .trim()
             .notEmpty().withMessage('Phone number is required')

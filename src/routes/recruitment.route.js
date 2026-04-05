@@ -25,7 +25,7 @@ router.post(
             .withMessage('Email is required')
             .isEmail()
             .withMessage('Invalid email format')
-            .normalizeEmail()
+            .normalizeEmail({ gmail_remove_dots: false })
             .toLowerCase(),
 
         // Registration number validation
