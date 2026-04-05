@@ -233,9 +233,11 @@ const downloadCertificate = async (req, res) => {
 
             pdfDoc.info.Title = `Certificate - ${certificate.participantName}`;
             pdfDoc.info.Subject = `Certificate of ${certificate.certificateType} for ${certificate.eventSlug}`;
-            pdfDoc.info.Author = 'GCSRM Certificate System';
+            pdfDoc.info.Author = 'GitHub Community SRM';
             pdfDoc.info.Creator = 'GCSRM Server';
-            pdfDoc.info.Keywords = `certificate,${certificate.eventSlug},${certificate.certificateType},${certificateId}`;
+            pdfDoc.info.Keywords = `certificate, ${certificate.eventSlug}, ${certificate.certificateType}, ${certificateId}, Verification: https://githubsrmist.in/verify/${certificateId}`;
+            pdfDoc.info['X-Certificate-ID'] = certificateId;
+            pdfDoc.info['X-Verification-URL'] = `https://githubsrmist.in/verify/${certificateId}`;
 
             pdfDoc.end();
 
