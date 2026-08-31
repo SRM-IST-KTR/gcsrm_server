@@ -9,6 +9,7 @@ const certificateRoutes = require('./certificate.route');
 const recruitmentRoutes = require('./recruitment.route');
 const ossomehacksRoutes = require('./ossomehacks.route');
 const emailRoutes = require('./email.route');
+const otpRoutes = require('./otp.route');
 
 router.use('/team', teamRoutes);
 router.use('/sponsors', sponsorRoutes);
@@ -18,5 +19,6 @@ router.use('/certificate', certificateRoutes);
 router.use('/recruitment', recruitmentRoutes);
 router.use('/ossomehacks', ossomehacksRoutes);
 router.use('/email', emailRoutes);
+router.use('/otp', otpRoutes);
 
 module.exports = router;
