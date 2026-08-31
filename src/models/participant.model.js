@@ -1,59 +1,72 @@
 const mongoose = require('mongoose');
 
-const participantSchema = new mongoose.Schema({
+const participantSchema = new mongoose.Schema(
+  {
     name: {
-        type: String,
-        required: true
-    },
-    regNo: {
-        type: String,
-        required: true
+      type: String,
+      required: true,
     },
     email: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+      lowercase: true,
+    },
+    registrationNumber: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
+    phone: {
+      type: String,
+      required: true,
+    },
+    year: {
+      type: String,
+      required: true,
+    },
+    domain: {
+      type: String,
+      required: true,
+    },
+    degreeWithBranch: {
+      type: String,
+      required: true,
+    },
+    links: {
+      github: {
         type: String,
-        required: true
-    },
-    phn: {
+        default: null,
+      },
+      demo: {
         type: String,
-        required: true
-    },
-    dept: {
+        default: null,
+      },
+      deployment: {
         type: String,
-        required: true
+        default: null,
+      },
     },
-    rsvp: {
-        type: Boolean,
-        default: false
+    status: {
+      type: String,
+      enum: ['registered', 'taskSubmitted', 'interviewShortlisted', 'onboarding'],
+      default: 'registered',
     },
-    checkin: {
-        type: Boolean,
-        default: false
-    },
-    snacks: {
-        type: Boolean,
-        default: false
-    }
-}, {
-    timestamps: true
-});
+  },
+  {
+    timestamps: true,
+  }
+);
 
-/**
- * Get or create a Participant model for a specific database and collection
- * This avoids redefining the schema on every request
- * @param {mongoose.Connection} db - The database connection
- * @param {string} collectionName - The name of the collection
- * @returns {mongoose.Model} - The Participant model for the specified collection
- */
-const getParticipantModel = (db, collectionName) => {
-    // Check if the model already exists for this database
-    if (db.models[collectionName]) {
-        return db.models[collectionName];
-    }
+participantSchema.index({ domain: 1, year: 1 });
+participantSchema.index({ status: 1 });
+participantSchema.index({ name: 'text' });
 
-    // Create and return a new model for this collection
-    return db.model(collectionName, participantSchema);
-};
+// Export a function that returns the model for a given connection
+function getParticipantModel(connection) {
+  return connection.model('recruitment26', participantSchema);
+}
 
-module.exports = {
-    getParticipantModel
-};
+module.exports = getParticipantModel;
