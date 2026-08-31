@@ -423,6 +423,7 @@ const getRecruitmentAnalytics = async (req, res, next) => {
     // Statuses
     const statusCounts = {
       registered: 0,
+      task_assigned: 0,
       taskSubmitted: 0,
       interviewShortlisted: 0,
       onboarding: 0,
@@ -510,10 +511,12 @@ const getRecruitmentAnalytics = async (req, res, next) => {
 
     const funnel = {
       registered: total,
+      taskAssigned: statusCounts.task_assigned + statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding,
       taskSubmitted: statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding,
       interviewShortlisted: statusCounts.interviewShortlisted + statusCounts.onboarding,
       onboarded: statusCounts.onboarding,
       rejected: statusCounts.rejected,
+      taskAssignmentRate: total > 0 ? (((statusCounts.task_assigned + statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding) / total) * 100).toFixed(1) : 0,
       taskConversionRate: total > 0 ? (((statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding) / total) * 100).toFixed(1) : 0,
       interviewConversionRate: total > 0 ? (((statusCounts.interviewShortlisted + statusCounts.onboarding) / total) * 100).toFixed(1) : 0,
       onboardingRate: total > 0 ? ((statusCounts.onboarding / total) * 100).toFixed(1) : 0,

@@ -54,6 +54,7 @@ const participantSchema = new mongoose.Schema(
       type: String,
       enum: [
         'registered',
+        'task_assigned',
         'taskSubmitted',
         'interviewShortlisted',
         'interviewShortlist',
