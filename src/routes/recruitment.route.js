@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body, param, query } = require('express-validator');
 const { applyForRecruitment } = require('../controller/recruitments/apply_MONGODB.controller');
+const requireOtpAuth = require('../middleware/requireOtpAuth');
 const { getParticipantTasks, getAllTasks, getTaskById } = require('../controller/recruitments/getTasks.controller');
 const {
   getAllParticipants,
@@ -23,17 +24,56 @@ router.get('/participants', getAllParticipants);
 // 3. POST /api/recruitment/batch - Batch update status / delete
 router.post('/batch', batchUpdateParticipants);
 
-// 4. POST /api/recruitment/apply - Applicant self-registration
+// 4. POST /api/recruitment/apply - Applicant self-registration with OTP auth and validations
 router.post(
   '/apply',
+  requireOtpAuth,
   [
-    body('name').trim().notEmpty().withMessage('Name is required'),
-    body('email').trim().isEmail().withMessage('Valid email is required'),
-    body('registrationNumber').trim().notEmpty().withMessage('Registration number is required'),
-    body('phone').trim().notEmpty().withMessage('Phone number is required'),
-    body('year').trim().notEmpty().withMessage('Year is required'),
-    body('domain').trim().notEmpty().withMessage('Domain is required'),
-    body('degreeWithBranch').trim().notEmpty().withMessage('Degree and branch is required'),
+    body('name')
+      .trim()
+      .notEmpty()
+      .withMessage('Name is required')
+      .isLength({ min: 2, max: 100 })
+      .withMessage('Name must be between 2 and 100 characters'),
+
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Email is required')
+      .isEmail()
+      .withMessage('Invalid email format')
+      .toLowerCase(),
+
+    body('registrationNumber')
+      .trim()
+      .notEmpty()
+      .withMessage('Registration number is required')
+      .toUpperCase(),
+
+    body('phone')
+      .trim()
+      .notEmpty()
+      .withMessage('Phone number is required'),
+
+    body('year')
+      .trim()
+      .notEmpty()
+      .withMessage('Year is required'),
+
+    body('domain')
+      .trim()
+      .notEmpty()
+      .withMessage('Domain is required'),
+
+    body('degreeWithBranch')
+      .trim()
+      .notEmpty()
+      .withMessage('Degree and branch is required'),
+
+    body('submissionTime')
+      .optional()
+      .isISO8601()
+      .withMessage('Invalid submission time format'),
   ],
   applyForRecruitment
 );
@@ -46,7 +86,6 @@ router.get('/tasks/:id', getTaskById);
 
 // 7. GET /api/recruitment - If query has email only, get participant tasks; otherwise get all participants
 router.get('/', (req, res, next) => {
-  // If email is explicitly queried without domain/year/status/search, check for participant tasks
   if (req.query.email && !req.query.domain && !req.query.status && !req.query.year && !req.query.search) {
     return getParticipantTasks(req, res, next);
   }

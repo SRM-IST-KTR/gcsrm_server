@@ -2,6 +2,7 @@ const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
 const { generateOTP, storeOTP, verifyOTP, getOTPTTL, OTP_TTL_SECONDS } = require('../utils/otpService');
 const { sendEmail } = require('../utils/emailService');
+const { signOtpToken, OTP_JWT_TTL } = require('../utils/jwt');
 
 /**
  * POST /api/otp/send
@@ -106,9 +107,14 @@ exports.verifyOTP = async (req, res, next) => {
       });
     }
 
+    // Issue a JWT so the client carries a verified session without re-verifying OTP.
+    const token = signOtpToken(email);
+
     return res.status(200).json({
       success: true,
       message: 'OTP verified successfully',
+      token,
+      expiresInSeconds: OTP_JWT_TTL(),
     });
   } catch (err) {
     Sentry.captureException(err, {
