@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { connectDB_recruitment } = require('../../utils/db');
+const { connectDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const getTaskModel = require('../../models/tasks.model');
 const Sentry = require('@sentry/node');
@@ -50,7 +50,7 @@ const getParticipantTasks = async (req, res, next) => {
         }
 
         // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        const recruitmentConn = await connectDB();
         const ParticipantUser = getParticipantUserModel(recruitmentConn);
         const Task = getTaskModel(recruitmentConn);
 
@@ -246,7 +246,7 @@ const getAllTasks = async (req, res, next) => {
         }
 
         // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        const recruitmentConn = await connectDB();
         const Task = getTaskModel(recruitmentConn);
 
         // Build filter object from query parameters
@@ -371,7 +371,7 @@ const getTaskById = async (req, res, next) => {
         }
 
         // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        const recruitmentConn = await connectDB();
         const Task = getTaskModel(recruitmentConn);
 
         const { id } = req.params;

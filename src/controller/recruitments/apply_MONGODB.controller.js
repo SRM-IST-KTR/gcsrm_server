@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { connectDB_recruitment } = require('../../utils/db');
+const { connectDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
@@ -38,13 +38,13 @@ const applyForRecruitment = async (req, res, next) => {
         }
 
         // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        const recruitmentConn = await connectDB();
         const ParticipantUser = getParticipantUserModel(recruitmentConn);
 
         // Server-side registration period validation
         const now = new Date();
-        const startDate = new Date(2025, 7, 25, 0, 0, 0); // August 25, 2025 at 00:00:00
-        const endDate = new Date(2025, 7, 30, 23, 59, 59); // August 30, 2025 at 23:59:59
+        const startDate = new Date(2026, 7, 25, 0, 0, 0); // August 25, 2026 at 00:00:00
+        const endDate = new Date(2026, 7, 30, 23, 59, 59); // August 30, 2026 at 23:59:59
 
         // Check if registration period is active
         if (now.getTime() < startDate.getTime()) {
@@ -62,7 +62,7 @@ const applyForRecruitment = async (req, res, next) => {
 
             return res.status(403).json({
                 success: false,
-                error: 'Registration has not started yet. Please wait until August 25, 2025.'
+                error: 'Registration has not started yet. Please wait until August 25, 2026.'
             });
         }
 

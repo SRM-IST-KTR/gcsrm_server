@@ -22,16 +22,10 @@ const participantSchema = new mongoose.Schema({
 	},
 	year: {
 		type: String,
-		enum: ['1', '2', "both"],
 		required: true,
 	},
 	domain: {
 		type: String,
-		enum: [
-			"Technical",
-			"Creatives",
-			"Corporate"
-		],
 		required: true,
 	},
 	degreeWithBranch: {
@@ -57,7 +51,7 @@ const participantSchema = new mongoose.Schema({
 		enum: [
 			'registered',
 			'taskSubmitted',
-			'interviewShortlist',
+			'interviewShortlisted',
 			'onboarding',
 		],
 		default: 'registered',
@@ -73,7 +67,7 @@ participantSchema.index({ name: 'text' });
 
 // Export a function that returns the model for a given connection
 function getParticipantUserModel(connection) {
-	return connection.model("recruitment25", participantSchema);
+	return connection.model("recruitment26", participantSchema);
 }
 
 module.exports = getParticipantUserModel;

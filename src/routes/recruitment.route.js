@@ -49,17 +49,13 @@ router.post(
         body('year')
             .trim()
             .notEmpty()
-            .withMessage('Year is required')
-            .isIn(['1', '2'])
-            .withMessage('Year must be 1 or 2'),
+            .withMessage('Year is required'),
 
         // Domain validation
         body('domain')
             .trim()
             .notEmpty()
-            .withMessage('Domain is required')
-            .isIn(['Technical', 'Creatives', 'Corporate'])
-            .withMessage('Domain must be Technical, Creatives, or Corporate'),
+            .withMessage('Domain is required'),
 
         // Degree with branch validation
         body('degreeWithBranch')
