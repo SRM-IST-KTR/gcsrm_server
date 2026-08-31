@@ -1,121 +1,98 @@
 const mongoose = require('mongoose');
 
 const eventSchema = new mongoose.Schema({
-
     slug: {
         type: String,
         required: true,
-        unique: true,
-        trim: true,
-        lowercase: true,
+        unique: true
     },
     event_name: {
         type: String,
-        required: true,
-        trim: true,
+        required: true
     },
     event_description: {
         type: String,
-        default: '',
+        required: true
     },
-    speakers_details: {
-        type: [{
-            name: { type: String, trim: true },
-            talk_title: { type: String, trim: true },
-            image_url: { type: String }
-        }],
-        default: [],
-    },
+    speakers_details: [{
+        name: { type: String, required: true },
+        designation: { type: String, required: true },
+        picture_url: { type: String, required: true },
+        profile_url: { type: String, required: true }
+    }],
     Registration_startDate: {
         type: Date,
-        required: true,
+        required: false
     },
     Registration_endDate: {
         type: Date,
-        required: true,
+        required: false
     },
     event_date: {
         type: Date,
-        required: true,
+        required: true
     },
     is_active: {
         type: Boolean,
-        default: false,
+        required: true
     },
     venue: {
         type: String,
-        required: true,
-        trim: true,
+        required: true
     },
-    sponsors_details: {
-        type: [{
-            name: { type: String, trim: true },
-            logo_url: { type: String },
-            tier: { type: String }
-        }],
-        default: [],
-    },
+    sponsors_details: [{
+        name: { type: String, required: true },
+        details: { type: String, required: true },
+        pic_url: { type: String, required: true }
+    }],
     duration: {
-        type: Number,
-        default: 0,
-        min: 0
+        type: String,
+        required: true
     },
     prerequisites: {
         type: [String],
-        default: [],
+        required: true
     },
     cost: {
-        type: Number,
-        default: 0,
-        min: 0
+        type: String,
+        required: true
     },
     poster_url: {
         type: String,
-        default: '',
+        required: true
     },
     registration_url: {
         type: String,
-        default: '',
+        required: true
     },
     database: {
         type: String,
-        default: '',
+        required: true
     },
     collection: {
-        participants: { type: String, required: true, trim: true },
-        organizers: { type: String, required: true, trim: true },
-        volunteers: { type: String, required: true, trim: true },
+        type: Object,
+        required: true
     },
     certificate: {
-        organizers: { type: String, default: '' },
-        participants: { type: String, default: '' },
-        volunteers: { type: String, default: '' },
+        type: Object,
+        required: false
     },
     jimp_config: {
-        yOffset: { type: String, required: true, default: '-10' },
-        color: { type: String, required: true },
-        font_size: { type: String, required: true },
-        font_family: { type: String, required: false, default: 'Quintessential' },
-        text_align: { type: String, required: false, default: 'center' },
-        xOffset: { type: String, required: false, default: '-10' },
-        uppercase: { type: Boolean, required: false, default: false },
-        fonts: {
-            type: Object, required: false, default: {
-                Quintessential: "https://fonts.googleapis.com/css2?family=Quintessential&display=swap"
-            }
-        },
+        type: Object,
+        required: false
     },
     teamEvent: {
         type: Boolean,
-        required: true,
+        default: false
     },
     teamSize: {
         type: Number,
-        required: function () { return this.teamEvent; },
-        min: 1
+        default: 1
     }
 }, {
     timestamps: true
 });
 
-module.exports = mongoose.model('Event', eventSchema);
+const Event = mongoose.models.events || mongoose.model('events', eventSchema, 'events');
+
+module.exports = Event;

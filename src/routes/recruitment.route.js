@@ -4,145 +4,105 @@ const { body, param, query } = require('express-validator');
 const { applyForRecruitment } = require('../controller/recruitments/apply_MONGODB.controller');
 const requireOtpAuth = require('../middleware/requireOtpAuth');
 const { getParticipantTasks, getAllTasks, getTaskById } = require('../controller/recruitments/getTasks.controller');
+const {
+  getAllParticipants,
+  getParticipantById,
+  createParticipant,
+  updateParticipant,
+  deleteParticipant,
+  batchUpdateParticipants,
+  getRecruitmentAnalytics,
+} = require('../controller/recruitments/recruitment.controller');
 
-// POST apply for recruitment with detailed validations
+// 1. GET /api/recruitment/analytics - Recruitment demographic & funnel analytics
+router.get('/analytics', getRecruitmentAnalytics);
+
+// 2. GET /api/recruitment/all or /api/recruitment/participants - Explicit list endpoint
+router.get('/all', getAllParticipants);
+router.get('/participants', getAllParticipants);
+
+// 3. POST /api/recruitment/batch - Batch update status / delete
+router.post('/batch', batchUpdateParticipants);
+
+// 4. POST /api/recruitment/apply - Applicant self-registration with OTP auth and validations
 router.post(
-    '/apply',
-    requireOtpAuth,
-    [
-        // Name validation
-        body('name')
-            .trim()
-            .notEmpty()
-            .withMessage('Name is required')
-            .isLength({ min: 2, max: 100 })
-            .withMessage('Name must be between 2 and 100 characters')
-            .matches(/^[a-zA-Z\s.'-]+$/)
-            .withMessage('Name can only contain letters, spaces, and common punctuation'),
+  '/apply',
+  requireOtpAuth,
+  [
+    body('name')
+      .trim()
+      .notEmpty()
+      .withMessage('Name is required')
+      .isLength({ min: 2, max: 100 })
+      .withMessage('Name must be between 2 and 100 characters'),
 
-        // Email validation
-        body('email')
-            .trim()
-            .notEmpty()
-            .withMessage('Email is required')
-            .isEmail()
-            .withMessage('Invalid email format')
-            .normalizeEmail({ gmail_remove_dots: false })
-            .toLowerCase(),
+    body('email')
+      .trim()
+      .notEmpty()
+      .withMessage('Email is required')
+      .isEmail()
+      .withMessage('Invalid email format')
+      .toLowerCase(),
 
-        // Registration number validation
-        body('registrationNumber')
-            .trim()
-            .notEmpty()
-            .withMessage('Registration number is required')
-            .matches(/^RA[0-9]{13}$/i)
-            .withMessage('Invalid registration number format. Must be RA followed by 13 digits (e.g., RA2111003010001)')
-            .toUpperCase(),
+    body('registrationNumber')
+      .trim()
+      .notEmpty()
+      .withMessage('Registration number is required')
+      .toUpperCase(),
 
-        // Phone validation
-        body('phone')
-            .trim()
-            .notEmpty()
-            .withMessage('Phone number is required')
-            .matches(/^[6-9][0-9]{9}$/)
-            .withMessage('Invalid phone number. Must be a valid 10-digit Indian mobile number'),
+    body('phone')
+      .trim()
+      .notEmpty()
+      .withMessage('Phone number is required'),
 
-        // Year validation
-        body('year')
-            .trim()
-            .notEmpty()
-            .withMessage('Year is required'),
+    body('year')
+      .trim()
+      .notEmpty()
+      .withMessage('Year is required'),
 
-        // Domain validation
-        body('domain')
-            .trim()
-            .notEmpty()
-            .withMessage('Domain is required'),
+    body('domain')
+      .trim()
+      .notEmpty()
+      .withMessage('Domain is required'),
 
-        // Degree with branch validation
-        body('degreeWithBranch')
-            .trim()
-            .notEmpty()
-            .withMessage('Degree with branch is required')
-            .isLength({ min: 2, max: 100 })
-            .withMessage('Degree with branch must be between 2 and 100 characters'),
+    body('degreeWithBranch')
+      .trim()
+      .notEmpty()
+      .withMessage('Degree and branch is required'),
 
-        // Optional links validation
-        body('links.github')
-            .optional({ checkFalsy: true })
-            .trim()
-            .isURL({ protocols: ['http', 'https'], require_protocol: true })
-            .withMessage('Invalid GitHub URL'),
-
-        body('links.demo')
-            .optional({ checkFalsy: true })
-            .trim()
-            .isURL({ protocols: ['http', 'https'], require_protocol: true })
-            .withMessage('Invalid demo URL'),
-
-        body('links.deployment')
-            .optional({ checkFalsy: true })
-            .trim()
-            .isURL({ protocols: ['http', 'https'], require_protocol: true })
-            .withMessage('Invalid deployment URL'),
-
-        // Optional submission time validation (for timestamp manipulation detection)
-        body('submissionTime')
-            .optional()
-            .isISO8601()
-            .withMessage('Invalid submission time format')
-    ],
-    applyForRecruitment
+    body('submissionTime')
+      .optional()
+      .isISO8601()
+      .withMessage('Invalid submission time format'),
+  ],
+  applyForRecruitment
 );
 
-// GET tasks for a specific participant based on their email
-router.get(
-    '/',
-    [
-        query('email')
-            .trim()
-            .notEmpty()
-            .withMessage('Email is required')
-            .isEmail()
-            .withMessage('Invalid email format')
-    ],
-    getParticipantTasks
-);
+// 5. GET /api/recruitment/tasks - Get all tasks
+router.get('/tasks', getAllTasks);
 
-// GET all tasks with optional filters [domain, year, taskType]
-router.get(
-    '/tasks',
-    [
-        query('domain')
-            .optional()
-            .isIn(['Technical', 'Creatives', 'Corporate'])
-            .withMessage('Domain must be Technical, Creatives, or Corporate'),
+// 6. GET /api/recruitment/tasks/:id - Get specific task
+router.get('/tasks/:id', getTaskById);
 
-        query('year')
-            .optional()
-            .isIn(['1', '2', 'both'])
-            .withMessage('Year must be 1, 2, or both'),
+// 7. GET /api/recruitment - If query has email only, get participant tasks; otherwise get all participants
+router.get('/', (req, res, next) => {
+  if (req.query.email && !req.query.domain && !req.query.status && !req.query.year && !req.query.search) {
+    return getParticipantTasks(req, res, next);
+  }
+  return getAllParticipants(req, res, next);
+});
 
-        query('taskType')
-            .optional()
-            .trim()
-            .notEmpty()
-            .withMessage('Task type cannot be empty')
-    ],
-    getAllTasks
-);
+// 8. POST /api/recruitment - Create new candidate (admin)
+router.post('/', createParticipant);
 
-// GET a specific task by ID
-router.get(
-    '/tasks/:id',
-    [
-        param('id')
-            .notEmpty()
-            .withMessage('Task ID is required')
-            .isMongoId()
-            .withMessage('Invalid task ID format')
-    ],
-    getTaskById
-);
+// 9. GET /api/recruitment/:id - Single candidate details
+router.get('/:id', getParticipantById);
+
+// 10. PUT /api/recruitment/:id - Update candidate
+router.put('/:id', updateParticipant);
+router.patch('/:id', updateParticipant);
+
+// 11. DELETE /api/recruitment/:id - Delete candidate
+router.delete('/:id', deleteParticipant);
 
 module.exports = router;

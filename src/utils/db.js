@@ -4,76 +4,91 @@ const Sentry = require('@sentry/node');
 
 dotenv.config();
 
-// Global cache for serverless environments (e.g., Vercel)
 let cached = global.__MONGO_CONN__;
 if (!cached) {
-    cached = global.__MONGO_CONN__ = { conn: null, promise: null };
+    cached = global.__MONGO_CONN__ = {
+        gcsrmConn: null,
+        recruitmentConn: null,
+        gcsrmPromise: null,
+        recruitmentPromise: null,
+    };
 }
 
-mongoose.set('bufferCommands', false); // fail fast instead of buffering indefinitely
+mongoose.set('bufferCommands', false);
 mongoose.set('strictQuery', true);
 
+const getOpts = (dbName) => ({
+    dbName,
+    maxPoolSize: parseInt(process.env.MONGO_POOL_MAX || '10', 10),
+    minPoolSize: parseInt(process.env.MONGO_POOL_MIN || '0', 10),
+    serverSelectionTimeoutMS: parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT || '5000', 10),
+    socketTimeoutMS: parseInt(process.env.MONGO_SOCKET_TIMEOUT || '45000', 10),
+    connectTimeoutMS: parseInt(process.env.MONGO_CONNECT_TIMEOUT || '10000', 10),
+    autoIndex: process.env.NODE_ENV !== 'production'
+});
+
+/**
+ * Connect to primary GCSRM database (teams, events, sponsors, certificates, contacts)
+ */
 async function connectDB() {
-    if (cached.conn) return cached.conn;
+    if (cached.gcsrmConn) return cached.gcsrmConn;
 
-    if (!cached.promise) {
-        const uri = process.env.MONGO_URI || process.env.MONGODB_URI; // allow either name
-        const dbName = process.env.DB_NAME;
+    if (!cached.gcsrmPromise) {
+        const uri = process.env.MONGO_URI || process.env.MONGODB_URI;
+        const dbName = process.env.DB_NAME || 'GCSRM';
         if (!uri) throw new Error('Missing MONGO_URI / MONGODB_URI environment variable');
-        if (!dbName) throw new Error('Missing DB_NAME environment variable');
 
-        const opts = {
-            dbName,
-            maxPoolSize: parseInt(process.env.MONGO_POOL_MAX || '10', 10),
-            minPoolSize: parseInt(process.env.MONGO_POOL_MIN || '0', 10),
-            serverSelectionTimeoutMS: parseInt(process.env.MONGO_SERVER_SELECTION_TIMEOUT || '5000', 10),
-            socketTimeoutMS: parseInt(process.env.MONGO_SOCKET_TIMEOUT || '45000', 10),
-            connectTimeoutMS: parseInt(process.env.MONGO_CONNECT_TIMEOUT || '10000', 10),
-            autoIndex: process.env.NODE_ENV !== 'production'
-        };
-
-        cached.promise = mongoose.connect(uri, opts)
+        cached.gcsrmPromise = mongoose.connect(uri, getOpts(dbName))
             .then((m) => {
-                console.log(`[Mongo] Connected: ${m.connection.host} db: ${m.connection.name}`);
-
-                // Only log errors and disconnections
-                mongoose.connection.on('error', (err) => {
-                    Sentry.logger.error('MongoDB connection error', {
-                        error: err.message,
-                        host: m.connection.host,
-                    });
-                    Sentry.captureException(err, {
-                        tags: { component: 'database', event: 'connection_error' }
-                    });
-                });
-
-                mongoose.connection.on('disconnected', () => {
-                    Sentry.logger.warn('MongoDB disconnected', {
-                        host: m.connection.host,
-                    });
-                });
-
-                return m;
+                console.log(`[Mongo] Connected primary: ${m.connection.host} db: ${m.connection.name}`);
+                return m.connection;
             })
             .catch(err => {
-                Sentry.logger.error('MongoDB connection failed', {
-                    error: err.message,
-                    uri: uri.replace(/\/\/[^:]+:[^@]+@/, '//***:***@'),
-                });
-                Sentry.captureException(err, {
-                    tags: { component: 'database', event: 'connection_error' }
-                });
+                Sentry.captureException(err);
                 throw err;
             });
     }
 
     try {
-        cached.conn = await cached.promise;
+        cached.gcsrmConn = await cached.gcsrmPromise;
     } catch (e) {
-        cached.promise = null; // reset so future calls retry
+        cached.gcsrmPromise = null;
         throw e;
     }
-    return cached.conn;
+    return cached.gcsrmConn;
+}
+
+/**
+ * Connect to Recruitment database (recruitment26, tasks26, dashaccess26)
+ */
+async function connectRecruitmentDB() {
+    if (cached.recruitmentConn) return cached.recruitmentConn;
+
+    const uri = process.env.MONGO_URI_RECRUITMENT || process.env.MONGO_URI || process.env.MONGODB_URI;
+    const dbName = process.env.DB_NAME_RECRUITMENT || 'Recruitment';
+    if (!uri) throw new Error('Missing MONGO_URI_RECRUITMENT / MONGO_URI environment variable');
+
+    // If primary connection is already established on the same cluster, use connection.useDb for high performance
+    if (mongoose.connection.readyState === 1) {
+        cached.recruitmentConn = mongoose.connection.useDb(dbName, { useCache: true });
+        return cached.recruitmentConn;
+    }
+
+    if (!cached.recruitmentPromise) {
+        // Ensure primary is connected or connect
+        cached.recruitmentPromise = connectDB().then((primaryConn) => {
+            cached.recruitmentConn = primaryConn.useDb(dbName, { useCache: true });
+            return cached.recruitmentConn;
+        });
+    }
+
+    try {
+        cached.recruitmentConn = await cached.recruitmentPromise;
+    } catch (e) {
+        cached.recruitmentPromise = null;
+        throw e;
+    }
+    return cached.recruitmentConn;
 }
 
 function dbHealth() {
@@ -89,4 +104,4 @@ process.on('SIGINT', async () => {
     process.exit(0);
 });
 
-module.exports = { connectDB, dbHealth };
+module.exports = { connectDB, connectRecruitmentDB, dbHealth };
