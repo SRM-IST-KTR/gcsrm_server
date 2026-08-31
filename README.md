@@ -57,7 +57,7 @@ A robust and scalable backend server for GitHub Club SRM (GCSRM) built with Node
 - **Validation**: Express-validator
 - **Logging**: Morgan
 - **Documentation**: Swagger (swagger-jsdoc, swagger-ui-express)
-- **Email**: Nodemailer
+- **Email**: Resend
 - **Image Processing**: Sharp
 - **PDF Generation**: PDFKit
 - **Font Handling**: OpenType.js
