@@ -181,27 +181,30 @@ Create a `.env` file with the following variables:
 
 ```env
 # Server Configuration
-PORT=3000
-NODE_ENV=development
+PORT=8000
+NODE_ENV=dev
 
-# Database Configuration
-MONGODB_URI=mongodb://localhost:27017/gcsrm
-DB_NAME=gcsrm
+# Primary Database Configuration (GCSRM - teams, events, sponsors, certificates)
+MONGO_URI=mongodb+srv://...
+DB_NAME=GCSRM
 
-# CORS Configuration (for production)
-# ALLOWED_ORIGINS=https://yourdomain.com,https://www.yourdomain.com
+# Recruitment Database Configuration (Recruitment - recruitment26, tasks26)
+MONGO_URI_RECRUITMENT=mongodb+srv://...
+DB_NAME_RECRUITMENT=Recruitment
 
-# Sentry Configuration (Optional - for error monitoring)
-SENTRY_DSN=your_sentry_dsn_here
+# Recruitment Intake Window (Optional ISO timestamps)
+RECRUITMENT_START_DATE=2026-08-01T00:00:00.000Z
+RECRUITMENT_END_DATE=2026-12-31T23:59:59.999Z
 
-# Email Configuration (Resend — for all email sending)
-RESEND_API_KEY=re_your_resend_api_key
+# CORS Configuration
+ORIGIN=*
+
+# Sentry & Email Configuration
+SENTRY_DSN=
+RESEND_API_KEY=
 SENDER_EMAIL=noreply@githubsrmist.in
-
-# Certificate Configuration
-CERTIFICATE_SECRET=YOUR_CERTIFICATE_SECRET
+CERTIFICATE_SECRET=your_secret_key
 ```
-
 #### Environment Variable Details
 
 
