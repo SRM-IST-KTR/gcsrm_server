@@ -1,4 +1,3 @@
-const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
 const Sentry = require('@sentry/node');
 
@@ -61,13 +60,13 @@ exports.sendContact = async (req, res, next) => {
       return `<!doctype html><html><head><meta charset="utf-8"></head><body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans', Helvetica, Arial, sans-serif; background-color:#f6f8fa;"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #d0d7de;border-radius:6px;overflow:hidden;"><div style="background:#24292f;padding:24px;color:#fff;text-align:center;"><h1 style="margin:0;font-size:20px;">GitHub Community SRM</h1><p style="color:#7d8590;margin:4px 0 0 0;font-size:14px;">Message received successfully</p></div><div style="padding:32px 24px;"><h2 style="color:#24292f;margin:0 0 16px 0;font-size:20px;">Hello ${nameVal},</h2><p style="color:#656d76;font-size:16px;line-height:1.5;margin-bottom:24px;">Thank you for reaching out to <strong>GitHub Community SRM</strong>. We have received your message and our team will respond within <strong>24-48 hours</strong>.</p></div><div style="background:#f6f8fa;padding:24px;border-top:1px solid #d0d7de;text-align:center;"><p style="color:#656d76;margin:0;font-size:12px;">© 2025 GitHub Community SRM. All rights reserved.</p></div></div></body></html>`;
     };
 
-    // Send team email + confirmation to sender using cached transporter
-    const transporter = require('../utils/mailer');
+    // Send team email + confirmation to sender using cached resend instance
+    const resend = require('../utils/mailer');
 
     const teamMailOptions = {
       from: fromEmail,
       to: adminEmail,
-      replyTo: email,
+      reply_to: email,
       subject: `🔔 New Contact Form Submission from ${name}`,
       html: createEmailTemplate(name, email, message),
       text: `New Contact Form Submission\n\nFrom: ${name} (${email})\n\nMessage:\n${message}\n\nReply to this person: ${email}`,
@@ -83,13 +82,15 @@ exports.sendContact = async (req, res, next) => {
 
     // Send emails synchronously (await) to guarantee delivery attempt before responding
     try {
-      const transporter = require('../utils/mailer');
       const sendStart = Date.now();
       console.log('[contact] sending emails...');
-      await Promise.all([
-        transporter.sendMail(teamMailOptions),
-        transporter.sendMail(confirmationMailOptions),
+      const [teamRes, confirmRes] = await Promise.all([
+        resend.emails.send(teamMailOptions),
+        resend.emails.send(confirmationMailOptions),
       ]);
+      
+      if (teamRes.error) throw teamRes.error;
+      if (confirmRes.error) throw confirmRes.error;
       const sendDuration = Date.now() - sendStart;
       console.log('[contact] emails sent, took', sendDuration, 'ms');
 

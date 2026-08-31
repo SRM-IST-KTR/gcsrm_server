@@ -1,26 +1,12 @@
-const nodemailer = require('nodemailer');
+const { Resend } = require('resend');
 
-let transporter = global.__nodemailer_transporter;
+let resendInstance = global.__resend_instance;
 
-if (!transporter) {
-  const host = process.env.ZOHO_SMTP_HOST || 'smtp.zoho.in';
-  const port = parseInt(process.env.ZOHO_SMTP_PORT || '465', 10);
-  const secure = (process.env.ZOHO_SMTP_SECURE || 'true') === 'true';
-  const user = process.env.ZOHO_SMTP_USER || process.env.SENDER_EMAIL || process.env.ZOHO_USER;
-  const pass = process.env.ZOHO_SMTP_PASS || process.env.SENDER_PASS || process.env.ZOHO_PASS;
-
-  transporter = nodemailer.createTransport({
-    host,
-    port,
-    secure,
-    auth: { user, pass },
-    pool: true,
-    maxConnections: 5,
-    maxMessages: 100,
-    ...(process.env.NODEMAILER_DEBUG === 'true' ? { logger: true, debug: true } : {}),
-  });
-
-  global.__nodemailer_transporter = transporter;
+if (!resendInstance) {
+  const apiKey = process.env.RESEND_API_KEY || '';
+  resendInstance = new Resend(apiKey);
+  
+  global.__resend_instance = resendInstance;
 }
 
-module.exports = transporter;
+module.exports = resendInstance;

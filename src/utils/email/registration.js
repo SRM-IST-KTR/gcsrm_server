@@ -1,4 +1,4 @@
-const transporter = require('../mailer');
+const resend = require('../mailer');
 const Sentry = require('@sentry/node');
 const fs = require('fs');
 const path = require('path');
@@ -171,18 +171,22 @@ Building the future, one commit at a time
             `
         };
 
-        const info = await transporter.sendMail(emailContent);
+        const { data, error: sendError } = await resend.emails.send(emailContent);
+        
+        if (sendError) {
+            throw sendError;
+        }
 
         Sentry.logger.info('Registration email sent successfully', {
             operation: 'sendRegistrationEmail',
             email: participant.email,
             event: event.slug,
-            messageId: info.messageId
+            messageId: data?.id
         });
 
         return {
             success: true,
-            messageId: info.messageId
+            messageId: data?.id
         };
     } catch (error) {
         Sentry.captureException(error, {
