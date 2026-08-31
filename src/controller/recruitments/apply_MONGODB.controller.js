@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { connectDB_recruitment } = require('../../utils/db');
+const { connectRecruitmentDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
@@ -15,7 +15,7 @@ const applyForRecruitment = async (req, res, next) => {
         // Check for validation errors from express-validator
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            Sentry.captureMessage('Recruitment application validation failed', {
+            Sentry.captureMessage('Validation errors during recruitment application', {
                 level: 'warning',
                 tags: {
                     operation: 'applyForRecruitment',
@@ -23,28 +23,34 @@ const applyForRecruitment = async (req, res, next) => {
                 },
                 extra: {
                     errors: errors.array(),
-                    body: req.body
+                    requestBody: {
+                        name: req.body.name,
+                        email: req.body.email,
+                        registrationNumber: req.body.registrationNumber,
+                        domain: req.body.domain,
+                        year: req.body.year
+                    }
                 }
             });
 
             return res.status(400).json({
                 success: false,
-                error: 'Validation failed',
-                errors: errors.array().map(err => ({
-                    field: err.path || err.param,
-                    message: err.msg
-                }))
+                errors: errors.array()
             });
         }
 
-        // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        // Connect to recruitment database
+        const recruitmentConn = await connectRecruitmentDB();
         const ParticipantUser = getParticipantUserModel(recruitmentConn);
 
-        // Server-side registration period validation
+        // Server-side registration period validation with env support
         const now = new Date();
-        const startDate = new Date(2025, 7, 25, 0, 0, 0); // August 25, 2025 at 00:00:00
-        const endDate = new Date(2025, 7, 30, 23, 59, 59); // August 30, 2025 at 23:59:59
+        const startDate = process.env.RECRUITMENT_START_DATE
+            ? new Date(process.env.RECRUITMENT_START_DATE)
+            : new Date('2026-08-01T00:00:00.000Z');
+        const endDate = process.env.RECRUITMENT_END_DATE
+            ? new Date(process.env.RECRUITMENT_END_DATE)
+            : new Date('2026-12-31T23:59:59.999Z');
 
         // Check if registration period is active
         if (now.getTime() < startDate.getTime()) {
@@ -62,7 +68,7 @@ const applyForRecruitment = async (req, res, next) => {
 
             return res.status(403).json({
                 success: false,
-                error: 'Registration has not started yet. Please wait until August 25, 2025.'
+                error: `Registration has not started yet. Please wait until ${startDate.toDateString()}.`
             });
         }
 
@@ -171,103 +177,43 @@ const applyForRecruitment = async (req, res, next) => {
             }
         });
     } catch (error) {
-        console.error('[applyForRecruitment] Error:', error);
+        const totalDuration = Date.now() - startTime;
 
-        // Handle specific MongoDB errors
-        if (error.code === 11000) {
-            // Duplicate key error
-            let errorMessage = 'This information is already registered.';
-            let field = 'unknown';
-
-            if (error.message.includes('regNo_1')) {
-                errorMessage = 'Database configuration error. Please contact support.';
-                field = 'regNo';
-
-                Sentry.captureException(error, {
-                    tags: {
-                        operation: 'applyForRecruitment',
-                        errorType: 'duplicate_key',
-                        field: 'regNo_deprecated'
-                    },
-                    extra: {
-                        errorCode: error.code,
-                        keyPattern: error.keyPattern
-                    }
-                });
-
-                return res.status(500).json({
-                    success: false,
-                    error: errorMessage
-                });
-            } else if (error.message.includes('registrationNumber')) {
-                errorMessage = 'This registration number is already registered.';
-                field = 'registrationNumber';
-            } else if (error.message.includes('email')) {
-                errorMessage = 'This email address is already registered.';
-                field = 'email';
-            }
-
-            Sentry.captureMessage('Duplicate recruitment application', {
-                level: 'info',
-                tags: {
-                    operation: 'applyForRecruitment',
-                    errorType: 'duplicate_key',
-                    field
-                },
-                extra: {
-                    email: req.body?.email,
-                    registrationNumber: req.body?.registrationNumber
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                error: errorMessage,
-                field
-            });
-        }
-
-        // Handle validation errors
-        if (error.name === 'ValidationError') {
-            const validationErrors = Object.keys(error.errors).map(key => ({
-                field: key,
-                message: error.errors[key].message
-            }));
-
-            Sentry.captureMessage('Recruitment application validation error', {
-                level: 'warning',
-                tags: {
-                    operation: 'applyForRecruitment',
-                    errorType: 'validation_error'
-                },
-                extra: {
-                    validationErrors,
-                    requestBody: req.body
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                error: 'Validation error',
-                errors: validationErrors
-            });
-        }
-
-        // Capture unexpected errors
         Sentry.captureException(error, {
             tags: {
-                operation: 'applyForRecruitment'
+                operation: 'applyForRecruitment',
+                component: 'controller'
             },
             extra: {
-                requestBody: req.body,
-                errorMessage: error.message,
-                errorStack: error.stack
+                requestBody: {
+                    name: req.body.name,
+                    email: req.body.email,
+                    registrationNumber: req.body.registrationNumber,
+                    domain: req.body.domain,
+                    year: req.body.year
+                },
+                totalDuration: `${totalDuration}ms`
             }
         });
 
-        return res.status(400).json({
+        Sentry.logger.error('Recruitment application failed', {
+            error: error.message,
+            stack: error.stack,
+            totalDuration: `${totalDuration}ms`
+        });
+
+        // Duplicate key handling
+        if (error.code === 11000) {
+            const field = Object.keys(error.keyPattern || {})[0] || 'field';
+            return res.status(409).json({
+                success: false,
+                error: `A participant with this ${field} already exists.`
+            });
+        }
+
+        return res.status(500).json({
             success: false,
-            error: error.message || 'An error occurred while processing your application.'
+            error: error.message || 'Internal Server Error'
         });
     }
 };

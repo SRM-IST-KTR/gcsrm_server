@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { connectDB_recruitment } = require('../../utils/db');
+const { connectRecruitmentDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const getTaskModel = require('../../models/tasks.model');
 const Sentry = require('@sentry/node');
@@ -24,10 +24,10 @@ const getParticipantTasks = async (req, res, next) => {
     const startTime = Date.now();
 
     try {
-        // Check for validation errors from express-validator
+        // Check for validation errors
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            Sentry.captureMessage('Get participant tasks validation failed', {
+            Sentry.captureMessage('Validation errors in getParticipantTasks', {
                 level: 'warning',
                 tags: {
                     operation: 'getParticipantTasks',
@@ -35,180 +35,128 @@ const getParticipantTasks = async (req, res, next) => {
                 },
                 extra: {
                     errors: errors.array(),
-                    query: req.query
+                    email: req.query.email
                 }
             });
 
             return res.status(400).json({
                 success: false,
-                error: 'Validation failed',
-                errors: errors.array().map(err => ({
-                    field: err.path || err.param,
-                    message: err.msg
-                }))
+                errors: errors.array()
             });
         }
 
-        // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
-        const ParticipantUser = getParticipantUserModel(recruitmentConn);
-        const Task = getTaskModel(recruitmentConn);
+        const email = req.query.email.toLowerCase().trim();
 
-        const { email } = req.query;
-
-        if (!email) {
-            Sentry.captureMessage('Get participant tasks - email missing', {
-                level: 'warning',
-                tags: {
-                    operation: 'getParticipantTasks',
-                    validation: 'missing_email'
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                message: 'Email is required'
-            });
-        }
-
-        Sentry.logger.info('Fetching participant tasks', {
-            operation: 'getParticipantTasks',
-            email: email,
+        // Set context for Sentry
+        Sentry.setContext('participant_task_lookup', {
+            email,
             ip: req.ip || req.connection?.remoteAddress
         });
 
-        // Find the participant
-        const queryStart = Date.now();
+        Sentry.logger.info('Looking up participant tasks', {
+            operation: 'getParticipantTasks',
+            email
+        });
+
+        // Connect to database
+        const recruitmentConn = await connectRecruitmentDB();
+        const ParticipantUser = getParticipantUserModel(recruitmentConn);
+        const Task = getTaskModel(recruitmentConn);
+
+        // Find participant by email
+        const participantQueryStart = Date.now();
         const participant = await ParticipantUser.findOne({ email }).lean();
-        const participantQueryDuration = Date.now() - queryStart;
+        const participantQueryDuration = Date.now() - participantQueryStart;
 
         if (!participant) {
-            Sentry.captureMessage('Participant not found for tasks', {
-                level: 'info',
-                tags: {
-                    operation: 'getParticipantTasks',
-                    email: email
-                }
+            Sentry.logger.info('Participant not found', {
+                operation: 'getParticipantTasks',
+                email
             });
 
             return res.status(404).json({
                 success: false,
-                message: 'Participant not found'
+                error: 'Participant with this email does not exist'
             });
         }
 
-        const {
-            name,
-            registrationNumber: regNo,
-            email: participantEmail,
-            phone,
-            year,
-            degreeWithBranch: dept,
-            domain,
-            status
-        } = participant;
+        // Extract participant domain and year
+        const domain = participant.domain;
+        const participantYear = participant.year; // e.g. "1st Year", "2nd Year", "1", "2"
 
-        // Year is already stored as '1' or '2' in the database
-        console.log('[getParticipantTasks] Participant domain:', domain);
-        console.log('[getParticipantTasks] Participant year:', year);
-
-        // Build flexible queries to handle domain variations
-        const domainVariations = [];
-        if (domain === "Corporate") {
-            domainVariations.push("Corporate");
-        } else if (domain === "Creatives") {
-            domainVariations.push("Creatives");
-        } else if (domain === "Technical") {
-            domainVariations.push("Technical");
+        // Normalize year value
+        let normalizedYear;
+        const yearLower = String(participantYear).toLowerCase();
+        if (yearLower.includes('1')) {
+            normalizedYear = '1';
+        } else if (yearLower.includes('2')) {
+            normalizedYear = '2';
         } else {
-            domainVariations.push(domain);
+            normalizedYear = participantYear;
         }
 
-        console.log('[getParticipantTasks] Domain variations to search:', domainVariations);
+        // Query tasks matching domain and year (or 'both')
+        const taskQueryStart = Date.now();
+        const tasks = await Task.find({
+            domain,
+            year: { $in: [normalizedYear, 'both'] }
+        }).lean();
+        const taskQueryDuration = Date.now() - taskQueryStart;
 
-        // Build task query - year is '1' or '2', matches with 'both' for common tasks
-        const taskQuery = {
-            domain: { $in: domainVariations },
-            $or: [
-                { year: year },      // Exact match: '1' or '2'
-                { year: "both" }     // Tasks for all years
-            ]
-        };
-
-        Sentry.logger.info('Fetching tasks for participant', {
-            operation: 'getParticipantTasks',
-            participantId: participant._id.toString(),
-            domain: domain,
-            year: year,
-            queryFilter: taskQuery
-        });
-
-        // Fetch tasks based on the query
-        const tasksQueryStart = Date.now();
-        let tasks = await Task.find(taskQuery).lean();
-        const tasksQueryDuration = Date.now() - tasksQueryStart;
-
-        console.log('[getParticipantTasks] Found tasks count:', tasks.length);
-
-        // Clean each task before sending it to the client
-        tasks = tasks.map(cleanTaskData);
+        // Clean task links
+        const cleanedTasks = tasks.map(cleanTaskData);
 
         const totalDuration = Date.now() - startTime;
 
-        Sentry.logger.info('Participant tasks fetched successfully', {
+        Sentry.logger.info('Participant tasks retrieved successfully', {
             operation: 'getParticipantTasks',
-            participantId: participant._id.toString(),
-            email: participantEmail,
-            domain: domain,
-            year: year,
+            email,
+            domain,
+            year: normalizedYear,
             tasksCount: tasks.length,
             participantQueryDuration: `${participantQueryDuration}ms`,
-            tasksQueryDuration: `${tasksQueryDuration}ms`,
+            taskQueryDuration: `${taskQueryDuration}ms`,
             totalDuration: `${totalDuration}ms`
         });
 
-        // Log slow database queries (over 300ms)
-        if (tasksQueryDuration > 300) {
-            Sentry.logger.warn('Slow database query', {
-                operation: 'getParticipantTasks',
-                query: 'tasks.find()',
-                duration: `${tasksQueryDuration}ms`,
-                count: tasks.length,
-                filter: taskQuery
-            });
-        }
-
         return res.status(200).json({
             success: true,
-            name,
-            regNo,
-            email: participantEmail,
-            year,
-            dept,
-            phone,
-            domain: domain,
-            status,
-            tasks // This will include the reference link along with other task details
+            data: {
+                participant: {
+                    name: participant.name,
+                    email: participant.email,
+                    domain: participant.domain,
+                    year: participant.year,
+                    status: participant.status,
+                    links: participant.links || {}
+                },
+                tasks: cleanedTasks
+            }
         });
-
     } catch (error) {
-        console.error('[getParticipantTasks] Error:', error);
+        const totalDuration = Date.now() - startTime;
 
         Sentry.captureException(error, {
             tags: {
-                operation: 'getParticipantTasks'
+                operation: 'getParticipantTasks',
+                component: 'controller'
             },
             extra: {
-                query: req.query,
-                errorMessage: error.message,
-                errorStack: error.stack
+                email: req.query.email,
+                totalDuration: `${totalDuration}ms`
             }
+        });
+
+        Sentry.logger.error('Failed to get participant tasks', {
+            error: error.message,
+            stack: error.stack,
+            email: req.query.email,
+            totalDuration: `${totalDuration}ms`
         });
 
         return res.status(500).json({
             success: false,
-            message: 'Internal server error',
-            error: error.message
+            error: error.message || 'Internal Server Error'
         });
     }
 };
@@ -220,132 +168,38 @@ const getAllTasks = async (req, res, next) => {
     const startTime = Date.now();
 
     try {
-        // Check for validation errors from express-validator
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
-            Sentry.captureMessage('Get tasks validation failed', {
-                level: 'warning',
-                tags: {
-                    operation: 'getAllTasks',
-                    validation: 'failed'
-                },
-                extra: {
-                    errors: errors.array(),
-                    query: req.query
-                }
-            });
-
             return res.status(400).json({
                 success: false,
-                error: 'Validation failed',
-                errors: errors.array().map(err => ({
-                    field: err.path || err.param,
-                    message: err.msg
-                }))
+                errors: errors.array()
             });
         }
 
         // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        const recruitmentConn = await connectRecruitmentDB();
         const Task = getTaskModel(recruitmentConn);
 
-        // Build filter object from query parameters
+        const { domain, year, taskType } = req.query;
         const filter = {};
 
-        if (req.query.domain) {
-            filter.domain = req.query.domain;
-        }
+        if (domain) filter.domain = domain;
+        if (year) filter.year = { $in: [year, 'both'] };
+        if (taskType) filter.taskType = new RegExp(taskType, 'i');
 
-        if (req.query.year) {
-            // Handle "both" case - should match tasks for year "both" or the specific year
-            if (req.query.year === '1' || req.query.year === '2') {
-                filter.$or = [
-                    { year: req.query.year },
-                    { year: 'both' }
-                ];
-            } else {
-                filter.year = req.query.year;
-            }
-        }
-
-        if (req.query.taskType) {
-            filter.taskType = req.query.taskType;
-        }
-
-        Sentry.logger.info('Fetching tasks', {
-            operation: 'getAllTasks',
-            filter: filter,
-            ip: req.ip || req.connection?.remoteAddress
-        });
-
-        // Fetch tasks from database
-        const queryStart = Date.now();
-        let tasks = await Task.find(filter)
-            .sort({ createdAt: -1 }) // Most recent first
-            .lean(); // Convert to plain JavaScript objects for better performance
-        const queryDuration = Date.now() - queryStart;
-
-        // Clean each task
-        tasks = tasks.map(cleanTaskData);
-
-        // Check if tasks were found
-        if (tasks.length === 0) {
-            Sentry.logger.info('No tasks found', {
-                operation: 'getAllTasks',
-                filter: filter
-            });
-
-            return res.status(404).json({
-                success: false,
-                message: 'No tasks found matching the criteria',
-                count: 0,
-                data: []
-            });
-        }
-
-        const totalDuration = Date.now() - startTime;
-
-        Sentry.logger.info('Tasks fetched successfully', {
-            operation: 'getAllTasks',
-            count: tasks.length,
-            queryDuration: `${queryDuration}ms`,
-            totalDuration: `${totalDuration}ms`
-        });
-
-        // Log slow database queries (over 300ms)
-        if (queryDuration > 300) {
-            Sentry.logger.warn('Slow database query', {
-                operation: 'getAllTasks',
-                query: 'tasks.find()',
-                duration: `${queryDuration}ms`,
-                count: tasks.length,
-                filter: filter
-            });
-        }
+        const tasks = await Task.find(filter).lean();
+        const cleanedTasks = tasks.map(cleanTaskData);
 
         return res.status(200).json({
             success: true,
-            count: tasks.length,
-            data: tasks
+            count: cleanedTasks.length,
+            data: cleanedTasks
         });
-
     } catch (error) {
-        console.error('[getAllTasks] Error:', error);
-
-        Sentry.captureException(error, {
-            tags: {
-                operation: 'getAllTasks'
-            },
-            extra: {
-                query: req.query,
-                errorMessage: error.message,
-                errorStack: error.stack
-            }
-        });
-
+        Sentry.captureException(error);
         return res.status(500).json({
             success: false,
-            error: error.message || 'An error occurred while fetching tasks.'
+            error: error.message || 'Internal Server Error'
         });
     }
 };
@@ -354,107 +208,28 @@ const getAllTasks = async (req, res, next) => {
  * Get a specific task by ID
  */
 const getTaskById = async (req, res, next) => {
-    const startTime = Date.now();
-
     try {
-        // Check for validation errors from express-validator
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                error: 'Validation failed',
-                errors: errors.array().map(err => ({
-                    field: err.path || err.param,
-                    message: err.msg
-                }))
-            });
-        }
-
-        // Connect to database
-        const recruitmentConn = await connectDB_recruitment();
+        const { id } = req.params;
+        const recruitmentConn = await connectRecruitmentDB();
         const Task = getTaskModel(recruitmentConn);
 
-        const { id } = req.params;
-
-        // Validate ObjectId format
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            Sentry.captureMessage('Invalid task ID format', {
-                level: 'warning',
-                tags: {
-                    operation: 'getTaskById',
-                    validation: 'invalid_id'
-                },
-                extra: {
-                    providedId: id
-                }
-            });
-
-            return res.status(400).json({
-                success: false,
-                error: 'Invalid task ID format'
-            });
-        }
-
-        Sentry.logger.info('Fetching task by ID', {
-            operation: 'getTaskById',
-            taskId: id
-        });
-
-        // Fetch task from database
-        const queryStart = Date.now();
         const task = await Task.findById(id).lean();
-        const queryDuration = Date.now() - queryStart;
-
         if (!task) {
-            Sentry.captureMessage('Task not found', {
-                level: 'info',
-                tags: {
-                    operation: 'getTaskById',
-                    taskId: id
-                }
-            });
-
             return res.status(404).json({
                 success: false,
                 error: 'Task not found'
             });
         }
 
-        // Clean the task data
-        const cleanedTask = cleanTaskData(task);
-
-        const totalDuration = Date.now() - startTime;
-
-        Sentry.logger.info('Task fetched successfully', {
-            operation: 'getTaskById',
-            taskId: id,
-            taskTitle: cleanedTask.title,
-            queryDuration: `${queryDuration}ms`,
-            totalDuration: `${totalDuration}ms`
-        });
-
         return res.status(200).json({
             success: true,
-            data: cleanedTask
+            data: cleanTaskData(task)
         });
-
     } catch (error) {
-        console.error('[getTaskById] Error:', error);
-
-        Sentry.captureException(error, {
-            tags: {
-                operation: 'getTaskById',
-                taskId: req.params?.id
-            },
-            extra: {
-                errorMessage: error.message,
-                errorStack: error.stack
-            }
-        });
-
+        Sentry.captureException(error);
         return res.status(500).json({
             success: false,
-            error: error.message || 'An error occurred while fetching the task.'
+            error: error.message || 'Internal Server Error'
         });
     }
 };

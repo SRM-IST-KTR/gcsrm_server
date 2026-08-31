@@ -1,4 +1,4 @@
-const transporter = require('../mailer');
+const { sendEmail } = require('../emailService');
 const Sentry = require('@sentry/node');
 const fs = require('fs');
 const path = require('path');
@@ -126,7 +126,7 @@ const sendRegistrationEmail = async (participant, event) => {
         const htmlContent = loadTemplate('registration.html', replacements);
 
         const emailContent = {
-            from: process.env.ZOHO_SMTP_USER || process.env.SENDER_EMAIL,
+            from: process.env.SENDER_EMAIL,
             to: participant.email,
             subject: `Registration Confirmed - ${event.event_name}`,
             html: htmlContent,
@@ -171,18 +171,18 @@ Building the future, one commit at a time
             `
         };
 
-        const info = await transporter.sendMail(emailContent);
+        const { data } = await sendEmail(emailContent);
 
         Sentry.logger.info('Registration email sent successfully', {
             operation: 'sendRegistrationEmail',
             email: participant.email,
             event: event.slug,
-            messageId: info.messageId
+            messageId: data?.id
         });
 
         return {
             success: true,
-            messageId: info.messageId
+            messageId: data?.id
         };
     } catch (error) {
         Sentry.captureException(error, {
