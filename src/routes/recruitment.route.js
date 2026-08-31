@@ -2,11 +2,13 @@ const express = require('express');
 const router = express.Router();
 const { body, param, query } = require('express-validator');
 const { applyForRecruitment } = require('../controller/recruitments/apply_MONGODB.controller');
+const requireOtpAuth = require('../middleware/requireOtpAuth');
 const { getParticipantTasks, getAllTasks, getTaskById } = require('../controller/recruitments/getTasks.controller');
 
 // POST apply for recruitment with detailed validations
 router.post(
     '/apply',
+    requireOtpAuth,
     [
         // Name validation
         body('name')
