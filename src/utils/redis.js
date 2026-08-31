@@ -1,6 +1,7 @@
 /**
- * Redis client singleton.
- * Lazily connects on first use so dotenv has already loaded.
+ * Redis client singleton (robust).
+ * Connects lazily on first use, buffers commands while reconnecting,
+ * and tolerates idle-socket drops on serverless runtimes.
  */
 let Redis;
 try {
@@ -20,17 +21,17 @@ const getRedis = () => {
 
   const url = process.env.REDIS_URL || 'redis://localhost:6379';
   client = new Redis(url, {
-    maxRetriesPerRequest: 1,
-    enableOfflineQueue: false,
+    maxRetriesPerRequest: 3,
+    enableOfflineQueue: true, // buffer commands while the socket reconnects
+    connectTimeout: 10000,
+    tls: url.startsWith('rediss://') ? { rejectUnauthorized: false } : undefined,
     retryStrategy(times) {
-      if (times > 3) return null; // give up after 3 retries
-      return Math.min(times * 200, 2000);
+      return Math.min(times * 100, 3000);
     },
-    lazyConnect: true,
   });
 
   client.on('error', (err) => {
-    // suppress unhandled error crash
+    console.error('[redis] error:', err.message);
   });
 
   client.on('connect', () => {
@@ -41,14 +42,9 @@ const getRedis = () => {
 };
 
 const isConnected = async () => {
-  try {
-    const r = getRedis();
-    if (!r) return false;
-    await r.ping();
-    return true;
-  } catch {
-    return false;
-  }
+  const r = getRedis();
+  if (!r) return false;
+  return r.status === 'ready';
 };
 
 module.exports = { getRedis, isConnected };
