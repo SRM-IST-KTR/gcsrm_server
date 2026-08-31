@@ -3,6 +3,7 @@ const { connectRecruitmentDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
+const { sendRecruitmentConfirmationEmail } = require('../../utils/email/recruitment');
 
 /**
  * Apply for recruitment
@@ -153,12 +154,15 @@ const applyForRecruitment = async (req, res, next) => {
             totalDuration: `${totalDuration}ms`
         });
 
-        // Log slow database operations (over 500ms)
-        if (queryDuration > 500) {
-            Sentry.logger.warn('Slow database operation', {
-                operation: 'applyForRecruitment',
-                action: 'create_participant',
-                duration: `${queryDuration}ms`
+        // Send instant confirmation email to the user after successful save
+        try {
+            await sendRecruitmentConfirmationEmail(user);
+        } catch (emailError) {
+            Sentry.captureException(emailError, {
+                tags: {
+                    operation: 'applyForRecruitment',
+                    subOperation: 'sendConfirmationEmail'
+                }
             });
         }
 
