@@ -134,6 +134,55 @@ const getParticipantById = async (req, res, next) => {
 };
 
 /**
+ * Get single candidate by email — returns registration details + email verification status
+ */
+const getParticipantByEmail = async (req, res, next) => {
+  try {
+    const { email } = req.params;
+    const normalizedEmail = email.toLowerCase().trim();
+
+    if (!normalizedEmail) {
+      return res.status(400).json({
+        success: false,
+        error: 'Email is required',
+      });
+    }
+
+    const dbConn = await connectRecruitmentDB();
+    const ParticipantUser = getParticipantUserModel(dbConn);
+
+    // Case-insensitive lookup with regex escape to handle legacy mixed-case records
+    const escapedEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const candidate = await ParticipantUser.findOne({
+      email: new RegExp(`^${escapedEmail}$`, 'i'),
+    });
+
+    if (!candidate) {
+      return res.status(200).json({
+        success: true,
+        verified: false,
+        message: 'Email not found in recruitment records. Please register first.',
+        data: null,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      verified: true,
+      message: 'Email is verified and registered.',
+      data: candidate,
+    });
+  } catch (error) {
+    Sentry.captureException(error);
+    console.error('Error fetching participant by email:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message || 'Failed to fetch participant by email',
+    });
+  }
+};
+
+/**
  * Create a new candidate
  */
 const createParticipant = async (req, res, next) => {
@@ -497,6 +546,7 @@ module.exports = {
   getAllParticipants,
   getParticipantById,
   createParticipant,
+  getParticipantByEmail,
   updateParticipant,
   deleteParticipant,
   batchUpdateParticipants,

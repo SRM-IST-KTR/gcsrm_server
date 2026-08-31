@@ -7,6 +7,7 @@ const { signOtpToken, OTP_JWT_TTL } = require('../utils/jwt');
 /**
  * POST /api/otp/send
  * Generate a 6-digit OTP, store it in Redis with a 5-minute TTL, and email it.
+ * Accepts optional `emailTemplate` (HTML string with {{otp}} placeholder) and `subject` override.
  */
 exports.sendOTP = async (req, res, next) => {
   const startTime = Date.now();
@@ -16,7 +17,7 @@ exports.sendOTP = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { email } = req.body;
+    const { email, emailTemplate, subject } = req.body;
 
     // Check if there's already a valid OTP that hasn't expired
     const remaining = await getOTPTTL(email);
@@ -32,7 +33,10 @@ exports.sendOTP = async (req, res, next) => {
     const otp = generateOTP();
     await storeOTP(email, otp);
 
-    const html = `
+    // Resolve HTML: use custom template if provided (replacing {{otp}}), else default
+    const html = emailTemplate
+      ? emailTemplate.replace(/\{\{otp\}\}/g, otp)
+      : `
       <!doctype html>
       <html>
       <head><meta charset="utf-8"></head>
@@ -49,7 +53,7 @@ exports.sendOTP = async (req, res, next) => {
 
     const { data } = await sendEmail({
       to: email,
-      subject: 'Your OTP Code — GitHub Community SRM',
+      subject: subject || 'Your OTP Code — GitHub Community SRM',
       html,
       text: `Your OTP code is: ${otp}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, please ignore this email.`,
     });
@@ -58,6 +62,8 @@ exports.sendOTP = async (req, res, next) => {
     Sentry.logger.info('OTP sent', {
       operation: 'sendOTP',
       email,
+      hasCustomTemplate: Boolean(emailTemplate),
+      subject: subject || 'default',
       messageId: data?.id,
       duration: `${duration}ms`,
     });

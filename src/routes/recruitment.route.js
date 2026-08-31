@@ -8,6 +8,7 @@ const {
   getAllParticipants,
   getParticipantById,
   createParticipant,
+  getParticipantByEmail,
   updateParticipant,
   deleteParticipant,
   batchUpdateParticipants,
@@ -83,8 +84,10 @@ router.get('/tasks', getAllTasks);
 
 // 6. GET /api/recruitment/tasks/:id - Get specific task
 router.get('/tasks/:id', getTaskById);
+// 7. GET /api/recruitment/email/:email - Get registration details by email with verification status
+router.get('/email/:email', getParticipantByEmail);
 
-// 7. GET /api/recruitment - If query has email only, get participant tasks; otherwise get all participants
+// 8. GET /api/recruitment - If query has email only, get participant tasks; otherwise get all participants
 router.get('/', (req, res, next) => {
   if (req.query.email && !req.query.domain && !req.query.status && !req.query.year && !req.query.search) {
     return getParticipantTasks(req, res, next);
@@ -92,17 +95,17 @@ router.get('/', (req, res, next) => {
   return getAllParticipants(req, res, next);
 });
 
-// 8. POST /api/recruitment - Create new candidate (admin)
+// 9. POST /api/recruitment - Create new candidate (admin)
 router.post('/', createParticipant);
 
-// 9. GET /api/recruitment/:id - Single candidate details
+// 10. GET /api/recruitment/:id - Single candidate details
 router.get('/:id', getParticipantById);
 
-// 10. PUT /api/recruitment/:id - Update candidate
+// 11. PUT /api/recruitment/:id - Update candidate
 router.put('/:id', updateParticipant);
 router.patch('/:id', updateParticipant);
 
-// 11. DELETE /api/recruitment/:id - Delete candidate
+// 12. DELETE /api/recruitment/:id - Delete candidate
 router.delete('/:id', deleteParticipant);
 
 module.exports = router;
