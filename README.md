@@ -12,6 +12,7 @@ A robust and scalable backend server for GitHub Club SRM (GCSRM) built with Node
   - [Installation](#installation)
   - [Configuration](#configuration)
 - [API Documentation](#-api-documentation)
+- [Email API Endpoints](#-email-api-endpoints)
 - [Project Structure](#-project-structure)
 - [API Endpoints](#-api-endpoints)
   - [Teams](#teams)
@@ -33,7 +34,8 @@ A robust and scalable backend server for GitHub Club SRM (GCSRM) built with Node
 - **Team Management** - Manage team members and their roles
 - **Sponsor Management** - Track and manage club sponsors
 - **Certificate Generation** - Automated certificate generation and verification system
-- **Contact Form Handler** - Process and store contact form submissions with email notifications
+- **Contact Form Handler** - Process and store contact form submissions with email notifications via Resend
+- **Unified Email Service** - Single Resend-powered library for single and batch email sending (up to 100 emails per call)
 - **Interactive API Documentation** - Swagger UI for easy API exploration and testing
 - **Security First** - Helmet.js for security headers, CORS configuration
 - **Request Logging** - Morgan for HTTP request logging
@@ -192,9 +194,9 @@ DB_NAME=gcsrm
 # Sentry Configuration (Optional - for error monitoring)
 SENTRY_DSN=your_sentry_dsn_here
 
-# Email Configuration (for contact form notifications)
-ZOHO_SMTP_PASS=your_app_specific_password
-ZOHO_SMTP_USER=noreply@gcsrm.com
+# Email Configuration (Resend — for all email sending)
+RESEND_API_KEY=re_your_resend_api_key
+SENDER_EMAIL=noreply@githubsrmist.in
 
 # Certificate Configuration
 CERTIFICATE_SECRET=YOUR_CERTIFICATE_SECRET
@@ -210,8 +212,8 @@ CERTIFICATE_SECRET=YOUR_CERTIFICATE_SECRET
 | `MONGODB_URI`        | MongoDB connection string            | Yes      | -           |
 | `DB_NAME`            | Database name                        | Yes      | -           |
 | `SENTRY_DSN`         | Sentry error tracking DSN            | No       | -           |
-| `ZOHO_SMTP_USER`     | Email account username               | Yes*     | -           |
-| `ZOHO_SMTP_PASS`     | Email account password               | Yes*     | -           |
+| `RESEND_API_KEY`     | Resend API key (starts with re_)      | Yes*     | -           |
+| `SENDER_EMAIL`       | Default from address for all emails   | Yes*     | -           |
 | `CERTIFICATE_SECRET` | Certificate verification             | Yes*     | -           |
 
 ## 📚 API Documentation
@@ -234,6 +236,63 @@ The Swagger interface provides:
 - 🔐 **Authentication details** - Required headers and authorization
 - 💡 **Example requests** - Sample payloads for each endpoint
 
+## 📧 Email API Endpoints
+
+All email sending is powered by **Resend** through the unified `emailService.js` library. No nodemailer or SMTP involved.
+
+### `POST /api/email/send` — Single email
+
+Send a single email to one or more recipients.
+
+**Request body:**
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `to` | yes | string | Recipient email address |
+| `subject` | yes | string | Email subject line |
+| `html` | no | string | HTML body (required if `text` omitted) |
+| `text` | no | string | Plain text body (required if `html` omitted) |
+| `from` | no | string | Sender override (defaults to `SENDER_EMAIL`) |
+| `reply_to` | no | string | Reply-to address |
+| `scheduled_at` | no | string | ISO date for scheduled delivery |
+
+**Example:**
+```json
+{
+  "to": "user@example.com",
+  "subject": "Welcome to GC SRM",
+  "html": "<h1>Welcome!</h1><p>Thanks for joining.</p>"
+}
+```
+
+**Response:** `200` — `{ "success": true, "message": "Email sent successfully", "messageId": "..." }`
+
+### `POST /api/email/batch` — Batch emails (up to 100)
+
+Send multiple emails in a single API call. Each email is sent individually but billed as one batch.
+
+**Request body:**
+
+| Field | Required | Type | Description |
+|-------|----------|------|-------------|
+| `emails` | yes | array | Array of email objects (max 100) |
+
+Each email object supports: `to`, `subject`, `html`, `text`, `from`, `reply_to`.
+
+**Example:**
+```json
+{
+  "emails": [
+    { "to": "user1@example.com", "subject": "Welcome", "html": "<p>Hello user1</p>" },
+    { "to": "user2@example.com", "subject": "Reminder", "html": "<p>Hello user2</p>" }
+  ]
+}
+```
+
+**Response:** `200` — `{ "success": true, "message": "2 emails sent successfully", "messageIds": ["...", "..."] }`
+
+> **Note:** Resend blocks `@example.com` domains in sandbox mode. Use `delivered@resend.dev` for testing.
+
 ## 📁 Project Structure
 
 ```plaintext
@@ -243,6 +302,7 @@ gcsrm_server/
 │   ├── controller/                 # Request handlers & business logic
 │   │   ├── certificate.controller.js
 │   │   ├── contact.controller.js
+│   │   ├── email.controller.js    # Single + batch email endpoints
 │   │   ├── event.controller.js
 │   │   ├── sponsor.controller.js
 │   │   └── team.controller.js
@@ -259,13 +319,14 @@ gcsrm_server/
 │   │   ├── index.js               # Main router
 │   │   ├── certificate.route.js
 │   │   ├── contact.route.js
+│   │   ├── email.route.js         # Email API routes
 │   │   ├── event.route.js
 │   │   ├── sponsor.route.js
 │   │   └── team.route.js
 │   └── utils/                      # Helper functions & utilities
 │       ├── db.js                  # Database connection
+│       ├── emailService.js        # Unified Resend email library (single + batch)
 │       ├── instrument.js          # Sentry instrumentation
-│       ├── mailer.js              # Email service
 │       ├── swagger.js             # Swagger configuration
 │       └── certificates/          # Certificate generation
 │           └── overlay-sharp.js   # Image processing for certificates
@@ -342,7 +403,8 @@ This project is configured for Vercel deployment.
 - ✅ Use production MongoDB URI
 - ✅ Configure proper CORS origins
 - ✅ Set up Sentry DSN for error monitoring
-- ✅ Use strong email credentials
+- ✅ Set RESEND_API_KEY in the production environment
+- ✅ Verify SENDER_EMAIL domain is verified in Resend
 - ✅ Enable HTTPS
 - ✅ Set up rate limiting (if needed)
 - ✅ Configure proper logging
