@@ -1,8 +1,31 @@
+const fs = require('fs');
+const path = require('path');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
 const { generateOTP, storeOTP, verifyOTP, getOTPTTL, OTP_TTL_SECONDS } = require('../utils/otpService');
 const { sendEmail } = require('../utils/emailService');
 const { signOtpToken, OTP_JWT_TTL } = require('../utils/jwt');
+
+let defaultOtpTemplateCache = null;
+const loadOtpTemplate = () => {
+  if (defaultOtpTemplateCache) return defaultOtpTemplateCache;
+  try {
+    const templatePath = path.join(__dirname, '../utils/email/templates/otp.html');
+    defaultOtpTemplateCache = fs.readFileSync(templatePath, 'utf8');
+  } catch (err) {
+    // Fallback if file read fails
+    defaultOtpTemplateCache = `
+      <!doctype html><html><body style="font-family:sans-serif;padding:20px;background:#fffdf0;">
+        <div style="max-width:480px;margin:0 auto;background:#fff;border:3px solid #1e1b24;border-radius:12px;padding:24px;text-align:center;">
+          <h2 style="color:#1e1b24;">Your Verification Code</h2>
+          <div style="font-size:32px;font-weight:bold;letter-spacing:8px;padding:16px;background:#ffd93d;border:2px solid #1e1b24;border-radius:8px;margin:20px 0;">{{OTP}}</div>
+          <p style="color:#666;font-size:13px;">Valid for 5 minutes. Do not share this code.</p>
+        </div>
+      </body></html>`;
+  }
+  return defaultOtpTemplateCache;
+};
+loadOtpTemplate();
 
 /**
  * POST /api/otp/send
@@ -33,23 +56,11 @@ exports.sendOTP = async (req, res, next) => {
     const otp = generateOTP();
     await storeOTP(email, otp);
 
-    // Resolve HTML: use custom template if provided (replacing {{otp}}), else default
-    const html = emailTemplate
-      ? emailTemplate.replace(/\{\{otp\}\}/g, otp)
-      : `
-      <!doctype html>
-      <html>
-      <head><meta charset="utf-8"></head>
-      <body style="font-family: -apple-system, sans-serif; background:#f6f8fa;">
-        <div style="max-width:480px;margin:40px auto;background:#fff;border:1px solid #d0d7de;border-radius:8px;padding:32px;">
-          <h2 style="margin:0 0 8px;color:#24292f;">Your OTP Code</h2>
-          <p style="color:#656d76;font-size:14px;margin:0 0 24px;">Use this code to complete your verification. It expires in 5 minutes.</p>
-          <div style="background:#f6f8fa;border:1px solid #d0d7de;border-radius:6px;padding:16px;text-align:center;letter-spacing:8px;font-size:32px;font-weight:700;color:#24292f;">${otp}</div>
-          <p style="color:#656d76;font-size:12px;margin-top:24px;">If you didn't request this code, you can safely ignore this email.</p>
-        </div>
-      </body>
-      </html>
-    `;
+    // Resolve HTML: use custom template if provided (replacing {{otp}} or {{OTP}}), else default Shinchan template
+    const rawTemplate = emailTemplate || loadOtpTemplate();
+    const html = rawTemplate
+      .replace(/\{\{otp\}\}/gi, otp)
+      .replace(/\{\{OTP\}\}/g, otp);
 
     const { data } = await sendEmail({
       to: email,

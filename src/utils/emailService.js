@@ -1,129 +1,218 @@
-/**
- * Unified email service — single library for all emailing in this codebase.
- *
- * Everything that sends email (contact forms, registrations, recruitments,
- * batch campaigns, …) MUST go through this module. It wraps the Resend SDK
- * (`resend`) — there is no nodemailer/smtp path anywhere.
- *
- * API:
- *   const { sendEmail, sendBatchEmails, getResend, isConfigured } = require('./emailService');
- *
- *   // Single email
- *   const result = await sendEmail({
- *     to: 'user@example.com',
- *     subject: 'Hi',
- *     html: '<p>…</p>',
- *     text: '…',            // optional
- *     from: 'Team <team@example.com>', // optional, defaults to SENDER_EMAIL
- *     reply_to: '…',        // optional
- *     scheduled_at: '…',    // optional ISO date
- *   });
- *
- *   // Batch email (multiple recipients in one API call, up to 100)
- *   const result = await sendBatchEmails([
- *     { to: 'a@example.com', subject: '…', html: '…' },
- *     { to: 'b@example.com', subject: '…', html: '…' },
- *   ]);
- *   // result.data is an array of { id } per email, in the same order as input.
- *
- * All functions throw on failure (never swallow); the returned object is
- * `{ success: true, data }` where `data` is the raw Resend response.
- */
-const { Resend } = require('resend');
+const { SESClient, SendEmailCommand } = require('@aws-sdk/client-ses');
 
-let resendInstance = null;
-let initError = null;
+let sesClientInstance = null;
 
-/**
- * Lazy, cached Resend instance. Constructed on first use so that
- * `dotenv.config()` has already run when the key is read.
- */
-const getResend = () => {
-  if (resendInstance) return resendInstance;
+const getSES = () => {
+  if (sesClientInstance) return sesClientInstance;
 
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    initError = new Error(
-      'Missing RESEND_API_KEY. Set it in your environment or .env file (e.g. RESEND_API_KEY=re_123)'
-    );
-    initError.code = 'RESEND_API_KEY_MISSING';
-    throw initError;
-  }
+  const region = process.env.AWS_REGION || process.env.AWS_DEFAULT_REGION || 'us-east-1';
 
-  resendInstance = new Resend(apiKey);
-  return resendInstance;
+  const credentials =
+    process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+      ? {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID.trim(),
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY.trim(),
+          ...(process.env.AWS_SESSION_TOKEN && {
+            sessionToken: process.env.AWS_SESSION_TOKEN.trim(),
+          }),
+        }
+      : undefined;
+
+  sesClientInstance = new SESClient({
+    region,
+    credentials,
+    maxAttempts: 3,
+  });
+
+  return sesClientInstance;
 };
 
-/** True when an API key is present (does not construct the SDK). */
-const isConfigured = () => Boolean(process.env.RESEND_API_KEY);
+const isConfigured = () =>
+  Boolean(
+    (process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY) ||
+      process.env.AWS_REGION ||
+      process.env.AWS_PROFILE ||
+      process.env.SENDER_EMAIL
+  );
 
-/** Resolve the from-address: explicit option wins, else SENDER_EMAIL. */
-const resolveFrom = (from) => from || process.env.SENDER_EMAIL;
+const resolveFrom = (from) => from || process.env.SENDER_EMAIL || 'noreply@githubsrmist.in';
 
-/**
- * Normalize Resend errors into a consistent Error with a `cause` and status.
- */
+const normalizeAddresses = (input) => {
+  if (!input) return [];
+  if (Array.isArray(input)) {
+    return input.map((addr) => String(addr).trim()).filter(Boolean);
+  }
+  if (typeof input === 'string') {
+    return input
+      .split(',')
+      .map((addr) => addr.trim())
+      .filter(Boolean);
+  }
+  return [];
+};
+
 const toError = (error, context) => {
   if (!error) return null;
-  const err = new Error(
-    `${context}: ${error.message || JSON.stringify(error)}`
-  );
-  err.code = error.name || 'RESEND_ERROR';
-  err.statusCode = error.statusCode;
+
+  const message = error.message || (typeof error === 'object' ? JSON.stringify(error) : String(error));
+  const err = new Error(`${context}: ${message}`);
+
+  err.name = error.name || 'SESError';
+  err.code = error.name || error.Code || 'SES_ERROR';
+  err.statusCode = error.$metadata?.httpStatusCode || error.statusCode || 500;
   err.cause = error;
+
   return err;
 };
 
-/**
- * Send a single email.
- * @param {Object} options - CreateEmailOptions + optional `from` override.
- * @returns {Promise<{success: true, data: {id: string}}>}
- * @throws {Error} on missing API key or Resend API failure.
- */
-const sendEmail = async (options = {}) => {
-  const resend = getResend();
-  const email = {
-    ...options,
-    from: resolveFrom(options.from),
-  };
-  const { data, error } = await resend.emails.send(email);
-  if (error) throw toError(error, 'Resend email send failed');
-  return { success: true, data };
-};
-
-/**
- * Send multiple emails in a single batch API call (max 100 per Resend docs).
- * @param {Array<Object>} emails - Array of CreateBatchEmailOptions.
- * @returns {Promise<{success: true, data: {id: string}[]}>} - id per email, input order
- * @throws {Error} on missing API key or Resend API failure.
- */
-const sendBatchEmails = async (emails = []) => {
-  if (!Array.isArray(emails) || emails.length === 0) {
-    throw new Error('sendBatchEmails: emails array must not be empty');
+const buildSendEmailParams = (options = {}) => {
+  const toAddresses = normalizeAddresses(options.to);
+  if (toAddresses.length === 0) {
+    const err = new Error('Email recipient "to" is required and must not be empty.');
+    err.statusCode = 400;
+    err.code = 'INVALID_RECIPIENT';
+    throw err;
   }
-  const resend = getResend();
-  const payload = emails.map((e) => ({
-    ...e,
-    from: resolveFrom(e.from),
-  }));
-  const { data, error } = await resend.batch.send(payload);
-  if (error) throw toError(error, 'Resend batch send failed');
-  // The SDK wraps the batch payload as { data: { data: [{ id }, …] } };
-  // normalize so `data` is always the id array itself.
-  const ids = Array.isArray(data?.data) ? data.data : data;
-  return { success: true, data: ids };
+
+  if (!options.subject || typeof options.subject !== 'string' || options.subject.trim() === '') {
+    const err = new Error('Email "subject" is required and must not be empty.');
+    err.statusCode = 400;
+    err.code = 'INVALID_SUBJECT';
+    throw err;
+  }
+
+  const hasHtml = Boolean(options.html && typeof options.html === 'string' && options.html.trim() !== '');
+  const hasText = Boolean(options.text && typeof options.text === 'string' && options.text.trim() !== '');
+
+  if (!hasHtml && !hasText) {
+    const err = new Error('Email body requires at least "html" or "text" content.');
+    err.statusCode = 400;
+    err.code = 'INVALID_BODY';
+    throw err;
+  }
+
+  const ccAddresses = normalizeAddresses(options.cc);
+  const bccAddresses = normalizeAddresses(options.bcc);
+  const replyToAddresses = normalizeAddresses(options.reply_to || options.replyTo);
+
+  const configurationSet =
+    options.configuration_set ||
+    options.configurationSet ||
+    process.env.AWS_SES_CONFIGURATION_SET ||
+    'gcsrm-events';
+
+  return {
+    Source: resolveFrom(options.from),
+    Destination: {
+      ToAddresses: toAddresses,
+      ...(ccAddresses.length > 0 && { CcAddresses: ccAddresses }),
+      ...(bccAddresses.length > 0 && { BccAddresses: bccAddresses }),
+    },
+    Message: {
+      Subject: {
+        Charset: 'UTF-8',
+        Data: options.subject,
+      },
+      Body: {
+        ...(hasHtml && {
+          Html: {
+            Charset: 'UTF-8',
+            Data: options.html,
+          },
+        }),
+        ...(hasText && {
+          Text: {
+            Charset: 'UTF-8',
+            Data: options.text,
+          },
+        }),
+      },
+    },
+    ...(replyToAddresses.length > 0 && { ReplyToAddresses: replyToAddresses }),
+    ...(configurationSet && { ConfigurationSetName: configurationSet }),
+  };
 };
 
-/**
- * Reset the cached instance (mainly for tests).
- */
+const sendEmail = async (options = {}) => {
+  try {
+    const ses = getSES();
+    const params = buildSendEmailParams(options);
+    const command = new SendEmailCommand(params);
+    const response = await ses.send(command);
+
+    return {
+      success: true,
+      data: {
+        id: response.MessageId,
+      },
+    };
+  } catch (error) {
+    if (error.statusCode === 400 && error.code?.startsWith('INVALID_')) {
+      throw error;
+    }
+    throw toError(error, 'SES single email send failed');
+  }
+};
+
+const mapConcurrent = async (items, concurrency, fn) => {
+  const results = new Array(items.length);
+  let currentIndex = 0;
+
+  const worker = async () => {
+    while (currentIndex < items.length) {
+      const index = currentIndex++;
+      results[index] = await fn(items[index], index);
+    }
+  };
+
+  const pool = Array.from(
+    { length: Math.min(concurrency, items.length) },
+    () => worker()
+  );
+
+  await Promise.all(pool);
+  return results;
+};
+
+const sendBatchEmails = async (emails = [], batchOptions = {}) => {
+  if (!Array.isArray(emails) || emails.length === 0) {
+    const err = new Error('sendBatchEmails: emails must be a non-empty array');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const concurrency =
+    batchOptions.concurrency ||
+    parseInt(process.env.SES_BATCH_CONCURRENCY, 10) ||
+    10;
+
+  try {
+    const results = await mapConcurrent(emails, concurrency, async (emailOptions, idx) => {
+      try {
+        const res = await sendEmail(emailOptions);
+        return res.data;
+      } catch (err) {
+        err.message = `Batch email at index ${idx} failed (${emailOptions?.to || 'unknown'}): ${err.message}`;
+        throw err;
+      }
+    });
+
+    return {
+      success: true,
+      data: results,
+    };
+  } catch (error) {
+    throw toError(error, 'SES batch email send failed');
+  }
+};
+
 const resetForTest = () => {
-  resendInstance = null;
-  initError = null;
+  sesClientInstance = null;
 };
 
 module.exports = {
-  getResend,
+  getSES,
+  getResend: getSES,
   isConfigured,
   sendEmail,
   sendBatchEmails,

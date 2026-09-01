@@ -7,7 +7,7 @@ const emailController = require('../controller/email.controller');
  * @swagger
  * tags:
  *   name: Email
- *   description: Send single or batch emails via Resend
+ *   description: Send single or batch emails via Amazon SES
  */
 
 /**
@@ -15,7 +15,7 @@ const emailController = require('../controller/email.controller');
  * /email/send:
  *   post:
  *     summary: Send a single email
- *     description: Sends one email to one or more recipients via Resend.
+ *     description: Sends one email to one or more recipients via Amazon SES.
  *     tags: [Email]
  *     requestBody:
  *       required: true
@@ -89,13 +89,12 @@ router.post('/send',
  * /email/batch:
  *   post:
  *     summary: Send batch emails (up to 100)
- *     description: Sends multiple emails in a single Resend API call. Each email is sent individually but billed as one batch.
+ *     description: Sends multiple emails in batch via Amazon SES.
  *     tags: [Email]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
- *           schema:
  *             type: object
  *             required: [emails]
  *             properties:
