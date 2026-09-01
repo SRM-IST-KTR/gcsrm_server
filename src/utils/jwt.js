@@ -10,6 +10,9 @@ function getSecret() {
     return secret;
 }
 
+/** The OTP JWT lifetime in seconds (defaults to 3600 = 1 hour). */
+const OTP_JWT_TTL = () => Number(process.env.OTP_JWT_TTL || 3600);
+
 /**
  * Sign a JWT for an email that has been verified via OTP.
  * The token proves the email passed OTP verification, so the
@@ -17,7 +20,8 @@ function getSecret() {
  */
 function signOtpToken(email) {
     return jwt.sign({ email: email.toLowerCase() }, getSecret(), {
-        expiresIn: Number(process.env.OTP_JWT_TTL || 3600),
+        algorithm: 'HS256',
+        expiresIn: OTP_JWT_TTL(),
     });
 }
 
@@ -26,12 +30,10 @@ function signOtpToken(email) {
  * Throws if the token is invalid, expired, or malformed.
  */
 function verifyToken(token) {
-    return jwt.verify(token, getSecret());
+    return jwt.verify(token, getSecret(), {
+        algorithms: ['HS256'],
+    });
 }
-
-/** The OTP JWT lifetime in seconds (defaults to 3600 = 1 hour). */
-const OTP_JWT_TTL = () => Number(process.env.OTP_JWT_TTL || 3600);
-
 module.exports = {
     signOtpToken,
     verifyToken,

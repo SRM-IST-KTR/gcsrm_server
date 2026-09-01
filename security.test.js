@@ -53,6 +53,28 @@ describe('Security Fixes', () => {
         .send({});
       expect(res.status).toBe(400); // Because of missing "to" and "subject"
     });
+    it('returns 500 when SERVICE_API_KEY is not configured', async () => {
+      delete process.env.SERVICE_API_KEY;
+      const res = await request(app).post('/api/email/send')
+        .set('x-api-key', 'any-key')
+        .send({ to: 'a@b.com', subject: 'hi' });
+      expect(res.status).toBe(500);
+      expect(res.body).toEqual({
+        success: false,
+        message: 'Server configuration error',
+      });
+    });
+
+    it('returns 401 with different length api key', async () => {
+      const res = await request(app).post('/api/email/send')
+        .set('x-api-key', 'short')
+        .send({ to: 'a@b.com', subject: 'hi' });
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({
+        success: false,
+        message: 'Unauthorized: Invalid or missing x-api-key header',
+      });
+    });
   });
 
   describe('OTP Injection Prevention', () => {
@@ -71,6 +93,37 @@ describe('Security Fixes', () => {
       expect(emailArgs.subject).toBe('Your OTP Code — GitHub Community SRM');
       expect(emailArgs.html).not.toContain('<h1>Hacked</h1>');
       expect(emailArgs.html).toContain('123456');
+    });
+  });
+
+  describe('JWT Security Hardening', () => {
+    const jwt = require('jsonwebtoken');
+    const { signOtpToken, verifyToken, OTP_JWT_TTL } = require('./src/utils/jwt');
+
+    beforeEach(() => {
+      process.env.JWT_SECRET = 'test-jwt-secret-key-12345';
+    });
+
+    it('signs tokens with HS256 algorithm and lowercased email', () => {
+      const token = signOtpToken('TestUser@Example.COM');
+      const decoded = jwt.decode(token, { complete: true });
+      expect(decoded.header.alg).toBe('HS256');
+      expect(decoded.payload.email).toBe('testuser@example.com');
+      expect(decoded.payload.exp - decoded.payload.iat).toBe(OTP_JWT_TTL());
+    });
+
+    it('verifies valid HS256 token', () => {
+      const token = signOtpToken('user@example.com');
+      const payload = verifyToken(token);
+      expect(payload.email).toBe('user@example.com');
+    });
+
+    it('rejects tokens signed with unauthorized algorithms like HS384 or none', () => {
+      const hs384Token = jwt.sign({ email: 'user@example.com' }, process.env.JWT_SECRET, { algorithm: 'HS384' });
+      expect(() => verifyToken(hs384Token)).toThrow();
+
+      const noneToken = jwt.sign({ email: 'user@example.com' }, '', { algorithm: 'none' });
+      expect(() => verifyToken(noneToken)).toThrow();
     });
   });
 });

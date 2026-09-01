@@ -32,6 +32,14 @@ const options = {
             }
         ],
         components: {
+            securitySchemes: {
+                ApiKeyAuth: {
+                    type: 'apiKey',
+                    in: 'header',
+                    name: 'x-api-key',
+                    description: 'API key for internal microservice relay'
+                }
+            },
             schemas: {
                 Sponsor: {
                     type: "object",
