@@ -199,26 +199,37 @@ RECRUITMENT_END_DATE=2026-12-31T23:59:59.999Z
 # CORS Configuration
 ORIGIN=*
 
-# Sentry & Email Configuration
+# Sentry & AWS SES Email Configuration
 SENTRY_DSN=
-RESEND_API_KEY=
+AWS_REGION=us-east-1
+AWS_ACCESS_KEY_ID=AKIA...
+AWS_SECRET_ACCESS_KEY=...
 SENDER_EMAIL=noreply@githubsrmist.in
+AWS_SES_CONFIGURATION_SET=gcsrm-events
+SES_BATCH_CONCURRENCY=10
 CERTIFICATE_SECRET=your_secret_key
 ```
 #### Environment Variable Details
 
 
-| Variable             | Description                          | Required | Default     |
-| -------------------- | ------------------------------------ | -------- | ----------- |
-| `PORT`               | Server port                          | No       | 3000        |
-| `NODE_ENV`           | Environment (development/production) | No       | development |
-| `MONGODB_URI`        | MongoDB connection string            | Yes      | -           |
-| `DB_NAME`            | Database name                        | Yes      | -           |
-| `SENTRY_DSN`         | Sentry error tracking DSN            | No       | -           |
-| `RESEND_API_KEY`     | Resend API key (starts with re_)      | Yes*     | -           |
-| `SENDER_EMAIL`       | Default from address for all emails   | Yes*     | -           |
-| `CERTIFICATE_SECRET` | Certificate verification             | Yes*     | -           |
-
+| Variable                    | Description                                  | Required | Default                 |
+| --------------------------- | -------------------------------------------- | -------- | ----------------------- |
+| `PORT`                      | Server port                                  | No       | 8000                    |
+| `NODE_ENV`                  | Environment (development/production)         | No       | dev                     |
+| `MONGO_URI`                 | MongoDB connection string (GCSRM main DB)    | Yes      | -                       |
+| `DB_NAME`                   | Database name                                | Yes      | GCSRM                   |
+| `MONGO_URI_RECRUITMENT`     | Recruitment MongoDB connection string        | Yes      | -                       |
+| `DB_NAME_RECRUITMENT`       | Recruitment Database name                    | Yes      | Recruitment             |
+| `REDIS_URL`                 | Redis server URL for OTP caching             | Yes      | redis://localhost:6379  |
+| `JWT_SECRET`                | Secret key for signing OTP session tokens    | Yes      | -                       |
+| `SENTRY_DSN`                | Sentry error tracking DSN                    | No       | -                       |
+| `AWS_REGION`                | Amazon SES AWS Region                        | Yes      | us-east-1               |
+| `AWS_ACCESS_KEY_ID`         | IAM Access Key ID for SES                    | Yes*     | - (inherits CLI/role)   |
+| `AWS_SECRET_ACCESS_KEY`     | IAM Secret Access Key for SES                | Yes*     | - (inherits CLI/role)   |
+| `SENDER_EMAIL`              | Verified default sender email address        | Yes      | noreply@githubsrmist.in |
+| `AWS_SES_CONFIGURATION_SET` | SES Configuration Set for metric tracking    | No       | gcsrm-events            |
+| `SES_BATCH_CONCURRENCY`     | Concurrency worker pool size for batch email | No       | 10                      |
+| `CERTIFICATE_SECRET`        | Certificate verification secret key          | Yes      | -                       |
 ## 📚 API Documentation
 
 This project uses **Swagger/OpenAPI** for comprehensive, interactive API documentation.
@@ -241,7 +252,7 @@ The Swagger interface provides:
 
 ## 📧 Email API Endpoints
 
-All email sending is powered by **Resend** through the unified `emailService.js` library. No nodemailer or SMTP involved.
+All email sending is powered by **Amazon Simple Email Service (SES)** through the unified `src/utils/emailService.js` library using the AWS SDK v3 (`@aws-sdk/client-ses`) with HTTP connection pooling and bounded batch concurrency.
 
 ### `POST /api/email/send` — Single email
 
@@ -272,7 +283,7 @@ Send a single email to one or more recipients.
 
 ### `POST /api/email/batch` — Batch emails (up to 100)
 
-Send multiple emails in a single API call. Each email is sent individually but billed as one batch.
+Send multiple emails in parallel via a concurrency-bounded worker pool (preserves request ordering).
 
 **Request body:**
 
@@ -294,7 +305,7 @@ Each email object supports: `to`, `subject`, `html`, `text`, `from`, `reply_to`.
 
 **Response:** `200` — `{ "success": true, "message": "2 emails sent successfully", "messageIds": ["...", "..."] }`
 
-> **Note:** Resend blocks `@example.com` domains in sandbox mode. Use `delivered@resend.dev` for testing.
+> **Note:** Emails are routed through Amazon SES with automated event logging via the `gcsrm-events` Configuration Set.
 
 ## 📁 Project Structure
 
@@ -406,8 +417,8 @@ This project is configured for Vercel deployment.
 - ✅ Use production MongoDB URI
 - ✅ Configure proper CORS origins
 - ✅ Set up Sentry DSN for error monitoring
-- ✅ Set RESEND_API_KEY in the production environment
-- ✅ Verify SENDER_EMAIL domain is verified in Resend
+- ✅ Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in Vercel / server environment
+- ✅ Verify `SENDER_EMAIL` domain (`githubsrmist.in`) is verified in Amazon SES
 - ✅ Enable HTTPS
 - ✅ Set up rate limiting (if needed)
 - ✅ Configure proper logging
