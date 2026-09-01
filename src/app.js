@@ -31,7 +31,8 @@ const corsOptions = {
             'https://octacore.githubsrmist.in',
             'https://octacore-beta.githubsrmist.in',
             'https://gcsrm-server.vercel.app',
-            'https://gcsrm-server-*.vercel.app' // Allow preview deployments
+            'https://gcsrm-server-*.vercel.app', // Allow preview deployments
+            'https://gcsrm-rec26.vercel.app/'
         ]
         : true, // Allow all origins in development
     credentials: true,
