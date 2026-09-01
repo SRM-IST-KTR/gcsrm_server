@@ -3,6 +3,7 @@ const router = express.Router();
 const { body, param, query } = require('express-validator');
 const { applyForRecruitment } = require('../controller/recruitments/apply_MONGODB.controller');
 const requireOtpAuth = require('../middleware/requireOtpAuth');
+const { submitTask } = require('../controller/recruitments/submitTask.controller');
 const { getParticipantTasks, getAllTasks, getTaskById } = require('../controller/recruitments/getTasks.controller');
 const {
   getAllParticipants,
@@ -78,6 +79,11 @@ router.post(
   ],
   applyForRecruitment
 );
+
+// 4b. POST /api/recruitment/submit - Submit completed recruitment task (syncs to Google Sheet)
+router.post('/submit', requireOtpAuth, submitTask);
+router.post('/submit-task', requireOtpAuth, submitTask);
+router.post('/tasks/submit', requireOtpAuth, submitTask);
 
 // 5. GET /api/recruitment/tasks - Get all tasks
 router.get('/tasks', getAllTasks);
