@@ -87,7 +87,7 @@ taskSchema.index({ domain: 1, year: 1 });
 
 // Export a function that returns the model for a given connection
 function getTaskModel(connection) {
-    return connection.model("tasks25", taskSchema);
+    return connection.model("tasks26", taskSchema);
 }
 
 module.exports = getTaskModel;
