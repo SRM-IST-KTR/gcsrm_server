@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/djdiptayan1/gcsrm_server#readme",
   "dependencies": {
+    "@aws-sdk/client-ses": "^3.1123.0",
     "@sentry/node": "^10.15.0",
     "@sentry/profiling-node": "^10.15.0",
     "cors": "^2.8.5",
