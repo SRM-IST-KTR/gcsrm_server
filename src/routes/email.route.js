@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 const emailController = require('../controller/email.controller');
+const requireApiKey = require('../middleware/requireApiKey');
 
 /**
  * @swagger
@@ -17,6 +18,8 @@ const emailController = require('../controller/email.controller');
  *     summary: Send a single email
  *     description: Sends one email to one or more recipients via Amazon SES.
  *     tags: [Email]
+ *     security:
+ *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -77,6 +80,7 @@ const emailController = require('../controller/email.controller');
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/send',
+  requireApiKey,
   [
     body('to').notEmpty().withMessage('to is required'),
     body('subject').notEmpty().withMessage('subject is required'),
@@ -91,6 +95,8 @@ router.post('/send',
  *     summary: Send batch emails (up to 100)
  *     description: Sends multiple emails in batch via Amazon SES.
  *     tags: [Email]
+ *     security:
+ *       - ApiKeyAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -161,6 +167,7 @@ router.post('/send',
  *         $ref: '#/components/responses/InternalServerError'
  */
 router.post('/batch',
+  requireApiKey,
   [
     body('emails').isArray({ min: 1, max: 100 }).withMessage('emails must be a non-empty array (max 100)'),
   ],
