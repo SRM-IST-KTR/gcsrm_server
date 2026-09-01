@@ -1,6 +1,8 @@
-# OCTACORE
+# GCSRM Server
 
-A robust and scalable backend server for GitHub Club SRM (GCSRM) built with Node.js, Express.js, and MongoDB. This server provides RESTful APIs for managing club activities, events, team members, sponsors, certificates, and contact submissions.
+A robust, high-performance, and scalable backend server for **GitHub Community SRM (GCSRM)** built with Node.js, Express.js 5, MongoDB, Redis, and Amazon SES. This server powers the main community portal, recruitment intake system, hackathon management (OssomeHacks), dynamic certificate generation, OTP verification, and transactional email infrastructure.
+
+---
 
 ## 📋 Table of Contents
 
@@ -12,194 +14,169 @@ A robust and scalable backend server for GitHub Club SRM (GCSRM) built with Node
   - [Installation](#installation)
   - [Configuration](#configuration)
 - [API Documentation](#-api-documentation)
-- [Email API Endpoints](#-email-api-endpoints)
+- [API Endpoints Overview](#-api-endpoints-overview)
+  - [Authentication & OTP](#-authentication--otp)
+  - [Email Service](#-email-service)
+  - [Recruitment 2026](#-recruitment-2026)
+  - [OssomeHacks Hackathon](#-ossomehacks-hackathon)
+  - [Certificates](#-certificates)
+  - [Events](#-events)
+  - [Team & Sponsors](#-team--sponsors)
+  - [Contact Form](#-contact-form)
 - [Project Structure](#-project-structure)
-- [API Endpoints](#-api-endpoints)
-  - [Teams](#teams)
-  - [Sponsors](#sponsors)
-  - [Events](#events)
-  - [Certificates](#certificates)
-  - [Contact](#contact)
-- [Development](#-development)
-- [Deployment](#-deployment)
-
+- [Development & Deployment](#-development--deployment)
+- [Security & Performance](#-security--performance)
 - [License](#-license)
 - [Support](#-support)
 
+---
+
 ## ✨ Features
 
-- **RESTful API Architecture** - Clean and intuitive REST API design
-- **MongoDB Integration** - Robust database management with Mongoose ODM
-- **Event Management** - Complete CRUD operations for club events
-- **Team Management** - Manage team members and their roles
-- **Sponsor Management** - Track and manage club sponsors
-- **Certificate Generation** - Automated certificate generation and verification system
-- **Contact Form Handler** - Process and store contact form submissions with email notifications via Resend
-- **Unified Email Service** - Single Resend-powered library for single and batch email sending (up to 100 emails per call)
-- **Interactive API Documentation** - Swagger UI for easy API exploration and testing
-- **Security First** - Helmet.js for security headers, CORS configuration
-- **Request Logging** - Morgan for HTTP request logging
-- **Error Handling** - Centralized error handling middleware
-- **Database Health Checks** - Automatic connection monitoring
-- **Performance Monitoring** - Sentry integration for error tracking
-- **Development Hot Reload** - Nodemon for efficient development
+- **RESTful API Architecture** - Clean, modular Express.js 5.x routing and controller layer.
+- **Unified Amazon SES Email Engine** - High-throughput email delivery via AWS SDK v3 (`@aws-sdk/client-ses`) featuring connection pooling, bounded concurrency worker pools, and automated delivery tracking with Configuration Sets.
+- **OTP Verification System** - Anti-abuse, rate-limited 6-digit OTP delivery backed by Redis TTL caching and JWT-authenticated session issuance with custom Shinchan-themed HTML templates.
+- **Recruitment 2026 Portal Backend** - Complete intake workflow (registration, automated task assignment, task submissions, status checks) with dual MongoDB database isolation.
+- **OssomeHacks Hackathon Management** - Participant registration, check-in QR workflows, status polling, and export utilities.
+- **Automated Certificate Generation** - Dynamic name overlay and digital HMAC-SHA256 signature verification using Sharp and PDFKit.
+- **Multi-Database Support** - Dedicated MongoDB connections for primary community data and recruitment intake.
+- **Redis Caching Layer** - High-speed in-memory state and OTP storage with Upstash REST API compatibility.
+- **Error & Performance Monitoring** - Native Sentry v10 instrumentation with profiling and structured logging.
+- **Interactive API Documentation** - Built-in Swagger/OpenAPI documentation (`/api-docs`).
+- **Security First** - Helmet.js protection, CORS policies, and rigorous Express-validator input sanitization.
+
+---
 
 ## 🛠️ Tech Stack
 
 ### Core Technologies
-
-- **Runtime**: Node.js (v16+)
+- **Runtime**: Node.js (v18+)
 - **Framework**: Express.js 5.x
-- **Database**: MongoDB 6.x with Mongoose 8.x
-- **Language**: JavaScript (ES6+)
+- **Databases**: MongoDB 7.x (via Mongoose 9.x), Redis 6.x / Upstash (via ioredis)
+- **Language**: JavaScript (ES6+ / CommonJS)
 
 ### Key Dependencies
+- **Email Service**: `@aws-sdk/client-ses` (AWS SDK v3)
+- **Cache & Auth**: `ioredis`, `jsonwebtoken`
+- **Image & PDF Processing**: `sharp` (0.35.x with libvips), `pdfkit`, `opentype.js`
+- **Security & Validation**: `helmet`, `cors`, `express-validator`
+- **Monitoring & Logging**: `@sentry/node`, `@sentry/profiling-node`, `morgan`
+- **Documentation**: `swagger-jsdoc`, `swagger-ui-express`
+- **Environment**: `dotenv`
 
-- **Security**: Helmet, CORS
-- **Validation**: Express-validator
-- **Logging**: Morgan
-- **Documentation**: Swagger (swagger-jsdoc, swagger-ui-express)
-- **Email**: Resend
-- **Image Processing**: Sharp
-- **PDF Generation**: PDFKit
-- **Font Handling**: OpenType.js
-- **Monitoring**: Sentry
-- **Environment**: dotenv
-
-### Development Tools
-
-- **Process Manager**: Nodemon
-- **Version Control**: Git
+---
 
 ## 🏗️ Architecture
 
-The server follows a modular MVC (Model-View-Controller) architecture:
+```
+┌────────────────────────────────────────────────────────┐
+│                        Client                          │
+│     (Web App / Recruitment Portal / Mobile Client)     │
+└───────────────────────────┬────────────────────────────┘
+                            │ HTTPS / REST
+                            ▼
+┌────────────────────────────────────────────────────────┐
+│                  Express.js 5 Server                   │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ Middleware Layer                                 │  │
+│  │  - Helmet (Security Headers)                     │  │
+│  │  - CORS Configuration                            │  │
+│  │  - Morgan / Sentry Request Logging               │  │
+│  │  - Database Health & Connection Check            │  │
+│  │  - OTP Session Verification (requireOtpAuth)     │  │
+│  │  - Centralized Error Handling                    │  │
+│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ Routes & Controllers Layer                       │  │
+│  │  - /api/otp          - /api/recruitment          │  │
+│  │  - /api/email        - /api/ossomehacks          │  │
+│  │  - /api/events       - /api/certificate          │  │
+│  │  - /api/team         - /api/sponsors             │  │
+│  │  - /api/contact      - /api-docs (Swagger)       │  │
+│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────────────┐  │
+│  │ Services & Utilities                             │  │
+│  │  - Unified Amazon SES Email Service (Batch Pool) │  │
+│  │  - OTP & JWT Manager                             │  │
+│  │  - Sharp / PDFKit Certificate Engine             │  │
+│  └──────────────────────────────────────────────────┘  │
+└──────────────┬──────────────────┬─────────────────┬────┘
+               │                  │                 │
+               ▼                  ▼                 ▼
+     ┌──────────────────┐ ┌───────────────┐ ┌───────────────┐
+     │  Primary MongoDB │ │  Recruitment  │ │     Redis     │
+     │     (GCSRM)      │ │    MongoDB    │ │  (OTP/Cache)  │
+     └──────────────────┘ └───────────────┘ └───────────────┘
+```
 
-```
-┌─────────────┐
-│   Client    │
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────┐
-│      Express.js Server          │
-│  ┌───────────────────────────┐  │
-│  │  Middleware Layer         │  │
-│  │  - CORS                   │  │
-│  │  - Helmet (Security)      │  │
-│  │  - Request Logging        │  │
-│  │  - Error Handling         │  │
-│  │  - DB Health Check        │  │
-│  └───────────────────────────┘  │
-│  ┌───────────────────────────┐  │
-│  │  Routes Layer             │  │
-│  │  - /api/teams             │  │
-│  │  - /api/sponsors          │  │
-│  │  - /api/events            │  │
-│  │  - /api/certificates      │  │
-│  │  - /api/contact           │  │
-│  └───────────────────────────┘  │
-│  ┌───────────────────────────┐  │
-│  │  Controllers Layer        │  │
-│  │  - Business Logic         │  │
-│  │  - Request Handling       │  │
-│  └───────────────────────────┘  │
-│  ┌───────────────────────────┐  │
-│  │  Models Layer             │  │
-│  │  - Mongoose Schemas       │  │
-│  │  - Data Validation        │  │
-│  └───────────────────────────┘  │
-└─────────────┬───────────────────┘
-              │
-              ▼
-     ┌─────────────────┐
-     │   MongoDB        │
-     └─────────────────┘
-```
+---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-Before you begin, ensure you have the following installed:
-
-- **Node.js** (v16 or higher) - [Download](https://nodejs.org/)
-- **MongoDB** (v6.x or higher) - [Download](https://www.mongodb.com/try/download/community) or use [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
-- **npm** (comes with Node.js) or **yarn**
-- **Git** - [Download](https://git-scm.com/downloads)
+Ensure you have the following installed:
+- **Node.js** (v18 or higher) - [Download](https://nodejs.org/)
+- **MongoDB** (v6.x / 7.x) or [MongoDB Atlas](https://www.mongodb.com/cloud/atlas)
+- **Redis** (Local instance or [Upstash Redis](https://upstash.com/))
+- **AWS SES Account** with a verified sending domain
 
 ### Installation
 
 1. **Clone the repository**
-
    ```bash
    git clone https://github.com/SRM-IST-KTR/gcsrm_server.git
    cd gcsrm_server
    ```
-2. **Install dependencies**
 
+2. **Install dependencies**
    ```bash
    npm install
    ```
-3. **Set up environment variables**
 
-   Create a `.env` file in the root directory:
-
+3. **Configure environment variables**
    ```bash
    cp .env.example .env
    ```
+   Edit `.env` with your credentials (see table below).
 
-   Then edit `.env` with your configuration (see [Configuration](#configuration) section below).
-4. **Start MongoDB**
-
-   If using local MongoDB:
-
-   ```bash
-   # macOS
-   brew services start mongodb-community
-
-   # Linux
-   sudo systemctl start mongod
-
-   # Windows
-   net start MongoDB
-   ```
-5. **Start the development server**
-
+4. **Start the development server**
    ```bash
    npm run dev
    ```
-6. **Verify the installation**
 
-   - API Server: `http://localhost:3000`
-   - API Documentation: `http://localhost:3000/api-docs`
-   - Health Check: `http://localhost:3000/health`
+5. **Access services**
+   - API Base: `http://localhost:8000/api`
+   - Interactive Swagger Docs: `http://localhost:8000/api-docs`
+
+---
 
 ### Configuration
 
-Create a `.env` file with the following variables:
+Sample `.env` file structure:
 
 ```env
 # Server Configuration
 PORT=8000
 NODE_ENV=dev
 
-# Primary Database Configuration (GCSRM - teams, events, sponsors, certificates)
+# Primary Database (Teams, Events, Sponsors, Certificates)
 MONGO_URI=mongodb+srv://...
 DB_NAME=GCSRM
 
-# Recruitment Database Configuration (Recruitment - recruitment26, tasks26)
+# Recruitment Database (Recruitment '26, Tasks '26)
 MONGO_URI_RECRUITMENT=mongodb+srv://...
 DB_NAME_RECRUITMENT=Recruitment
 
-# Recruitment Intake Window (Optional ISO timestamps)
+# Recruitment Window (ISO Timestamps)
 RECRUITMENT_START_DATE=2026-08-01T00:00:00.000Z
 RECRUITMENT_END_DATE=2026-12-31T23:59:59.999Z
 
-# CORS Configuration
-ORIGIN=*
+# Redis & Authentication
+REDIS_URL=redis://localhost:6379
+JWT_SECRET=your_jwt_secret_here
 
-# Sentry & AWS SES Email Configuration
+# Sentry & Amazon SES Email Configuration
 SENTRY_DSN=
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=AKIA...
@@ -207,324 +184,223 @@ AWS_SECRET_ACCESS_KEY=...
 SENDER_EMAIL=noreply@githubsrmist.in
 AWS_SES_CONFIGURATION_SET=gcsrm-events
 SES_BATCH_CONCURRENCY=10
-CERTIFICATE_SECRET=your_secret_key
+
+# Security Secrets
+CERTIFICATE_SECRET=your_certificate_secret
+ORIGIN=*
 ```
+
 #### Environment Variable Details
 
+| Variable | Description | Required | Default |
+| :--- | :--- | :---: | :--- |
+| `PORT` | Express server port | No | `8000` |
+| `NODE_ENV` | Environment (`dev` / `production`) | No | `dev` |
+| `MONGO_URI` | MongoDB URI for primary GCSRM database | Yes | - |
+| `DB_NAME` | Primary database name | Yes | `GCSRM` |
+| `MONGO_URI_RECRUITMENT` | MongoDB URI for recruitment database | Yes | - |
+| `DB_NAME_RECRUITMENT` | Recruitment database name | Yes | `Recruitment` |
+| `REDIS_URL` | Redis connection URL | Yes | `redis://localhost:6379` |
+| `JWT_SECRET` | Secret key for signing OTP session tokens | Yes | - |
+| `SENTRY_DSN` | Sentry performance & error DSN | No | - |
+| `AWS_REGION` | AWS Region for Amazon SES | Yes | `us-east-1` |
+| `AWS_ACCESS_KEY_ID` | IAM Access Key ID for Amazon SES | Yes* | *(Inherits AWS CLI/IAM role)* |
+| `AWS_SECRET_ACCESS_KEY`| IAM Secret Access Key for Amazon SES | Yes* | *(Inherits AWS CLI/IAM role)* |
+| `SENDER_EMAIL` | Verified default sender address | Yes | `noreply@githubsrmist.in` |
+| `AWS_SES_CONFIGURATION_SET` | SES Configuration Set for metrics | No | `gcsrm-events` |
+| `SES_BATCH_CONCURRENCY` | Worker pool concurrency for batch sending | No | `10` |
+| `CERTIFICATE_SECRET` | Secret key for certificate digital signature | Yes | - |
 
-| Variable                    | Description                                  | Required | Default                 |
-| --------------------------- | -------------------------------------------- | -------- | ----------------------- |
-| `PORT`                      | Server port                                  | No       | 8000                    |
-| `NODE_ENV`                  | Environment (development/production)         | No       | dev                     |
-| `MONGO_URI`                 | MongoDB connection string (GCSRM main DB)    | Yes      | -                       |
-| `DB_NAME`                   | Database name                                | Yes      | GCSRM                   |
-| `MONGO_URI_RECRUITMENT`     | Recruitment MongoDB connection string        | Yes      | -                       |
-| `DB_NAME_RECRUITMENT`       | Recruitment Database name                    | Yes      | Recruitment             |
-| `REDIS_URL`                 | Redis server URL for OTP caching             | Yes      | redis://localhost:6379  |
-| `JWT_SECRET`                | Secret key for signing OTP session tokens    | Yes      | -                       |
-| `SENTRY_DSN`                | Sentry error tracking DSN                    | No       | -                       |
-| `AWS_REGION`                | Amazon SES AWS Region                        | Yes      | us-east-1               |
-| `AWS_ACCESS_KEY_ID`         | IAM Access Key ID for SES                    | Yes*     | - (inherits CLI/role)   |
-| `AWS_SECRET_ACCESS_KEY`     | IAM Secret Access Key for SES                | Yes*     | - (inherits CLI/role)   |
-| `SENDER_EMAIL`              | Verified default sender email address        | Yes      | noreply@githubsrmist.in |
-| `AWS_SES_CONFIGURATION_SET` | SES Configuration Set for metric tracking    | No       | gcsrm-events            |
-| `SES_BATCH_CONCURRENCY`     | Concurrency worker pool size for batch email | No       | 10                      |
-| `CERTIFICATE_SECRET`        | Certificate verification secret key          | Yes      | -                       |
+---
+
 ## 📚 API Documentation
 
-This project uses **Swagger/OpenAPI** for comprehensive, interactive API documentation.
+Complete interactive documentation is powered by **Swagger UI**:
 
-### Accessing Documentation
+Visit: **`http://localhost:8000/api-docs`**
 
-Once the server is running, access the Swagger UI at:
+---
 
-```plaintext
-http://localhost:3000/api-docs
-```
+## 🔌 API Endpoints Overview
 
-The Swagger interface provides:
+### 🔑 Authentication & OTP
+- `POST /api/otp/send` — Generate 6-digit OTP, store in Redis (5-min TTL), and dispatch Shinchan-themed verification email.
+- `POST /api/otp/verify` — Verify 6-digit OTP and receive a signed Bearer JWT session token for anti-tamper form submissions.
 
-- 📖 **Complete API reference** - All endpoints with descriptions
-- 🧪 **Interactive testing** - Try out APIs directly from the browser
-- 📋 **Request/Response schemas** - Detailed data models
-- 🔐 **Authentication details** - Required headers and authorization
-- 💡 **Example requests** - Sample payloads for each endpoint
+### 📧 Email Service
+- `POST /api/email/send` — Dispatch a single email via Amazon SES.
+- `POST /api/email/batch` — Dispatch up to 100 emails concurrently via the bounded worker pool (preserves request ordering).
 
-## 📧 Email API Endpoints
+### 🎯 Recruitment 2026
+- `POST /api/recruitment/apply` — Submit recruitment application (protected by `requireOtpAuth` middleware).
+- `GET /api/recruitment/status/:email` — Check applicant registration and task submission status.
+- `GET /api/recruitment/tasks/:domain` — Fetch domain-specific recruitment tasks.
+- `POST /api/recruitment/submit` — Submit completed recruitment tasks.
+- `GET /api/recruitment/stats` — Retrieve overall recruitment statistics and domain counts.
 
-All email sending is powered by **Amazon Simple Email Service (SES)** through the unified `src/utils/emailService.js` library using the AWS SDK v3 (`@aws-sdk/client-ses`) with HTTP connection pooling and bounded batch concurrency.
+### ⚡ OssomeHacks Hackathon
+- `GET /api/ossomehacks/status` — Get live hackathon portal registration status.
+- `POST /api/ossomehacks/register` — Register a participant for OssomeHacks.
+- `GET /api/ossomehacks/participant/:id` — Retrieve participant details by ID.
+- `POST /api/ossomehacks/checkin` — Check in a participant using QR/ID.
+- `GET /api/ossomehacks/export` — Export registered participants list.
 
-### `POST /api/email/send` — Single email
+### 📜 Certificates
+- `POST /api/certificate/generate` — Generate dynamic PNG / PDF certificate with custom text overlay.
+- `GET /api/certificate/verify/:id` — Verify digital authenticity of a certificate.
+- `GET /api/certificate/download/:id` — Download generated certificate file.
 
-Send a single email to one or more recipients.
+### 📅 Events
+- `GET /api/events` — List all community events.
+- `POST /api/events` — Create a new event.
+- `GET /api/events/:id` — Get event details.
+- `POST /api/events/:id/register` — Register participant for an event.
 
-**Request body:**
+### 👥 Team & Sponsors
+- `GET /api/team` — Fetch team members by domain/year.
+- `POST /api/team` — Add new team member.
+- `GET /api/sponsors` — List active sponsors by tier.
+- `POST /api/sponsors` — Add a new sponsor.
 
-| Field | Required | Type | Description |
-|-------|----------|------|-------------|
-| `to` | yes | string | Recipient email address |
-| `subject` | yes | string | Email subject line |
-| `html` | no | string | HTML body (required if `text` omitted) |
-| `text` | no | string | Plain text body (required if `html` omitted) |
-| `from` | no | string | Sender override (defaults to `SENDER_EMAIL`) |
-| `reply_to` | no | string | Reply-to address |
-| `scheduled_at` | no | string | ISO date for scheduled delivery |
+### 💬 Contact Form
+- `POST /api/contact` — Process contact submission and trigger dual notification emails (team notification + sender confirmation).
 
-**Example:**
-```json
-{
-  "to": "user@example.com",
-  "subject": "Welcome to GC SRM",
-  "html": "<h1>Welcome!</h1><p>Thanks for joining.</p>"
-}
-```
-
-**Response:** `200` — `{ "success": true, "message": "Email sent successfully", "messageId": "..." }`
-
-### `POST /api/email/batch` — Batch emails (up to 100)
-
-Send multiple emails in parallel via a concurrency-bounded worker pool (preserves request ordering).
-
-**Request body:**
-
-| Field | Required | Type | Description |
-|-------|----------|------|-------------|
-| `emails` | yes | array | Array of email objects (max 100) |
-
-Each email object supports: `to`, `subject`, `html`, `text`, `from`, `reply_to`.
-
-**Example:**
-```json
-{
-  "emails": [
-    { "to": "user1@example.com", "subject": "Welcome", "html": "<p>Hello user1</p>" },
-    { "to": "user2@example.com", "subject": "Reminder", "html": "<p>Hello user2</p>" }
-  ]
-}
-```
-
-**Response:** `200` — `{ "success": true, "message": "2 emails sent successfully", "messageIds": ["...", "..."] }`
-
-> **Note:** Emails are routed through Amazon SES with automated event logging via the `gcsrm-events` Configuration Set.
+---
 
 ## 📁 Project Structure
 
 ```plaintext
 gcsrm_server/
 ├── src/
-│   ├── app.js                      # Express application setup
-│   ├── controller/                 # Request handlers & business logic
-│   │   ├── certificate.controller.js
-│   │   ├── contact.controller.js
-│   │   ├── email.controller.js    # Single + batch email endpoints
-│   │   ├── event.controller.js
-│   │   ├── sponsor.controller.js
-│   │   └── team.controller.js
-│   ├── middleware/                 # Custom middleware functions
-│   │   ├── dbCheck.js             # Database health check
-│   │   ├── errorMiddleware.js     # Centralized error handling
-│   │   └── requestLogging.js      # Request logging middleware
-│   ├── models/                     # Mongoose schemas & models
+│   ├── app.js                              # Express application setup & middleware mounting
+│   ├── controller/                         # Controller handlers
+│   │   ├── certificates/
+│   │   │   ├── download.controller.js      # Certificate download handler
+│   │   │   ├── generate.controller.js      # Dynamic image/PDF generation
+│   │   │   └── verify.controller.js        # Digital HMAC signature verification
+│   │   ├── events/
+│   │   │   ├── event.controller.js         # Event CRUD
+│   │   │   └── register.controller.js      # Event registration
+│   │   ├── ossomeHacks/
+│   │   │   ├── checkInParticipant.controller.js
+│   │   │   ├── deleteRegistration.controller.js
+│   │   │   ├── getAllRegistrations.controller.js
+│   │   │   ├── HackStatus.controller.js
+│   │   │   ├── registration.controller.js
+│   │   │   └── updateRegistration.controller.js
+│   │   ├── recruitments/
+│   │   │   ├── apply_MONGODB.controller.js # Multi-DB application handler
+│   │   │   ├── getTasks.controller.js      # Domain task retrieval
+│   │   │   ├── recruitment.controller.js   # Recruitment status & stats
+│   │   │   └── submitTask.controller.js    # Task submission handler
+│   │   ├── contact.controller.js           # Contact form handler
+│   │   ├── email.controller.js             # SES single & batch endpoints
+│   │   ├── otp.controller.js               # Redis OTP generation & verification
+│   │   ├── sponsor.controller.js           # Sponsors CRUD
+│   │   └── team.controller.js              # Team CRUD
+│   ├── middleware/                         # Custom Express middlewares
+│   │   ├── dbCheck.js                     # Database connectivity gate
+│   │   ├── errorMiddleware.js             # Centralized error handler
+│   │   ├── requestLogging.js              # Sentry & Morgan request logger
+│   │   └── requireOtpAuth.js              # Bearer JWT OTP auth guard
+│   ├── models/                             # Mongoose schemas
 │   │   ├── certificate.model.js
 │   │   ├── event.model.js
+│   │   ├── ossomehacks.model.js
+│   │   ├── participant.model.js
+│   │   ├── recruitment.model.js
 │   │   ├── sponsor.model.js
+│   │   ├── tasks.model.js
 │   │   └── team.model.js
-│   ├── routes/                     # API route definitions
-│   │   ├── index.js               # Main router
+│   ├── routes/                             # API Route definitions
 │   │   ├── certificate.route.js
 │   │   ├── contact.route.js
-│   │   ├── email.route.js         # Email API routes
+│   │   ├── email.route.js
 │   │   ├── event.route.js
+│   │   ├── index.js                       # Route aggregator (/api)
+│   │   ├── ossomehacks.route.js
+│   │   ├── otp.route.js
+│   │   ├── recruitment.route.js
 │   │   ├── sponsor.route.js
 │   │   └── team.route.js
-│   └── utils/                      # Helper functions & utilities
-│       ├── db.js                  # Database connection
-│       ├── emailService.js        # Unified Resend email library (single + batch)
-│       ├── instrument.js          # Sentry instrumentation
-│       ├── swagger.js             # Swagger configuration
-│       └── certificates/          # Certificate generation
-│           └── overlay-sharp.js   # Image processing for certificates
-├── index.js                        # Application entry point
-├── package.json                    # Dependencies & scripts
-├── Dockerfile                      # Docker configuration
-├── vercel.json                     # Vercel deployment config
-├── .env                           # Environment variables (not in repo)
-├── .env.example                   # Environment template
-
-└── README.md                       # Project documentation
+│   └── utils/                              # Utilities and integrations
+│       ├── certificates/
+│       │   └── overlay-sharp.js           # Sharp SVG & font text overlay engine
+│       ├── email/
+│       │   ├── recruitment.js             # Recruitment email trigger
+│       │   ├── registration.js            # Event registration email trigger
+│       │   └── templates/
+│       │       ├── otp.html               # Shinchan Neo-Brutalist OTP email template
+│       │       ├── recruitment-confirmation.html
+│       │       └── registration.html
+│       ├── db.js                          # Primary & secondary MongoDB connections
+│       ├── emailService.js                # Amazon SES SDK v3 unified engine
+│       ├── hackStatusHelper.js            # Hackathon status helper
+│       ├── instrument.js                  # Sentry initialization
+│       ├── jwt.js                         # JWT token signer & verifier
+│       ├── otpService.js                  # Redis OTP TTL & generation helpers
+│       ├── redis.js                       # Redis / Upstash connection pool
+│       └── swagger.js                     # Swagger / OpenAPI config
+├── index.js                                # Application entry point
+├── package.json                            # Package manifest & dependencies
+├── Dockerfile                              # Docker container config
+├── vercel.json                             # Vercel serverless deployment config
+├── .env.example                            # Environment variables template
+└── README.md                               # Project documentation
 ```
 
-### Key Directories
+---
 
-- **`controllers/`** - Contains business logic and request handling
-- **`models/`** - Database schemas and data validation rules
-- **`routes/`** - API endpoint definitions and route handlers
-- **`middleware/`** - Custom Express middleware for cross-cutting concerns
-- **`utils/`** - Helper functions, database connection, and utilities
+## 💻 Development & Deployment
 
-## 💻 Development
-
-### Available Scripts
-
+### Local Development
 ```bash
-# Start development server with hot reload
 npm run dev
-
-# Start production server
-npm start
 ```
 
-## 🚀 Deployment
-
-### Vercel Deployment
-
-This project is configured for Vercel deployment.
-
-1. **Install Vercel CLI**
-
-   ```bash
-   npm install -g vercel
-   ```
-2. **Deploy to Vercel**
-
-   ```bash
-   vercel
-   ```
-3. **Production deployment**
-
-   ```bash
-   vercel --prod
-   ```
+### Vercel Serverless Deployment
+This project is configured for serverless execution on Vercel:
+1. Connect repository in the [Vercel Dashboard](https://vercel.com).
+2. Configure environment variables in **Project Settings → Environment Variables**.
+3. Deploy directly or push to `main` / `staging`.
 
 ### Docker Deployment
+```bash
+# Build image
+docker build -t gcsrm-server .
 
-1. **Build Docker image**
+# Run container
+docker run -p 8000:8000 --env-file .env gcsrm-server
+```
 
-   ```bash
-   docker build -t gcsrm-server .
-   ```
-2. **Run container**
+---
 
-   ```bash
-   docker run -p 3000:3000 --env-file .env gcsrm-server
-   ```
+## 🔒 Security & Performance
 
-### Environment-Specific Configuration
+- **0 Vulnerabilities**: All dependencies verified against `npm audit` with regular automated patching.
+- **Connection Reuse**: HTTP Keep-Alive connection pooling across serverless invocations for MongoDB, Redis, and Amazon SES.
+- **Anti-Spam & Anti-Tamper**: OTP sessions require email-matched Bearer JWTs preventing forged form submissions.
+- **Sanitized Filters**: MongoDB queries protected against NoSQL injections.
+- **Security Headers**: Standardized HTTP security headers configured via `helmet`.
 
-**Production Checklist:**
-
-- ✅ Set `NODE_ENV=production`
-- ✅ Use production MongoDB URI
-- ✅ Configure proper CORS origins
-- ✅ Set up Sentry DSN for error monitoring
-- ✅ Set `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` in Vercel / server environment
-- ✅ Verify `SENDER_EMAIL` domain (`githubsrmist.in`) is verified in Amazon SES
-- ✅ Enable HTTPS
-- ✅ Set up rate limiting (if needed)
-- ✅ Configure proper logging
-- ✅ Set up monitoring and alerts
-
-**Common HTTP Status Codes:**
-
-
-| Code | Meaning               | Description                   |
-| ---- | --------------------- | ----------------------------- |
-| 200  | OK                    | Request successful            |
-| 201  | Created               | Resource created successfully |
-| 400  | Bad Request           | Invalid request data          |
-| 404  | Not Found             | Resource not found            |
-| 500  | Internal Server Error | Server error occurred         |
+---
 
 ## 📄 License
 
 This project is licensed under the **ISC License**. See the [LICENSE](LICENSE) file for details.
 
-```plaintext
-ISC License
-
-Copyright (c) 2025 GitHub Club SRM
-
-Permission to use, copy, modify, and/or distribute this software for any
-purpose with or without fee is hereby granted, provided that the above
-copyright notice and this permission notice appear in all copies.
-
-THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
-WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
-MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
-ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
-WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
-ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
-OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-```
+---
 
 ## 📞 Support
 
-Need help? We're here for you!
-
-### Documentation
-
-- 📖 **API Documentation**: Visit `/api-docs` when the server is running
-- 📋 **Certificate System**: See [CERTIFICATE_SYSTEM.md](CERTIFICATE_SYSTEM.md)
-
-### Get in Touch
-
 - 🐛 **Bug Reports**: [Open an issue](https://github.com/SRM-IST-KTR/gcsrm_server/issues/new?template=bug_report.md)
 - 💡 **Feature Requests**: [Open an issue](https://github.com/SRM-IST-KTR/gcsrm_server/issues/new?template=feature_request.md)
-- 💬 **Discussions**: [GitHub Discussions](https://github.com/SRM-IST-KTR/gcsrm_server/discussions)
-- 📧 **Email**: contact@githubsrmist.in
-
-### Useful Resources
-
-- [Express.js Documentation](https://expressjs.com/)
-- [MongoDB Documentation](https://docs.mongodb.com/)
-- [Mongoose Documentation](https://mongoosejs.com/docs/)
-- [Node.js Documentation](https://nodejs.org/docs/)
-- [Swagger Documentation](https://swagger.io/docs/)
-
-## � Security
-
-### Reporting Security Issues
-
-If you discover a security vulnerability, please **DO NOT** open a public issue. Instead:
-
-1. Email us at community@githubsrmist.in
-2. Include a detailed description of the vulnerability
-3. Provide steps to reproduce (if applicable)
-4. We'll respond within 48 hours
-
-### Security Best Practices
-
-This project implements:
-
-- ✅ Helmet.js for security headers
-- ✅ CORS configuration
-- ✅ Input validation with express-validator
-- ✅ Environment variable protection
-- ✅ Error message sanitization
-- ✅ MongoDB injection prevention (via Mongoose)
-
-## 📈 Performance
-
-### Optimization Techniques
-
-- **Database Indexing** - Optimized queries with proper indexes
-- **Connection Pooling** - Efficient database connection management
-- **Error Monitoring** - Sentry integration for tracking issues
-
-### Monitoring
-
-We use **Sentry** for:
-
-- Error tracking
-- Performance monitoring
-- Release health tracking
+- 📧 **Community Email**: [contact@githubsrmist.in](mailto:contact@githubsrmist.in)
 
 <div align="center">
 
 **Built with ❤️ by GitHub Community SRM**
 
-**[Website](https://githubsrmist.in)** • **[GitHub](https://github.com/SRM-IST-KTR)** • **[LinkedIn](https://www.linkedin.com/company/githubsrm/)**
-
-⭐ Star us on GitHub — it motivates us a lot!
+**[Website](https://githubsrmist.in)** • **[Recruitment Portal](https://recruitment.githubsrmist.in)** • **[GitHub](https://github.com/SRM-IST-KTR)** • **[LinkedIn](https://www.linkedin.com/company/githubsrm/)**
 
 </div>
