@@ -30,14 +30,6 @@ const otpController = require('../controller/otp.controller');
  *                 format: email
  *                 description: Recipient email address
  *                 example: user@example.com
- *               emailTemplate:
- *                 type: string
- *                 description: Optional custom HTML email template. Use {{otp}} as a placeholder for the generated OTP code. Falls back to the default template when omitted.
- *                 example: '<div>Your code is <strong>{{otp}}</strong></div>'
- *               subject:
- *                 type: string
- *                 description: Optional custom email subject line. Defaults to "Your OTP Code — GitHub Community SRM".
- *                 example: 'Your Verification Code'
  *     responses:
  *       200:
  *         description: OTP sent successfully
@@ -79,14 +71,6 @@ const otpController = require('../controller/otp.controller');
 router.post('/send',
   [
     body('email').isEmail().withMessage('Valid email is required'),
-    body('emailTemplate')
-      .optional()
-      .isString()
-      .withMessage('emailTemplate must be a string'),
-    body('subject')
-      .optional()
-      .isString()
-      .withMessage('subject must be a string'),
   ],
   otpController.sendOTP
 );

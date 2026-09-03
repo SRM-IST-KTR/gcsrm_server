@@ -32,6 +32,13 @@ const options = {
             }
         ],
         components: {
+            securitySchemes: {
+                BearerAuth: {
+                    type: 'http',
+                    scheme: 'bearer',
+                    description: 'Service API Key for internal microservice relay (Authorization: Bearer <key>)'
+                }
+            },
             schemas: {
                 Sponsor: {
                     type: "object",
@@ -636,6 +643,19 @@ const options = {
                             },
                             example: {
                                 message: "Sponsor not found"
+                            }
+                        }
+                    }
+                },
+                Unauthorized: {
+                    description: "Unauthorized - Invalid or missing authentication credentials",
+                    content: {
+                        "application/json": {
+                            schema: {
+                                $ref: "#/components/schemas/Error"
+                            },
+                            example: {
+                                message: "Unauthorized: Missing or invalid Authorization Bearer header"
                             }
                         }
                     }

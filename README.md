@@ -83,6 +83,7 @@ A robust, high-performance, and scalable backend server for **GitHub Community S
 │  │  - CORS Configuration                            │  │
 │  │  - Morgan / Sentry Request Logging               │  │
 │  │  - Database Health & Connection Check            │  │
+│  │  - Service API Key Verification (requireApiKey)   │  │
 │  │  - OTP Session Verification (requireOtpAuth)     │  │
 │  │  - Centralized Error Handling                    │  │
 │  └──────────────────────────────────────────────────┘  │
@@ -187,8 +188,8 @@ SES_BATCH_CONCURRENCY=10
 
 # Security Secrets
 CERTIFICATE_SECRET=your_certificate_secret
+SERVICE_API_KEY=your_service_api_key_here
 ORIGIN=*
-```
 
 #### Environment Variable Details
 
@@ -210,7 +211,7 @@ ORIGIN=*
 | `AWS_SES_CONFIGURATION_SET` | SES Configuration Set for metrics | No | `gcsrm-events` |
 | `SES_BATCH_CONCURRENCY` | Worker pool concurrency for batch sending | No | `10` |
 | `CERTIFICATE_SECRET` | Secret key for certificate digital signature | Yes | - |
-
+| `SERVICE_API_KEY` | Secret Bearer token for gating `/api/email/send` & `/api/email/batch` | Yes | - |
 ---
 
 ## 📚 API Documentation
@@ -224,13 +225,12 @@ Visit: **`http://localhost:8000/api-docs`**
 ## 🔌 API Endpoints Overview
 
 ### 🔑 Authentication & OTP
-- `POST /api/otp/send` — Generate 6-digit OTP, store in Redis (5-min TTL), and dispatch Shinchan-themed verification email.
-- `POST /api/otp/verify` — Verify 6-digit OTP and receive a signed Bearer JWT session token for anti-tamper form submissions.
+- `POST /api/otp/send` — Generate 6-digit OTP, cache in Redis (5-min TTL), and dispatch branded Shinchan verification email using server template (`src/utils/email/templates/otp.html`). Client template/subject overrides are strictly discarded.
+- `POST /api/otp/verify` — Verify 6-digit OTP and receive an HS256-signed Bearer JWT session token for anti-tamper form submissions. Single-use only.
 
 ### 📧 Email Service
-- `POST /api/email/send` — Dispatch a single email via Amazon SES.
-- `POST /api/email/batch` — Dispatch up to 100 emails concurrently via the bounded worker pool (preserves request ordering).
-
+- `POST /api/email/send` — Dispatch a single email via Amazon SES. **Protected:** Requires `Authorization: Bearer <SERVICE_API_KEY>`.
+- `POST /api/email/batch` — Dispatch up to 100 emails concurrently via the bounded worker pool. **Protected:** Requires `Authorization: Bearer <SERVICE_API_KEY>`.
 ### 🎯 Recruitment 2026
 - `POST /api/recruitment/apply` — Submit recruitment application (protected by `requireOtpAuth` middleware).
 - `GET /api/recruitment/status/:email` — Check applicant registration and task submission status.
