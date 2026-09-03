@@ -29,50 +29,78 @@ app.use('/api/email', emailRoute);
 app.use('/api/otp', otpRoute);
 
 describe('Security Fixes', () => {
+  const originalEnv = { ...process.env };
+
   beforeEach(() => {
+    process.env = { ...originalEnv };
     process.env.SERVICE_API_KEY = 'secret-key-123';
     mockSendEmail.mockClear();
   });
 
+  afterAll(() => {
+    process.env = originalEnv;
+  });
+
   describe('Email Gateway Security', () => {
-    it('returns 401 without api key', async () => {
+    it('returns 401 without authorization header', async () => {
       const res = await request(app).post('/api/email/send').send({ to: 'a@b.com', subject: 'hi' });
       expect(res.status).toBe(401);
+      expect(res.body).toEqual({
+        success: false,
+        message: 'Unauthorized: Missing or invalid Authorization Bearer header',
+      });
     });
 
-    it('returns 401 with incorrect api key', async () => {
+    it('returns 401 with non-Bearer authorization header or legacy x-api-key', async () => {
+      const res1 = await request(app).post('/api/email/send')
+        .set('Authorization', 'Basic dXNlcjpwYXNz')
+        .send({ to: 'a@b.com', subject: 'hi' });
+      expect(res1.status).toBe(401);
+
+      const res2 = await request(app).post('/api/email/send')
+        .set('x-api-key', 'secret-key-123')
+        .send({ to: 'a@b.com', subject: 'hi' });
+      expect(res2.status).toBe(401);
+    });
+
+    it('returns 401 with incorrect bearer token', async () => {
       const res = await request(app).post('/api/email/send')
-        .set('x-api-key', 'wrong-key')
+        .set('Authorization', 'Bearer wrong-key')
         .send({ to: 'a@b.com', subject: 'hi' });
       expect(res.status).toBe(401);
+      expect(res.body).toEqual({
+        success: false,
+        message: 'Unauthorized: Invalid authentication token',
+      });
     });
 
-    it('proceeds with correct api key (fails validation if body is empty)', async () => {
+    it('returns 401 with different length bearer token', async () => {
       const res = await request(app).post('/api/email/send')
-        .set('x-api-key', 'secret-key-123')
-        .send({});
-      expect(res.status).toBe(400); // Because of missing "to" and "subject"
+        .set('Authorization', 'Bearer short')
+        .send({ to: 'a@b.com', subject: 'hi' });
+      expect(res.status).toBe(401);
+      expect(res.body).toEqual({
+        success: false,
+        message: 'Unauthorized: Invalid authentication token',
+      });
     });
+
+    it('proceeds with correct bearer token (fails validation if body is empty)', async () => {
+      const res = await request(app).post('/api/email/send')
+        .set('Authorization', 'Bearer secret-key-123')
+        .send({});
+      expect(res.status).toBe(400);
+    });
+
     it('returns 500 when SERVICE_API_KEY is not configured', async () => {
       delete process.env.SERVICE_API_KEY;
       const res = await request(app).post('/api/email/send')
-        .set('x-api-key', 'any-key')
+        .set('Authorization', 'Bearer any-key')
         .send({ to: 'a@b.com', subject: 'hi' });
       expect(res.status).toBe(500);
       expect(res.body).toEqual({
         success: false,
         message: 'Server configuration error',
-      });
-    });
-
-    it('returns 401 with different length api key', async () => {
-      const res = await request(app).post('/api/email/send')
-        .set('x-api-key', 'short')
-        .send({ to: 'a@b.com', subject: 'hi' });
-      expect(res.status).toBe(401);
-      expect(res.body).toEqual({
-        success: false,
-        message: 'Unauthorized: Invalid or missing x-api-key header',
       });
     });
   });
@@ -124,6 +152,20 @@ describe('Security Fixes', () => {
 
       const noneToken = jwt.sign({ email: 'user@example.com' }, '', { algorithm: 'none' });
       expect(() => verifyToken(noneToken)).toThrow();
+    });
+
+    it('falls back to 3600 for non-positive or invalid OTP_JWT_TTL values', () => {
+      process.env.OTP_JWT_TTL = '0';
+      expect(OTP_JWT_TTL()).toBe(3600);
+
+      process.env.OTP_JWT_TTL = '-100';
+      expect(OTP_JWT_TTL()).toBe(3600);
+
+      process.env.OTP_JWT_TTL = 'not_a_number';
+      expect(OTP_JWT_TTL()).toBe(3600);
+
+      process.env.OTP_JWT_TTL = '1800';
+      expect(OTP_JWT_TTL()).toBe(1800);
     });
   });
 });

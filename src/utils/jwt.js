@@ -11,7 +11,8 @@ function getSecret() {
 }
 
 /** The OTP JWT lifetime in seconds (defaults to 3600 = 1 hour). */
-const OTP_JWT_TTL = () => Number(process.env.OTP_JWT_TTL || 3600);
+// Clamp non-positive/NaN to default 3600 to prevent issuing immediately expired tokens
+const OTP_JWT_TTL = () => (Number(process.env.OTP_JWT_TTL) > 0 ? Number(process.env.OTP_JWT_TTL) : 3600);
 
 /**
  * Sign a JWT for an email that has been verified via OTP.

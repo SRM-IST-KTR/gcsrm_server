@@ -19,7 +19,7 @@ const requireApiKey = require('../middleware/requireApiKey');
  *     description: Sends one email to one or more recipients via Amazon SES.
  *     tags: [Email]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -76,6 +76,8 @@ const requireApiKey = require('../middleware/requireApiKey');
  *                   example: "e23a8b9c-1234-5678-9abc-def012345678"
  *       400:
  *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
@@ -96,7 +98,7 @@ router.post('/send',
  *     description: Sends multiple emails in batch via Amazon SES.
  *     tags: [Email]
  *     security:
- *       - ApiKeyAuth: []
+ *       - BearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -163,6 +165,8 @@ router.post('/send',
  *                   example: ["e23a8b9c-...", "f45b6c7d-..."]
  *       400:
  *         $ref: '#/components/responses/BadRequest'
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */

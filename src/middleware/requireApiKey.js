@@ -10,25 +10,25 @@ const requireApiKey = (req, res, next) => {
     });
   }
 
-  const apiKey = req.headers['x-api-key'];
-
-  if (!apiKey || typeof apiKey !== 'string') {
+  const auth = req.headers['authorization'];
+  if (!auth || typeof auth !== 'string' || !auth.startsWith('Bearer ')) {
     return res.status(401).json({
       success: false,
-      message: 'Unauthorized: Invalid or missing x-api-key header',
+      message: 'Unauthorized: Missing or invalid Authorization Bearer header',
     });
   }
 
-  const apiKeyBuffer = Buffer.from(apiKey);
+  const token = auth.slice(7).trim();
+  const tokenBuffer = Buffer.from(token);
   const serviceApiKeyBuffer = Buffer.from(serviceApiKey);
 
   if (
-    apiKeyBuffer.length !== serviceApiKeyBuffer.length ||
-    !crypto.timingSafeEqual(apiKeyBuffer, serviceApiKeyBuffer)
+    tokenBuffer.length !== serviceApiKeyBuffer.length ||
+    !crypto.timingSafeEqual(tokenBuffer, serviceApiKeyBuffer)
   ) {
     return res.status(401).json({
       success: false,
-      message: 'Unauthorized: Invalid or missing x-api-key header',
+      message: 'Unauthorized: Invalid authentication token',
     });
   }
 
