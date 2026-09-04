@@ -28,11 +28,14 @@ app.use(express.json());
 const corsOptions = {
     origin: process.env.NODE_ENV === 'production'
         ? [
+            'https://manage.githubsrmist.in',
+            'https://recruitment.githubsrmist.in',
+            'https://githubsrmist.in',
+            'https://www.githubsrmist.in',
             'https://octacore.githubsrmist.in',
             'https://octacore-beta.githubsrmist.in',
-            'https://gcsrm-server.vercel.app',
-            'https://gcsrm-server-*.vercel.app', // Allow preview deployments
-            'https://gcsrm-rec26.vercel.app'
+
+            /^https:\/\/[\w-]+\.vercel\.app$/
         ]
         : true, // Allow all origins in development
     credentials: true,
