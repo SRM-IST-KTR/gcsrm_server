@@ -118,6 +118,7 @@ const addTask = async (req, res, next) => {
         // ----------------------------------------
         const {
             title,
+            goal,
             description,
             guidelines,
             link,
@@ -143,12 +144,12 @@ const addTask = async (req, res, next) => {
         const missingFields = [];
 
         if (!title?.trim()) missingFields.push("title");
+        if (!goal?.trim()) missingFields.push("goal");
         if (!description?.trim()) missingFields.push("description");
         if (!guidelines?.trim()) missingFields.push("guidelines");
         if (!domain) missingFields.push("domain");
         if (!taskType?.trim()) missingFields.push("taskType");
         if (!year) missingFields.push("year");
-
         if (missingFields.length > 0) {
             return res.status(400).json({
                 success: false,
@@ -218,9 +219,9 @@ const addTask = async (req, res, next) => {
         // ----------------------------------------
         const taskData = {
             title: cleanString(title),
+            goal: cleanString(goal),
             description: cleanString(description),
             guidelines: cleanString(guidelines),
-
             link: link ? cleanString(link) : null,
 
             domain: cleanString(domain),

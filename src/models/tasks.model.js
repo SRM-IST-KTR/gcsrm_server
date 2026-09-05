@@ -8,6 +8,12 @@ const taskSchema = new mongoose.Schema(
             trim: true
         },
 
+        goal: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
         description: {
             type: String,
             required: true,
