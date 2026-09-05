@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 const Sentry = require('@sentry/node');
 const { connectRecruitmentDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
-;
+const { safeErrorMessage } = require('../../utils/regex');
 
 /**
  * Helper to infer domain if not explicitly provided
@@ -375,7 +375,7 @@ const submitTask = async (req, res, next) => {
 
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to submit task. Please try again.',
+      error: safeErrorMessage(error, 'Failed to submit task. Please try again.'),
     });
   }
 };
