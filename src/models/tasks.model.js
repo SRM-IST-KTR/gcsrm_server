@@ -1,91 +1,116 @@
 const mongoose = require("mongoose");
 
-const taskSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: true
-    },
-    description: {
-        type: String,
-        required: true
-    },
-    guidelines: {
-        type: String,
-        required: true
-    },
-    link: {
-        type: String,
-        default: null
-    },
-    domain: {
-        type: String,
-        enum: ["Technical", "Creatives", "Corporate"],
-        required: true
-    },
-    taskType: {
-        type: String,
-        required: true
-    },
-    year: {
-        type: String,
-        enum: ["1", "2", "both"],
-        required: true
-    },
-    deadline: {
-        type: Date,
-        required: false
-    },
+const taskSchema = new mongoose.Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-    steps: {
-        type: [String],
-        required: false,
-        default: []
-    },
-    requirements: {
-        type: [String],
-        required: false,
-        default: []
-    },
-    datasets: {
-        type: [String],
-        required: false,
-        default: []
-    },
-    evaluation: {
-        type: String,
-        required: false
-    },
-    outputs: {
-        type: [String],
-        required: false,
-        default: []
-    },
-    techStack: {
-        type: [String],
-        required: false,
-        default: []
-    },
-    tags: {
-        type: [String],
-        required: false,
-        default: []
-    },
+        description: {
+            type: String,
+            required: true,
+            trim: true
+        },
 
-    submissionForm: {
-        type: String,
-        required: false
+        guidelines: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        link: {
+            type: String,
+            default: null,
+            trim: true
+        },
+
+        domain: {
+            type: String,
+            enum: ["Technical", "Creatives", "Corporate"],
+            required: true
+        },
+
+        // GFX, VFX, Web, App, AI, etc.
+        subdomain: {
+            type: String,
+            required: false,
+            trim: true
+        },
+
+        taskType: {
+            type: String,
+            required: true,
+            trim: true
+        },
+
+        // Store normalized values only
+        year: {
+            type: String,
+            enum: ["1", "2", "both"],
+            required: true
+        },
+
+        deadline: {
+            type: Date,
+            required: false,
+            default: null
+        },
+
+        steps: {
+            type: [String],
+            default: []
+        },
+
+        requirements: {
+            type: [String],
+            default: []
+        },
+
+        datasets: {
+            type: [String],
+            default: []
+        },
+
+        evaluation: {
+            type: String,
+            default: null
+        },
+
+        outputs: {
+            type: [String],
+            default: []
+        },
+
+        techStack: {
+            type: [String],
+            default: []
+        },
+
+        tags: {
+            type: [String],
+            default: []
+        },
+
+        submissionForm: {
+            type: String,
+            default: null
+        },
+
+        submissionInstructions: {
+            type: String,
+            default: null
+        }
     },
-    submissionInstructions: {
-        type: String,
-        required: false
+    {
+        timestamps: true
     }
-}, {
-    timestamps: true
-});
+);
 
 taskSchema.index({ domain: 1, year: 1 });
+taskSchema.index({ domain: 1, subdomain: 1 });
 
-// Export a function that returns the model for a given connection
 function getTaskModel(connection) {
     return connection.model("tasks26", taskSchema);
 }
