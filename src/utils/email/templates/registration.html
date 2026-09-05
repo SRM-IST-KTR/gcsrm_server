@@ -1,155 +1,175 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registration Confirmation</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <title>Registration Confirmed - {{EVENT_NAME}}</title>
+  <style>
+    :root { color-scheme: light dark; supported-color-schemes: light dark; }
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; outline: none; text-decoration: none; }
+    
+    @media only screen and (max-width: 600px) {
+      .email-container { width: 100% !important; margin: auto !important; }
+      .content-cell { padding: 24px 18px !important; }
+      .header-cell { padding: 22px 18px 16px 18px !important; }
+    }
+
+    @media (prefers-color-scheme: dark) {
+      body, .email-bg { background-color: #09090b !important; color: #f4f4f5 !important; }
+      .email-card { background-color: #18181b !important; border-color: #27272a !important; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4) !important; }
+      .card-header { background-color: #18181b !important; border-bottom-color: #27272a !important; }
+      .card-footer { background-color: #18181b !important; border-top-color: #27272a !important; }
+      .info-box { background-color: #27272a !important; border-color: #3f3f46 !important; }
+      .callout-box { background-color: #172554 !important; border-color: #1e40af !important; }
+      .callout-text { color: #bfdbfe !important; }
+      .callout-title { color: #93c5fd !important; }
+      .text-title { color: #ffffff !important; }
+      .text-body { color: #d4d4d8 !important; }
+      .text-muted { color: #a1a1aa !important; }
+      .text-dim { color: #71717a !important; }
+      .brand-badge { background-color: #1e3a8a !important; color: #93c5fd !important; }
+      .confirmed-badge { background-color: #064e3b !important; color: #a7f3d0 !important; border-color: #047857 !important; }
+    }
+
+    [data-ogsc] body, [data-ogsc] .email-bg { background-color: #09090b !important; color: #f4f4f5 !important; }
+    [data-ogsc] .email-card { background-color: #18181b !important; border-color: #27272a !important; }
+    [data-ogsc] .info-box { background-color: #27272a !important; border-color: #3f3f46 !important; }
+    [data-ogsc] .text-title { color: #ffffff !important; }
+    [data-ogsc] .text-body { color: #d4d4d8 !important; }
+  </style>
 </head>
-
-<body
-    style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4;">
-    <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #f4f4f4; padding: 20px;">
-        <tr>
-            <td align="center">
-                <table width="600" cellpadding="0" cellspacing="0" border="0"
-                    style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
-                    <!-- Header -->
-                    <tr>
-                        <td
-                            style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                            <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 700;">GitHub Club SRM
-                            </h1>
-                            <p style="color: #ffffff; margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Registration
-                                Confirmed</p>
-                        </td>
-                    </tr>
-
-                    <!-- Content -->
-                    <tr>
-                        <td style="padding: 40px 30px;">
-                            <h2 style="color: #333333; margin: 0 0 20px 0; font-size: 24px;">Hi {{PARTICIPANT_NAME}}! 👋
-                            </h2>
-                            <p style="color: #555555; margin: 0 0 20px 0; font-size: 16px; line-height: 1.6;">
-                                You're all set for <strong>{{EVENT_NAME}}</strong>!
-                            </p>
-
-                            <!-- Event Details Box -->
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                style="background-color: #f8f9fa; border-radius: 6px; padding: 20px; margin: 20px 0;">
-                                <tr>
-                                    <td>
-                                        <p
-                                            style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">
-                                            📅 Event Details</p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Event:</strong> {{EVENT_NAME}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Date:</strong> {{EVENT_DATE}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Time:</strong> {{EVENT_TIME}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Venue:</strong> {{EVENT_VENUE}}
-                                        </p>
-
-                                        {{EVENT_DURATION}}
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Registration Details -->
-                            <table width="100%" cellpadding="0" cellspacing="0" border="0"
-                                style="background-color: #fff9e6; border-left: 4px solid #ffd700; border-radius: 6px; padding: 20px; margin: 20px 0;">
-                                <tr>
-                                    <td>
-                                        <p
-                                            style="margin: 0 0 15px 0; color: #333333; font-size: 18px; font-weight: 600;">
-                                            ✅ Your Registration</p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Name:</strong> {{PARTICIPANT_NAME}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Registration No:</strong> {{PARTICIPANT_REGNO}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Email:</strong> {{PARTICIPANT_EMAIL}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Phone:</strong> {{PARTICIPANT_PHONE}}
-                                        </p>
-
-                                        <p style="margin: 10px 0; color: #555555; font-size: 14px;">
-                                            <strong>Department:</strong> {{PARTICIPANT_DEPT}}
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            {{EVENT_DESCRIPTION}}
-
-                            {{EVENT_PREREQUISITES}}
-
-                            <!-- Important Notes -->
-                            <div style="background-color: #e3f2fd; border-radius: 6px; padding: 20px; margin: 20px 0;">
-                                <p style="margin: 0 0 10px 0; color: #1976d2; font-size: 16px; font-weight: 600;">⚠️
-                                    Important Notes:</p>
-                                <ul
-                                    style="color: #555555; font-size: 14px; line-height: 1.8; margin: 0; padding-left: 20px;">
-                                    <li>Please arrive 10 minutes before the event starts</li>
-                                    <li>Bring your college ID card for verification</li>
-                                    <li>Keep this email for reference</li>
-                                    {{EVENT_COST}}
-                                </ul>
-                            </div>
-
-                            <p style="color: #555555; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">
-                                If you have any questions or need to cancel your registration, please contact us.
-                            </p>
-
-                            <p style="color: #555555; margin: 20px 0 0 0; font-size: 14px; line-height: 1.6;">
-                                Looking forward to seeing you there! 🚀
-                            </p>
-                        </td>
-                    </tr>
-
-                    <!-- Footer -->
-                    <tr>
-                        <td
-                            style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                            <p style="color: #888888; margin: 0 0 10px 0; font-size: 14px;">
-                                <strong>GitHub Club SRM</strong>
-                            </p>
-                            <p style="color: #888888; margin: 0 0 15px 0; font-size: 12px;">
-                                Building the future, one commit at a time
-                            </p>
-                            <div style="margin: 15px 0;">
-                                <a href="https://github.com/SRM-IST-KTR"
-                                    style="color: #667eea; text-decoration: none; margin: 0 10px; font-size: 12px;">GitHub</a>
-                                <a href="https://www.linkedin.com/company/github-srmist"
-                                    style="color: #667eea; text-decoration: none; margin: 0 10px; font-size: 12px;">LinkedIn</a>
-                                <a href="https://twitter.com/githubsrmist"
-                                    style="color: #667eea; text-decoration: none; margin: 0 10px; font-size: 12px;">Twitter</a>
-                            </div>
-                            <p style="color: #aaaaaa; margin: 15px 0 0 0; font-size: 11px;">
-                                © {{CURRENT_YEAR}} GitHub Club SRM. All rights reserved.
-                            </p>
-                        </td>
-                    </tr>
-                </table>
+<body class="email-bg" style="margin: 0; padding: 24px 10px; background-color: #f4f4f5; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color: #18181b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+    <tr>
+      <td align="center" class="email-bg">
+        <!-- Main Card Container -->
+        <table role="presentation" class="email-container email-card" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 520px; background-color: #ffffff; border: 1px solid #e4e4e7; border-radius: 16px; box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04); overflow: hidden;">
+          <!-- Top Header -->
+          <tr>
+            <td class="header-cell card-header" style="padding: 28px 32px 20px 32px; background-color: #ffffff; border-bottom: 1px solid #f4f4f5; text-align: center;">
+              <img
+                src="https://res.cloudinary.com/doslhy0tq/image/upload/v1725744883/Logo_lwragi.png"
+                alt="GitHub Community SRM Logo"
+                width="135"
+                style="display: block; margin: 0 auto 12px auto; max-width: 135px; height: auto; border: 0;"
+              />
+              <h1 class="text-title" style="margin: 4px 0 0 0; color: #09090b; font-size: 22px; font-weight: 800; letter-spacing: -0.5px;">
+                {{EVENT_NAME}}
+              </h1>
             </td>
-        </tr>
-    </table>
-</body>
+          </tr>
 
+          <!-- Content Body -->
+          <tr>
+            <td class="content-cell" style="padding: 32px; text-align: left;">
+              <!-- Status Pill -->
+              <div style="text-align: center; margin-bottom: 16px;">
+                <span class="confirmed-badge" style="display: inline-block; background-color: #ecfdf5; color: #059669; border: 1px solid #a7f3d0; border-radius: 9999px; padding: 4px 14px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  ✓ Registration Confirmed
+                </span>
+              </div>
+
+              <h2 class="text-title" style="margin: 0 0 12px 0; color: #09090b; font-size: 20px; font-weight: 700; text-align: center;">
+                You're In, {{PARTICIPANT_NAME}}!
+              </h2>
+
+              <p class="text-body" style="margin: 0 0 20px 0; color: #3f3f46; font-size: 14.5px; line-height: 1.6; text-align: left;">
+                Your seat has been reserved for <strong>{{EVENT_NAME}}</strong>. Below are your event logistics and registered badge details. Please save this email for venue check-in.
+              </p>
+
+              <!-- Event Logistics Card -->
+              <div class="info-box" style="background-color: #fafafa; border: 1px solid #e4e4e7; border-radius: 12px; padding: 18px 20px; margin: 20px 0;">
+                <p class="text-title" style="margin: 0 0 12px 0; color: #09090b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  📅 Event Logistics
+                </p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size: 13.5px;">
+                  <tr>
+                    <td class="text-dim" style="padding-bottom: 8px; color: #71717a; width: 100px;">Date & Time:</td>
+                    <td class="text-title" style="padding-bottom: 8px; color: #09090b; font-weight: 600;">{{EVENT_DATE}} · {{EVENT_TIME}}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-dim" style="padding-bottom: 8px; color: #71717a;">Venue:</td>
+                    <td class="text-title" style="padding-bottom: 8px; color: #09090b; font-weight: 600;">{{EVENT_VENUE}}</td>
+                  </tr>
+                  {{EVENT_DURATION}}
+                </table>
+              </div>
+
+              <!-- Attendee Badge Info Card -->
+              <div class="info-box" style="background-color: #fafafa; border: 1px solid #e4e4e7; border-radius: 12px; padding: 18px 20px; margin: 20px 0;">
+                <p class="text-title" style="margin: 0 0 12px 0; color: #09090b; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  👤 Attendee Record
+                </p>
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="font-size: 13.5px;">
+                  <tr>
+                    <td class="text-dim" style="padding-bottom: 6px; color: #71717a; width: 100px;">Name:</td>
+                    <td class="text-title" style="padding-bottom: 6px; color: #09090b; font-weight: 600;">{{PARTICIPANT_NAME}}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-dim" style="padding-bottom: 6px; color: #71717a;">Reg No:</td>
+                    <td class="text-title" style="padding-bottom: 6px; color: #09090b; font-weight: 600; font-family: monospace;">{{PARTICIPANT_REGNO}}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-dim" style="padding-bottom: 6px; color: #71717a;">Department:</td>
+                    <td class="text-title" style="padding-bottom: 6px; color: #09090b; font-weight: 600;">{{PARTICIPANT_DEPT}}</td>
+                  </tr>
+                  <tr>
+                    <td class="text-dim" style="color: #71717a;">Email:</td>
+                    <td class="text-title" style="color: #09090b; font-weight: 600;">{{PARTICIPANT_EMAIL}}</td>
+                  </tr>
+                </table>
+              </div>
+
+              {{EVENT_DESCRIPTION}}
+
+              {{EVENT_PREREQUISITES}}
+
+              <!-- Important Check-in Notes -->
+              <div class="callout-box" style="background-color: #eff6ff; border: 1px solid #bfdbfe; border-radius: 12px; padding: 16px 20px; margin: 24px 0;">
+                <p class="callout-title" style="margin: 0 0 8px 0; color: #1e40af; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">
+                  📌 Entry & Check-in Instructions
+                </p>
+                <ul class="callout-text" style="margin: 0; padding-left: 18px; color: #1e3a8a; font-size: 13px; line-height: 1.6;">
+                  <li>Arrive at least 10 minutes prior to session commencement</li>
+                  <li>Present your college physical ID card at the entry check-in desk</li>
+                  <li>Keep this confirmation email handy on your device</li>
+                  {{EVENT_COST}}
+                </ul>
+              </div>
+
+              <div style="margin-top: 28px; padding-top: 20px; border-top: 1px solid #f4f4f5; text-align: left;">
+                <p class="text-dim" style="margin: 0; color: #71717a; font-size: 12.5px; line-height: 1.4;">
+                  Best regards,<br />
+                  <strong class="text-title" style="color: #18181b;">GitHub Community SRM Team</strong>
+                </p>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td class="card-footer" style="padding: 20px 32px; background-color: #fafafa; border-top: 1px solid #f4f4f5; text-align: center;">
+              <p class="text-muted" style="margin: 0 0 8px 0; color: #a1a1aa; font-size: 11.5px;">
+                SRM Institute of Science & Technology · Kattankulathur, Chennai
+              </p>
+              <div style="margin: 8px 0;">
+                <a href="https://github.com/SRM-IST-KTR" style="color: #2563eb; text-decoration: none; margin: 0 8px; font-size: 11.5px; font-weight: 600;">GitHub</a>
+                <a href="https://www.linkedin.com/company/githubsrm/mycompany/" style="color: #2563eb; text-decoration: none; margin: 0 8px; font-size: 11.5px; font-weight: 600;">LinkedIn</a>
+                <a href="https://www.instagram.com/githubsrm/?hl=en" style="color: #2563eb; text-decoration: none; margin: 0 8px; font-size: 11.5px; font-weight: 600;">Instagram</a>
+                <a href="https://githubsrmist.in" style="color: #2563eb; text-decoration: none; margin: 0 8px; font-size: 11.5px; font-weight: 600;">Website</a>
+              </div>
+              <p class="text-muted" style="margin: 8px 0 0 0; color: #a1a1aa; font-size: 11px;">
+                &copy; {{CURRENT_YEAR}} GitHub Community SRM. All rights reserved.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
 </html>
