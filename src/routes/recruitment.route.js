@@ -175,6 +175,10 @@ router.post(
       .notEmpty()
       .withMessage('Title is required'),
 
+    body('goal')
+      .trim()
+      .notEmpty()
+      .withMessage('Goal is required'),
     body('description')
       .trim()
       .notEmpty()
