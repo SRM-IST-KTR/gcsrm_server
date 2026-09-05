@@ -6,6 +6,8 @@ const { body, param, query } = require('express-validator');
 const { generateCertificate } = require('../controller/certificates/generate.controller');
 const { verifyCertificate } = require('../controller/certificates/verify.controller');
 const { downloadCertificate } = require('../controller/certificates/download.controller');
+const { listCertificates } = require('../controller/certificates/list.controller');
+const { revokeCertificate } = require('../controller/certificates/revoke.controller');
 /**
  * @swagger
  * /certificate/generate:
@@ -489,5 +491,8 @@ router.get('/download/:certificateId',
     ],
     downloadCertificate
 );
+
+router.get('/', listCertificates);
+router.put('/revoke/:certificateId', revokeCertificate);
 
 module.exports = router;
