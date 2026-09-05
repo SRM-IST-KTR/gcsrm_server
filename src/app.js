@@ -19,6 +19,9 @@ dotenv.config();
 
 const app = express();
 
+// Disable ETags so Vercel edge never returns 304 stripping Access-Control-Allow-Origin
+app.set('etag', false);
+
 // Add comprehensive request logging middleware early
 app.use(requestLoggingMiddleware);
 
@@ -53,6 +56,14 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
+
+// Enforce no-cache on all API endpoints to prevent edge 304 CORS stripping
+app.use('/api', (req, res, next) => {
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+    next();
+});
 
 // Morgan logging (keep for file logs if needed)
 if (process.env.NODE_ENV === 'production') {
