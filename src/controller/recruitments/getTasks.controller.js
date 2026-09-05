@@ -4,6 +4,7 @@ const getParticipantUserModel = require('../../models/recruitment.model');
 const getTaskModel = require('../../models/tasks.model');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
+const { escapeRegex, safeErrorMessage } = require('../../utils/regex');
 
 /**
  * Clean task data by removing extra quotes from links
@@ -156,7 +157,7 @@ const getParticipantTasks = async (req, res, next) => {
 
         return res.status(500).json({
             success: false,
-            error: error.message || 'Internal Server Error'
+            error: safeErrorMessage(error, 'Internal Server Error')
         });
     }
 };
@@ -185,7 +186,7 @@ const getAllTasks = async (req, res, next) => {
 
         if (domain) filter.domain = domain;
         if (year) filter.year = { $in: [year, 'both'] };
-        if (taskType) filter.taskType = new RegExp(taskType, 'i');
+        if (taskType) filter.taskType = new RegExp(escapeRegex(taskType), 'i');
 
         const tasks = await Task.find(filter).lean();
         const cleanedTasks = tasks.map(cleanTaskData);
@@ -199,7 +200,7 @@ const getAllTasks = async (req, res, next) => {
         Sentry.captureException(error);
         return res.status(500).json({
             success: false,
-            error: error.message || 'Internal Server Error'
+            error: safeErrorMessage(error, 'Internal Server Error')
         });
     }
 };
@@ -229,7 +230,7 @@ const getTaskById = async (req, res, next) => {
         Sentry.captureException(error);
         return res.status(500).json({
             success: false,
-            error: error.message || 'Internal Server Error'
+            error: safeErrorMessage(error, 'Internal Server Error')
         });
     }
 };

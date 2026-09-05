@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { connectRecruitmentDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
+const { escapeRegex, safeErrorMessage } = require('../../utils/regex');
 
 /**
  * Get all recruitment participants with advanced filtering, search, pagination, and sorting
@@ -17,9 +18,9 @@ const getAllParticipants = async (req, res, next) => {
 
     const query = {};
 
-    // Domain Filter
+    // Domain Filter (escaped: user input must never form regex syntax)
     if (domain && domain !== 'all') {
-      query.domain = new RegExp(`^${domain}$`, 'i');
+      query.domain = new RegExp(`^${escapeRegex(domain)}$`, 'i');
     }
 
     // Status Filter
@@ -38,13 +39,13 @@ const getAllParticipants = async (req, res, next) => {
       } else if (year === '2nd' || year === '2' || year === '2nd Year') {
         query.year = { $regex: /2|2nd/i };
       } else {
-        query.year = new RegExp(year, 'i');
+        query.year = new RegExp(escapeRegex(year), 'i');
       }
     }
 
-    // Search Query
+    // Search Query (escaped substring search)
     if (search && search.trim() !== '') {
-      const searchRegex = new RegExp(search.trim(), 'i');
+      const searchRegex = new RegExp(escapeRegex(search.trim()), 'i');
       query.$or = [
         { name: searchRegex },
         { email: searchRegex },
@@ -86,7 +87,7 @@ const getAllParticipants = async (req, res, next) => {
     console.error('Error fetching recruitment participants:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to fetch recruitment participants',
+      error: safeErrorMessage(error, 'Failed to fetch recruitment participants'),
     });
   }
 };
@@ -128,7 +129,7 @@ const getParticipantById = async (req, res, next) => {
     console.error('Error fetching single candidate:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to fetch candidate',
+      error: safeErrorMessage(error, 'Failed to fetch candidate'),
     });
   }
 };
@@ -177,7 +178,7 @@ const getParticipantByEmail = async (req, res, next) => {
     console.error('Error fetching participant by email:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to fetch participant by email',
+      error: safeErrorMessage(error, 'Failed to fetch participant by email'),
     });
   }
 };
@@ -250,7 +251,7 @@ const createParticipant = async (req, res, next) => {
     console.error('Error creating candidate:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to create candidate',
+      error: safeErrorMessage(error, 'Failed to create candidate'),
     });
   }
 };
@@ -297,7 +298,7 @@ const updateParticipant = async (req, res, next) => {
     console.error('Error updating candidate:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to update candidate',
+      error: safeErrorMessage(error, 'Failed to update candidate'),
     });
   }
 };
@@ -340,7 +341,7 @@ const deleteParticipant = async (req, res, next) => {
     console.error('Error deleting candidate:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to delete candidate',
+      error: safeErrorMessage(error, 'Failed to delete candidate'),
     });
   }
 };
@@ -400,7 +401,7 @@ const batchUpdateParticipants = async (req, res, next) => {
     console.error('Error in batch update:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed batch update',
+      error: safeErrorMessage(error, 'Failed batch update'),
     });
   }
 };
@@ -540,7 +541,7 @@ const getRecruitmentAnalytics = async (req, res, next) => {
     console.error('Error calculating recruitment analytics:', error);
     return res.status(500).json({
       success: false,
-      error: error.message || 'Failed to calculate recruitment analytics',
+      error: safeErrorMessage(error, 'Failed to calculate recruitment analytics'),
     });
   }
 };

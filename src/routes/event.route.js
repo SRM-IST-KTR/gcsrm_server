@@ -13,6 +13,7 @@ const {
     updateEventParticipant,
     checkinEventParticipant,
     snacksEventParticipant,
+    sendEventRsvpEmail,
 } = require('../controller/events/event.controller');
 const { registerInEvent } = require('../controller/events/register.controller');
 
@@ -23,6 +24,7 @@ router.get('/participants/:slug', fetchEventParticipants);
 router.put('/participants/:email', updateEventParticipant);
 router.post('/checkin', checkinEventParticipant);
 router.post('/snacks', snacksEventParticipant);
+router.post('/send-rsvp', sendEventRsvpEmail);
 
 router.get('/:id', fetchEvent);
 router.post('/createEvent', createEvent);

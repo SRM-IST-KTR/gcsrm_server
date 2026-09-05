@@ -2,6 +2,7 @@ const teamSchema = require('../models/team.model');
 const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 const Sentry = require('@sentry/node');
+const { safeErrorMessage } = require('../utils/regex');
 
 // get members
 const fetchTeamMembers = async (req, res) => {
@@ -93,6 +94,11 @@ const createTeamMember = async (req, res) => {
             await connectDB();
         }
 
+        if (req.body.index == null) {
+            const maxMember = await teamSchema.findOne().sort({ index: -1 }).lean();
+            req.body.index = (maxMember?.index != null ? maxMember.index : -1) + 1;
+        }
+
         const saveStart = Date.now();
         const newMember = new teamSchema(req.body);
         const savedMember = await newMember.save();
@@ -147,7 +153,7 @@ const createTeamMember = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: err.message
+            error: safeErrorMessage(err, 'Failed to create team member')
         });
     }
 };

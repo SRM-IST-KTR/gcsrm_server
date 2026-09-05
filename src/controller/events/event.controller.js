@@ -1,8 +1,12 @@
+const fs = require('fs');
+const path = require('path');
 const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const Event = require('../../models/event.model');
 const { getParticipantModel } = require('../../models/participant.model');
 const Sentry = require('@sentry/node');
+const { sendEmail } = require('../../utils/emailService');
+const { safeErrorMessage } = require('../../utils/regex');
 
 const fetchAll = async (req, res) => {
     const startTime = Date.now();
@@ -244,6 +248,52 @@ const snacksEventParticipant = async (req, res) => {
     }
 };
 
+/**
+ * Send RSVP request email to participant
+ */
+const sendEventRsvpEmail = async (req, res) => {
+    try {
+        const { participant, event } = req.body || {};
+        if (!participant?.email || !event?.event_name) {
+            return res.status(400).json({ success: false, error: 'Participant email and event details required' });
+        }
+
+        const templatePath = path.join(__dirname, '../../utils/email/templates/rsvp.html');
+        let html = fs.readFileSync(templatePath, 'utf-8');
+
+        const replacements = {
+            name: participant.name || '',
+            email: participant.email || '',
+            phn: participant.phn || '',
+            event: event.event_name || '',
+            department: participant.dept || '',
+            registrationNumber: participant.regNo || '',
+            event_description: event.event_description || '',
+            date: event.event_date || '',
+            venue: event.venue || '',
+            prerequisites: event.prerequisites || '',
+            slug: event.slug || '',
+        };
+
+        for (const [key, val] of Object.entries(replacements)) {
+            html = html.replaceAll(`{{${key}}}`, val);
+        }
+
+        await sendEmail({
+            to: participant.email,
+            subject: `RSVP Required for ${event.event_name}`,
+            html,
+            from: '"GitHub Community SRM | Events" <events@githubsrmist.tech>',
+            reply_to: 'community@githubsrmist.tech',
+        });
+
+        return res.status(200).json({ success: true, message: 'RSVP email sent successfully' });
+    } catch (error) {
+        Sentry.captureException(error);
+        return res.status(500).json({ success: false, error: safeErrorMessage(error, 'Error sending email') });
+    }
+};
+
 module.exports = {
     fetchAll,
     fetchEvent,
@@ -255,4 +305,5 @@ module.exports = {
     updateEventParticipant,
     checkinEventParticipant,
     snacksEventParticipant,
+    sendEventRsvpEmail,
 };

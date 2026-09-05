@@ -45,17 +45,17 @@ const teamSchema = new mongoose.Schema({
     },
     pictureUrl: {
         type: String,
-        required: true
+        default: ""
     },
     isCurrent: {
         type: Boolean,
-        required: true
+        default: true
     },
     socials: {
-        linkedin: { type: String, required: true },
-        github: { type: String, required: true },
-        instagram: { type: String },
-        website: { type: String }
+        linkedin: { type: String, default: "" },
+        github: { type: String, default: "" },
+        instagram: { type: String, default: "" },
+        website: { type: String, default: "" }
     }
 },
     { timestamps: true }

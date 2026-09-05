@@ -4,6 +4,7 @@ const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
 const { sendRecruitmentConfirmationEmail } = require('../../utils/email/recruitment');
+const { safeErrorMessage } = require('../../utils/regex');
 
 /**
  * Apply for recruitment
@@ -217,7 +218,7 @@ const applyForRecruitment = async (req, res, next) => {
 
         return res.status(500).json({
             success: false,
-            error: error.message || 'Internal Server Error'
+            error: safeErrorMessage(error, 'Internal Server Error')
         });
     }
 };
