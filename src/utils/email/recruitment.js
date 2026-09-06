@@ -3,22 +3,23 @@ const Sentry = require('@sentry/node');
 const fs = require('fs');
 const path = require('path');
 
-// Cache the recruitment confirmation template at module load time
+// Cache the recruitment confirmation and task assigned templates at module load time
 let recruitmentTemplateCache = null;
+let taskAssignedTemplateCache = null;
 
-/**
- * Load template into cache (called once at module initialization)
- */
 const loadTemplateCache = () => {
     try {
         const templatePath = path.join(__dirname, 'templates', 'recruitment-confirmation.html');
         recruitmentTemplateCache = fs.readFileSync(templatePath, 'utf-8');
-        Sentry.logger.info('Recruitment email template cached successfully', {
-            operation: 'loadRecruitmentTemplateCache',
-            templatePath: templatePath
+
+        const taskTemplatePath = path.join(__dirname, 'templates', 'task-assigned.html');
+        taskAssignedTemplateCache = fs.readFileSync(taskTemplatePath, 'utf-8');
+
+        Sentry.logger.info('Recruitment email templates cached successfully', {
+            operation: 'loadRecruitmentTemplateCache'
         });
     } catch (error) {
-        Sentry.logger.error('Failed to cache recruitment email template', {
+        Sentry.logger.error('Failed to cache recruitment email templates', {
             operation: 'loadRecruitmentTemplateCache',
             error: error.message
         });
@@ -28,41 +29,38 @@ const loadTemplateCache = () => {
 // Initialize template cache when module loads
 loadTemplateCache();
 
-/**
- * Load and parse recruitment confirmation email template
- * @param {Object} replacements - Object with placeholder-value pairs
- * @returns {string} Parsed HTML
- */
 const loadTemplate = (replacements) => {
     let template = recruitmentTemplateCache;
-
     if (!template) {
         const templatePath = path.join(__dirname, 'templates', 'recruitment-confirmation.html');
         template = fs.readFileSync(templatePath, 'utf-8');
     }
-
-    // Replace all placeholders
     Object.keys(replacements).forEach(key => {
         const placeholder = `{{${key}}}`;
         const value = replacements[key] || '';
         template = template.replace(new RegExp(placeholder, 'g'), value);
     });
-
     return template;
 };
 
-/**
- * Send recruitment confirmation email to participant after successful registration
- * @param {Object} participant - Participant details from the recruitment model
- */
+const loadTaskAssignedTemplate = (replacements) => {
+    let template = taskAssignedTemplateCache;
+    if (!template) {
+        const templatePath = path.join(__dirname, 'templates', 'task-assigned.html');
+        template = fs.readFileSync(templatePath, 'utf-8');
+    }
+    Object.keys(replacements).forEach(key => {
+        const placeholder = `{{${key}}}`;
+        const value = replacements[key] || '';
+        template = template.replace(new RegExp(placeholder, 'g'), value);
+    });
+    return template;
+};
+
 const sendRecruitmentConfirmationEmail = async (participant) => {
     try {
         const safeName = participant?.name?.trim() || 'Candidate';
-
-        const replacements = {
-            NAME: safeName
-        };
-
+        const replacements = { NAME: safeName };
         const htmlContent = loadTemplate(replacements);
 
         const emailContent = {
@@ -84,42 +82,55 @@ GitHub Community SRM Team
         };
 
         const { data } = await sendEmail(emailContent);
-
-        Sentry.logger.info('Recruitment confirmation email sent successfully', {
-            operation: 'sendRecruitmentConfirmationEmail',
-            email: participant.email,
-            messageId: data?.id
-        });
-
-        return {
-            success: true,
-            messageId: data?.id
-        };
+        return { success: true, messageId: data?.id };
     } catch (error) {
         Sentry.captureException(error, {
-            tags: {
-                component: 'email',
-                operation: 'sendRecruitmentConfirmationEmail'
-            },
-            extra: {
-                participantEmail: participant?.email
-            }
+            tags: { component: 'email', operation: 'sendRecruitmentConfirmationEmail' },
+            extra: { participantEmail: participant?.email }
         });
+        return { success: false, error: error.message };
+    }
+};
 
-        // Don't throw — registration should succeed even if email fails
-        Sentry.logger.error('Failed to send recruitment confirmation email', {
-            operation: 'sendRecruitmentConfirmationEmail',
-            error: error.message,
-            email: participant?.email
-        });
+const sendTaskAssignedEmail = async (participant) => {
+    try {
+        const safeName = participant?.name?.trim() || 'Candidate';
+        const replacements = { NAME: safeName };
+        const htmlContent = loadTaskAssignedTemplate(replacements);
 
-        return {
-            success: false,
-            error: error.message
+        const emailContent = {
+            from: process.env.SENDER_EMAIL,
+            to: participant.email,
+            subject: 'GitHub Community SRM Recruitment ’26 | Domain Task',
+            html: htmlContent,
+            text: `
+Hi ${safeName},
+
+Thank you for registering for GitHub Community SRM Recruitment ’26.
+
+Your domain task has been released. Please complete the assigned task and submit it on the recruitment website by 12th September 2026.
+
+Make sure to follow the submission instructions on the website and submit your task before the deadline.
+
+View Task: https://recruitment.githubsrmist.in/apply
+
+All the best!
+GitHub Community SRM
+            `.trim()
         };
+
+        const { data } = await sendEmail(emailContent);
+        return { success: true, messageId: data?.id };
+    } catch (error) {
+        Sentry.captureException(error, {
+            tags: { component: 'email', operation: 'sendTaskAssignedEmail' },
+            extra: { participantEmail: participant?.email }
+        });
+        return { success: false, error: error.message };
     }
 };
 
 module.exports = {
-    sendRecruitmentConfirmationEmail
+    sendRecruitmentConfirmationEmail,
+    sendTaskAssignedEmail
 };

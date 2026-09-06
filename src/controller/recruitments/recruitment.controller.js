@@ -351,7 +351,7 @@ const deleteParticipant = async (req, res, next) => {
  */
 const batchUpdateParticipants = async (req, res, next) => {
   try {
-    const { ids, action, status } = req.body;
+    const { ids, action, status, sendEmail: shouldSendEmail } = req.body;
     const dbConn = await connectRecruitmentDB();
     const ParticipantUser = getParticipantUserModel(dbConn);
 
@@ -375,11 +375,32 @@ const batchUpdateParticipants = async (req, res, next) => {
         { $set: { status } }
       );
 
+      let emailsSent = 0;
+      let emailErrors = 0;
+
+      if (status === 'task_assigned' && shouldSendEmail) {
+        const { sendTaskAssignedEmail } = require('../../utils/email/recruitment');
+        const participants = await ParticipantUser.find({ _id: { $in: ids } });
+        
+        for (const p of participants) {
+          if (p.email) {
+            const emailRes = await sendTaskAssignedEmail(p);
+            if (emailRes.success) {
+              emailsSent++;
+            } else {
+              emailErrors++;
+            }
+          }
+        }
+      }
+
       return res.status(200).json({
         success: true,
-        message: `Updated status for ${result.modifiedCount} candidates`,
+        message: `Updated status for ${result.modifiedCount} candidates${emailsSent > 0 ? ` and sent ${emailsSent} task assignment emails` : ''}`,
         matchedCount: result.matchedCount,
         modifiedCount: result.modifiedCount,
+        emailsSent,
+        emailErrors,
       });
     }
 
