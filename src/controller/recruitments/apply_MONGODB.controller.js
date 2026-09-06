@@ -119,6 +119,12 @@ const applyForRecruitment = async (req, res, next) => {
         // Remove submissionTime from body before saving to database
         const { submissionTime, ...userData } = req.body;
 
+        // Check if task assignment upon registration is enabled via env/config (e.g., RECRUIT_ASSIGN_TASK_ENABLED=true or TRUE)
+        const assignTaskEnabled = String(process.env.RECRUIT_ASSIGN_TASK_ENABLED || process.env.ASSIGN_TASK_ENABLED || '').toLowerCase() === 'true';
+
+        if (assignTaskEnabled) {
+            userData.status = 'task_assigned';
+        }
         // Set context for Sentry
         Sentry.setContext('recruitment_application', {
             name: userData.name,
@@ -165,6 +171,21 @@ const applyForRecruitment = async (req, res, next) => {
                     subOperation: 'sendConfirmationEmail'
                 }
             });
+        }
+
+        // If task assignment upon registration is enabled, send the task assigned email as well
+        if (assignTaskEnabled) {
+            try {
+                const { sendTaskAssignedEmail } = require('../../utils/email/recruitment');
+                await sendTaskAssignedEmail(user);
+            } catch (taskEmailError) {
+                Sentry.captureException(taskEmailError, {
+                    tags: {
+                        operation: 'applyForRecruitment',
+                        subOperation: 'sendTaskAssignedEmail'
+                    }
+                });
+            }
         }
 
         return res.status(201).json({
