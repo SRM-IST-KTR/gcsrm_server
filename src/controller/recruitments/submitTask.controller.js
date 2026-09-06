@@ -35,6 +35,16 @@ const submitTask = async (req, res, next) => {
   const startTime = Date.now();
 
   try {
+    // Check current Indian date and time (IST / Asia/Kolkata)
+    // Target: 8th September 2026, 12:00am (00:00:00 IST)
+    const targetTime = new Date('2026-09-07T18:30:00.000Z').getTime(); // 8th Sept 2026 00:00:00 IST
+    if (Date.now() < targetTime) {
+      return res.status(403).json({
+        success: false,
+        error: 'Why Being Smarty Dude, Time is not come to submit the tasks yet.',
+      });
+    }
+
     const rawEmail = req.body.email || req.verifiedEmail || '';
     const rawRegNo = req.body.registrationNumber || req.body.regNo || req.body.registrationNo || req.body.regNumber || '';
     const rawName = req.body.name || req.body.fullName || '';
