@@ -115,7 +115,7 @@ Make sure to follow the submission instructions on the website and submit your t
 View Task: https://recruitment.githubsrmist.in/apply
 
 All the best!
-GitHub Community SRM Team
+GitHub Community SRM
             `.trim()
         };
 
