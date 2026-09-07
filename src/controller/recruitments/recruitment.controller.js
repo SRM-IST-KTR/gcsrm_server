@@ -404,6 +404,31 @@ const batchUpdateParticipants = async (req, res, next) => {
       });
     }
 
+    if (action === 'sendTaskEmailOnly') {
+      let emailsSent = 0;
+      let emailErrors = 0;
+
+      const { sendTasksLiveEmail } = require('../../utils/email/recruitment');
+      const participants = await ParticipantUser.find({ _id: { $in: ids } });
+      
+      for (const p of participants) {
+        if (p.email) {
+          const emailRes = await sendTasksLiveEmail(p);
+          if (emailRes.success) {
+            emailsSent++;
+          } else {
+            emailErrors++;
+          }
+        }
+      }
+
+      return res.status(200).json({
+        message: `Successfully sent ${emailsSent} task submissions live emails without changing status`,
+        emailsSent,
+        emailErrors,
+      });
+    }
+
     if (action === 'delete') {
       const result = await ParticipantUser.deleteMany({ _id: { $in: ids } });
       return res.status(200).json({
@@ -415,7 +440,7 @@ const batchUpdateParticipants = async (req, res, next) => {
 
     return res.status(400).json({
       success: false,
-      error: "Invalid action. Supported actions: 'updateStatus', 'delete'",
+      error: "Invalid action. Supported actions: 'updateStatus', 'sendTaskEmailOnly', 'delete'",
     });
   } catch (error) {
     Sentry.captureException(error);
