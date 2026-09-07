@@ -5,16 +5,17 @@ const path = require('path');
 
 // Cache the recruitment confirmation and task assigned templates at module load time
 let recruitmentTemplateCache = null;
+let taskAssignedTemplateCache = null;
 let tasksLiveTemplateCache = null;
-
 const loadTemplateCache = () => {
     try {
         const templatePath = path.join(__dirname, 'templates', 'recruitment-confirmation.html');
         recruitmentTemplateCache = fs.readFileSync(templatePath, 'utf-8');
+        const taskTemplatePath = path.join(__dirname, 'templates', 'task-assigned.html');
+        taskAssignedTemplateCache = fs.readFileSync(taskTemplatePath, 'utf-8');
 
         const tasksLiveTemplatePath = path.join(__dirname, 'templates', 'tasks-live.html');
         tasksLiveTemplateCache = fs.readFileSync(tasksLiveTemplatePath, 'utf-8');
-
         Sentry.logger.info('Recruitment email templates cached successfully', {
             operation: 'loadRecruitmentTemplateCache'
         });
@@ -41,6 +42,58 @@ const loadTemplate = (replacements) => {
         template = template.replace(new RegExp(placeholder, 'g'), value);
     });
     return template;
+};
+
+const loadTaskAssignedTemplate = (replacements) => {
+    let template = taskAssignedTemplateCache;
+    if (!template) {
+        const templatePath = path.join(__dirname, 'templates', 'task-assigned.html');
+        template = fs.readFileSync(templatePath, 'utf-8');
+    }
+    Object.keys(replacements).forEach(key => {
+        const placeholder = `{{${key}}}`;
+        const value = replacements[key] || '';
+        template = template.replace(new RegExp(placeholder, 'g'), value);
+    });
+    return template;
+};
+
+const sendTaskAssignedEmail = async (participant) => {
+    try {
+        const safeName = participant?.name?.trim() || 'Candidate';
+        const replacements = { NAME: safeName };
+        const htmlContent = loadTaskAssignedTemplate(replacements);
+
+        const emailContent = {
+            from: process.env.SENDER_EMAIL,
+            to: participant.email,
+            subject: 'GitHub Community SRM Recruitment ’26 | Domain Task',
+            html: htmlContent,
+            text: `
+Hi ${safeName},
+
+Thank you for registering for GitHub Community SRM Recruitment ’26.
+
+Your domain task has been released. Please complete the assigned task and submit it on the recruitment website by Deadline: 12 September 2026, 23:59 PM IST.
+
+Make sure to follow the submission instructions on the website and submit your task before the deadline.
+
+View Task: https://recruitment.githubsrmist.in/apply
+
+All the best!
+GitHub Community SRM
+            `.trim()
+        };
+
+        const { data } = await sendEmail(emailContent);
+        return { success: true, messageId: data?.id };
+    } catch (error) {
+        Sentry.captureException(error, {
+            tags: { component: 'email', operation: 'sendTaskAssignedEmail' },
+            extra: { participantEmail: participant?.email }
+        });
+        return { success: false, error: error.message };
+    }
 };
 
 const loadTasksLiveTemplate = (replacements) => {
