@@ -7,6 +7,7 @@ const path = require('path');
 let recruitmentTemplateCache = null;
 let taskAssignedTemplateCache = null;
 let tasksLiveTemplateCache = null;
+let taskReminderTemplateCache = null;
 const loadTemplateCache = () => {
     try {
         const templatePath = path.join(__dirname, 'templates', 'recruitment-confirmation.html');
@@ -16,6 +17,8 @@ const loadTemplateCache = () => {
 
         const tasksLiveTemplatePath = path.join(__dirname, 'templates', 'tasks-live.html');
         tasksLiveTemplateCache = fs.readFileSync(tasksLiveTemplatePath, 'utf-8');
+        const taskReminderTemplatePath = path.join(__dirname, 'templates', 'task-reminder.html');
+        taskReminderTemplateCache = fs.readFileSync(taskReminderTemplatePath, 'utf-8');
         Sentry.logger.info('Recruitment email templates cached successfully', {
             operation: 'loadRecruitmentTemplateCache'
         });
@@ -57,6 +60,60 @@ const loadTaskAssignedTemplate = (replacements) => {
     });
     return template;
 };
+
+
+const loadTaskReminderTemplate = (replacements) => {
+    let template = taskReminderTemplateCache;
+    if (!template) {
+        const templatePath = path.join(__dirname, 'templates', 'task-reminder.html');
+        template = fs.readFileSync(templatePath, 'utf-8');
+    }
+    Object.keys(replacements).forEach(key => {
+        const placeholder = `{{${key}}}`;
+        const value = replacements[key] || '';
+        template = template.replace(new RegExp(placeholder, 'g'), value);
+    });
+    return template;
+};
+
+const sendTaskReminderEmail = async (participant) => {
+    try {
+        const safeName = participant?.name?.trim() || 'Candidate';
+        const replacements = { NAME: safeName };
+        const htmlContent = loadTaskReminderTemplate(replacements);
+
+        const emailContent = {
+            from: process.env.SENDER_EMAIL,
+            to: participant.email,
+            subject: "GitHub Community SRM Recruitment ’26 | Task Submission Reminder",
+            html: htmlContent,
+            text: `
+Hi ${safeName},
+
+Thank you for registering for GitHub Community SRM Recruitment ’26.
+
+This is a friendly reminder that your domain task is still pending. Please complete the assigned task and submit it on the recruitment website by Deadline: 12 September 2026, 23:59 PM IST.
+
+Make sure to follow the submission instructions on the website and submit your task before the deadline.
+
+Submit Task: https://recruitment.githubsrmist.in/apply
+
+All the best!
+GitHub Community SRM
+            `.trim()
+        };
+
+        const { data } = await sendEmail(emailContent);
+        return { success: true, messageId: data?.id };
+    } catch (error) {
+        Sentry.captureException(error, {
+            tags: { component: 'email', operation: 'sendTaskReminderEmail' },
+            extra: { participantEmail: participant?.email }
+        });
+        return { success: false, error: error.message };
+    }
+};
+
 
 const sendTaskAssignedEmail = async (participant) => {
     try {
@@ -184,5 +241,6 @@ GitHub Community SRM
 module.exports = {
     sendRecruitmentConfirmationEmail,
     sendTaskAssignedEmail,
-    sendTasksLiveEmail
+    sendTasksLiveEmail,
+    sendTaskReminderEmail,
 };

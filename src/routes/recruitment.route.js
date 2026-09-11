@@ -32,6 +32,10 @@ const {
   getRecruitmentAnalytics,
 } = require('../controller/recruitments/recruitment.controller');
 
+const {
+  sendTaskReminderEmails
+} = require('../controller/recruitments/sendTaskReminder.controller');
+
 
 // ============================================================
 // 1. GET /api/recruitment/analytics
@@ -57,6 +61,21 @@ router.get('/participants', getAllParticipants);
 // ============================================================
 
 router.post('/batch', batchUpdateParticipants);
+
+
+// ============================================================
+// 3b. POST /api/recruitment/send-task-reminder
+// Send task submission reminder emails to selected candidates
+// ============================================================
+
+router.post(
+  '/send-task-reminder',
+  [
+    body('ids').isArray({ min: 1 }).withMessage('ids must be a non-empty array'),
+    body('ids.*').isString().withMessage('each id must be a string'),
+  ],
+  sendTaskReminderEmails
+);
 
 
 // ============================================================
