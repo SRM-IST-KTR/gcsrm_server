@@ -35,13 +35,22 @@ const submitTask = async (req, res, next) => {
   const startTime = Date.now();
 
   try {
-    // Check current Indian date and time (IST / Asia/Kolkata)
-    // Target: 8th September 2026, 12:00am (00:00:00 IST)
-    const targetTime = new Date('2026-09-07T18:30:00.000Z').getTime(); // 8th Sept 2026 00:00:00 IST
-    if (Date.now() < targetTime) {
+    // Check the recruitment task submission window in IST.
+    const submissionOpensAt = new Date('2026-09-07T18:30:00.000Z').getTime(); // 8th Sept 2026 00:00:00 IST
+    const submissionClosesAt = new Date('2026-09-13T18:30:00.000Z').getTime(); // 14th Sept 2026 00:00:00 IST, after the 13th Sept deadline
+    const currentTime = Date.now();
+
+    if (currentTime < submissionOpensAt) {
       return res.status(403).json({
         success: false,
         error: 'Why Being Smarty Dude, Time is not come to submit the tasks yet.',
+      });
+    }
+
+    if (currentTime >= submissionClosesAt) {
+      return res.status(403).json({
+        success: false,
+        error: 'Task submission deadline has passed.',
       });
     }
 
