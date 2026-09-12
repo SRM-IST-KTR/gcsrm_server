@@ -17,7 +17,7 @@ const loadTemplateCache = () => {
 
         const tasksLiveTemplatePath = path.join(__dirname, 'templates', 'tasks-live.html');
         tasksLiveTemplateCache = fs.readFileSync(tasksLiveTemplatePath, 'utf-8');
-        const taskReminderTemplatePath = path.join(__dirname, 'templates', 'task-reminder.html');
+        const taskReminderTemplatePath = path.join(__dirname, 'templates', 'task-deadline-extended.html');
         taskReminderTemplateCache = fs.readFileSync(taskReminderTemplatePath, 'utf-8');
         Sentry.logger.info('Recruitment email templates cached successfully', {
             operation: 'loadRecruitmentTemplateCache'
@@ -65,7 +65,7 @@ const loadTaskAssignedTemplate = (replacements) => {
 const loadTaskReminderTemplate = (replacements) => {
     let template = taskReminderTemplateCache;
     if (!template) {
-        const templatePath = path.join(__dirname, 'templates', 'task-reminder.html');
+        const templatePath = path.join(__dirname, 'templates', 'task-deadline-extended.html');
         template = fs.readFileSync(templatePath, 'utf-8');
     }
     Object.keys(replacements).forEach(key => {
