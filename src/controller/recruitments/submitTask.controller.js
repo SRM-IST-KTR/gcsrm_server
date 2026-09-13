@@ -37,7 +37,7 @@ const submitTask = async (req, res, next) => {
   try {
     // Check the recruitment task submission window in IST.
     const submissionOpensAt = new Date('2026-09-07T18:30:00.000Z').getTime(); // 8th Sept 2026 00:00:00 IST
-    const submissionClosesAt = new Date('2026-09-13T18:30:00.000Z').getTime(); // 14th Sept 2026 00:00:00 IST, after the 13th Sept deadline
+    const submissionClosesAt = new Date('2026-09-13T19:10:00.000Z').getTime(); // 14th Sept 2026 12:40:00 AM IST
     const currentTime = Date.now();
 
     if (currentTime < submissionOpensAt) {
