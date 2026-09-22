@@ -1,6 +1,6 @@
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
-const { sendEmail, sendBatchEmails } = require('../utils/emailService');
+const { sendEmail, sendBccEmails, sendBatchEmails } = require('../utils/emailService');
 
 /**
  * POST /api/email/send
@@ -14,7 +14,7 @@ exports.sendSingle = async (req, res, next) => {
       return res.status(400).json({ success: false, errors: errors.array() });
     }
 
-    const { to, subject, html, text, from, reply_to, scheduled_at } = req.body;
+    const { to, bcc, subject, html, text, from, reply_to, scheduled_at } = req.body;
 
     Sentry.logger.info('Sending single email', {
       operation: 'sendSingleEmail',
@@ -22,15 +22,24 @@ exports.sendSingle = async (req, res, next) => {
       subject: subject?.slice(0, 60),
     });
 
-    const result = await sendEmail({
-      to,
-      subject,
-      html,
-      text,
-      from,
-      reply_to,
-      scheduled_at,
-    });
+    const result = bcc
+      ? await sendBccEmails(bcc, {
+          subject,
+          html,
+          text,
+          from,
+          reply_to,
+          scheduled_at,
+        })
+      : await sendEmail({
+          to,
+          subject,
+          html,
+          text,
+          from,
+          reply_to,
+          scheduled_at,
+        });
 
     const duration = Date.now() - startTime;
     Sentry.logger.info('Single email sent', {
@@ -40,9 +49,15 @@ exports.sendSingle = async (req, res, next) => {
     });
 
     return res.status(200).json({
-      success: true,
+      success: result.success !== false,
       message: 'Email sent successfully',
       messageId: result.data?.id,
+      messageIds: result.results?.filter((item) => item.success && item.id).map((item) => item.id),
+      total: result.total,
+      chunkCount: result.chunkCount,
+      sentCount: result.sentCount,
+      failedCount: result.failedCount,
+      results: result.results,
     });
   } catch (err) {
     Sentry.captureException(err, {

@@ -67,8 +67,11 @@ const toError = (error, context) => {
 
 const buildSendEmailParams = (options = {}) => {
   const toAddresses = normalizeAddresses(options.to);
-  if (toAddresses.length === 0) {
-    const err = new Error('Email recipient "to" is required and must not be empty.');
+  const ccAddresses = normalizeAddresses(options.cc);
+  const bccAddresses = normalizeAddresses(options.bcc);
+
+  if (toAddresses.length === 0 && ccAddresses.length === 0 && bccAddresses.length === 0) {
+    const err = new Error('At least one email recipient is required in "to", "cc", or "bcc".');
     err.statusCode = 400;
     err.code = 'INVALID_RECIPIENT';
     throw err;
@@ -91,8 +94,6 @@ const buildSendEmailParams = (options = {}) => {
     throw err;
   }
 
-  const ccAddresses = normalizeAddresses(options.cc);
-  const bccAddresses = normalizeAddresses(options.bcc);
   const replyToAddresses = normalizeAddresses(options.reply_to || options.replyTo);
 
   const configurationSet =
@@ -104,7 +105,7 @@ const buildSendEmailParams = (options = {}) => {
   return {
     Source: resolveFrom(options.from),
     Destination: {
-      ToAddresses: toAddresses,
+      ...(toAddresses.length > 0 && { ToAddresses: toAddresses }),
       ...(ccAddresses.length > 0 && { CcAddresses: ccAddresses }),
       ...(bccAddresses.length > 0 && { BccAddresses: bccAddresses }),
     },
@@ -174,6 +175,66 @@ const mapConcurrent = async (items, concurrency, fn) => {
   return results;
 };
 
+const sendBccEmails = async (recipients = [], emailOptions = {}) => {
+  const bccAddresses = normalizeAddresses(recipients);
+  if (bccAddresses.length === 0) {
+    const err = new Error('sendBccEmails: recipients must be a non-empty array');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const chunkSize = 49;
+  const chunks = Array.from(
+    { length: Math.ceil(bccAddresses.length / chunkSize) },
+    (_, index) => bccAddresses.slice(index * chunkSize, (index + 1) * chunkSize)
+  );
+
+  const concurrency =
+    emailOptions.concurrency ||
+    parseInt(process.env.SES_BATCH_CONCURRENCY, 10) ||
+    10;
+
+  const results = await mapConcurrent(chunks, concurrency, async (chunk, index) => {
+    try {
+      const response = await sendEmail({
+        ...emailOptions,
+        bcc: chunk,
+        to: undefined,
+        concurrency: undefined,
+      });
+
+      return {
+        recipients: chunk,
+        success: true,
+        id: response.data?.id,
+        index,
+      };
+    } catch (error) {
+      return {
+        recipients: chunk,
+        success: false,
+        error: error.message || String(error),
+        index,
+      };
+    }
+  });
+
+  const sentCount = results.reduce((count, result) => (
+    result.success ? count + result.recipients.length : count
+  ), 0);
+  const failedCount = bccAddresses.length - sentCount;
+
+  return {
+    success: sentCount > 0,
+    total: bccAddresses.length,
+    chunkCount: chunks.length,
+    sentCount,
+    failedCount,
+    results,
+    data: results,
+  };
+};
+
 const sendBatchEmails = async (emails = [], batchOptions = {}) => {
   if (!Array.isArray(emails) || emails.length === 0) {
     const err = new Error('sendBatchEmails: emails must be a non-empty array');
@@ -232,6 +293,7 @@ module.exports = {
   getResend: getSES,
   isConfigured,
   sendEmail,
+  sendBccEmails,
   sendBatchEmails,
   resetForTest,
 };

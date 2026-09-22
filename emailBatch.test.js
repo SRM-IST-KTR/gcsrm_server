@@ -156,7 +156,37 @@ describe('Batch Email Architecture & Security Tests', () => {
     });
   });
 
-  describe('3. Route Protection on Recruitment Endpoints', () => {
+  describe('3. POST /api/email/send BCC broadcast', () => {
+    it('sends BCC recipients in private chunks of 49', async () => {
+      mockSend.mockImplementation(async (command) => ({
+        MessageId: `broadcast-${command.Destination.BccAddresses.length}`,
+      }));
+
+      const recipients = Array.from({ length: 100 }, (_, index) => `user${index}@example.com`);
+      const res = await request(app)
+        .post('/api/email/send')
+        .set('Authorization', 'Bearer secret-api-key-test')
+        .send({
+          bcc: recipients,
+          subject: 'WhatsApp Recruitment Invite',
+          html: '<html><body>Join us</body></html>',
+        });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
+      expect(res.body.total).toBe(100);
+      expect(res.body.sentCount).toBe(100);
+      expect(res.body.failedCount).toBe(0);
+      expect(res.body.chunkCount).toBe(3);
+      expect(mockSend).toHaveBeenCalledTimes(3);
+      expect(mockSend.mock.calls.map(([command]) => command.Destination.BccAddresses.length))
+        .toEqual([49, 49, 2]);
+      expect(mockSend.mock.calls.every(([command]) => !command.Destination.ToAddresses))
+        .toBe(true);
+    });
+  });
+
+  describe('4. Route Protection on Recruitment Endpoints', () => {
     it('rejects POST /api/recruitment/batch without Bearer token (401)', async () => {
       const res = await request(app)
         .post('/api/recruitment/batch')
@@ -213,7 +243,7 @@ describe('Batch Email Architecture & Security Tests', () => {
     });
   });
 
-  describe('4. Recruitment Batch Chunking & Email Dispatch', () => {
+  describe('5. Recruitment Batch Chunking & Email Dispatch', () => {
     it('dispatches emails in chunks and handles individual email failure gracefully', async () => {
       mockSend.mockImplementation(async (command) => {
         const to = command.Destination?.ToAddresses?.[0];

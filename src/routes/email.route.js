@@ -15,8 +15,8 @@ const requireApiKey = require('../middleware/requireApiKey');
  * @swagger
  * /email/send:
  *   post:
- *     summary: Send a single email
- *     description: Sends one email to one or more recipients via Amazon SES.
+ *     summary: Send one email or a private BCC broadcast
+ *     description: Sends one email via Amazon SES. BCC recipients are automatically split into groups of 49.
  *     tags: [Email]
  *     security:
  *       - BearerAuth: []
@@ -26,7 +26,7 @@ const requireApiKey = require('../middleware/requireApiKey');
  *         application/json:
  *           schema:
  *             type: object
- *             required: [to, subject]
+ *             required: [subject]
  *             properties:
  *               to:
  *                 type: string
@@ -57,6 +57,12 @@ const requireApiKey = require('../middleware/requireApiKey');
  *                 format: date-time
  *                 description: ISO date to schedule the email for later
  *                 example: "2026-09-01T10:00:00Z"
+ *               bcc:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Private recipient list; chunked into groups of 49
+ *                 example: [user1@example.com, user2@example.com]
  *     responses:
  *       200:
  *         description: Email sent successfully
@@ -84,7 +90,8 @@ const requireApiKey = require('../middleware/requireApiKey');
 router.post('/send',
   requireApiKey,
   [
-    body('to').notEmpty().withMessage('to is required'),
+    body('to').optional(),
+    body('bcc').optional(),
     body('subject').notEmpty().withMessage('subject is required'),
   ],
   emailController.sendSingle
