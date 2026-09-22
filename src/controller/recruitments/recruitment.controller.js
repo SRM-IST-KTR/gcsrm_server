@@ -4,6 +4,15 @@ const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
 const { escapeRegex, safeErrorMessage } = require('../../utils/regex');
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
 /**
  * Get all recruitment participants with advanced filtering, search, pagination, and sorting
  */
@@ -382,14 +391,23 @@ const batchUpdateParticipants = async (req, res, next) => {
         const { sendTaskAssignedEmail } = require('../../utils/email/recruitment');
         const participants = await ParticipantUser.find({ _id: { $in: ids } });
         
-        for (const p of participants) {
-          if (p.email) {
-            const emailRes = await sendTaskAssignedEmail(p);
-            if (emailRes.success) {
+        const validParticipants = participants.filter((p) => p && p.email);
+        emailErrors += (participants.length - validParticipants.length);
+
+        const chunks = chunkArray(validParticipants, 10);
+        for (let i = 0; i < chunks.length; i++) {
+          const chunkResults = await Promise.allSettled(
+            chunks[i].map((p) => sendTaskAssignedEmail(p))
+          );
+          for (const res of chunkResults) {
+            if (res.status === 'fulfilled' && res.value?.success) {
               emailsSent++;
             } else {
               emailErrors++;
             }
+          }
+          if (i < chunks.length - 1) {
+            await sleep(300);
           }
         }
       }
@@ -411,14 +429,23 @@ const batchUpdateParticipants = async (req, res, next) => {
       const { sendTasksLiveEmail } = require('../../utils/email/recruitment');
       const participants = await ParticipantUser.find({ _id: { $in: ids } });
       
-      for (const p of participants) {
-        if (p.email) {
-          const emailRes = await sendTasksLiveEmail(p);
-          if (emailRes.success) {
+      const validParticipants = participants.filter((p) => p && p.email);
+      emailErrors += (participants.length - validParticipants.length);
+
+      const chunks = chunkArray(validParticipants, 10);
+      for (let i = 0; i < chunks.length; i++) {
+        const chunkResults = await Promise.allSettled(
+          chunks[i].map((p) => sendTasksLiveEmail(p))
+        );
+        for (const res of chunkResults) {
+          if (res.status === 'fulfilled' && res.value?.success) {
             emailsSent++;
           } else {
             emailErrors++;
           }
+        }
+        if (i < chunks.length - 1) {
+          await sleep(300);
         }
       }
 

@@ -89,14 +89,19 @@ exports.sendBatch = async (req, res, next) => {
     const duration = Date.now() - startTime;
     Sentry.logger.info('Batch emails sent', {
       operation: 'sendBatchEmail',
-      count: result.data?.length,
+      count: result.sentCount,
+      failedCount: result.failedCount,
       duration: `${duration}ms`,
     });
 
     return res.status(200).json({
       success: true,
-      message: `${result.data?.length || 0} emails sent successfully`,
-      messageIds: result.data?.map((d) => d.id),
+      message: `${result.sentCount} of ${result.total} emails sent successfully${result.failedCount > 0 ? `, ${result.failedCount} failed` : ''}`,
+      total: result.total,
+      sentCount: result.sentCount,
+      failedCount: result.failedCount,
+      messageIds: result.results?.filter((d) => d.success && d.id).map((d) => d.id) || [],
+      results: result.results,
     });
   } catch (err) {
     Sentry.captureException(err, {

@@ -5,6 +5,15 @@ const { validationResult } = require('express-validator');
 const Sentry = require('@sentry/node');
 const { safeErrorMessage } = require('../../utils/regex');
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+const chunkArray = (arr, size) => {
+  const chunks = [];
+  for (let i = 0; i < arr.length; i += size) {
+    chunks.push(arr.slice(i, i + size));
+  }
+  return chunks;
+};
+
 /**
  * POST /api/recruitment/send-task-reminder
  *
@@ -29,18 +38,33 @@ const sendTaskReminderEmails = async (req, res, next) => {
     let emailsSent = 0;
     let emailErrors = 0;
     const failedRecipients = [];
+    const validParticipants = [];
 
     for (const p of participants) {
       if (!p.email) {
         emailErrors++;
-        continue;
-      }
-      const emailRes = await sendTaskReminderEmail(p);
-      if (emailRes.success) {
-        emailsSent++;
+        failedRecipients.push({ email: 'missing', error: 'Missing email address' });
       } else {
-        emailErrors++;
-        failedRecipients.push({ email: p.email, error: emailRes.error });
+        validParticipants.push(p);
+      }
+    }
+
+    const chunks = chunkArray(validParticipants, 10);
+    for (let i = 0; i < chunks.length; i++) {
+      const chunk = chunks[i];
+      const chunkResults = await Promise.allSettled(chunk.map((p) => sendTaskReminderEmail(p)));
+      for (let j = 0; j < chunkResults.length; j++) {
+        const res = chunkResults[j];
+        if (res.status === 'fulfilled' && res.value?.success) {
+          emailsSent++;
+        } else {
+          emailErrors++;
+          const err = res.status === 'fulfilled' ? res.value?.error : res.reason?.message;
+          failedRecipients.push({ email: chunk[j].email, error: err || 'Send failure' });
+        }
+      }
+      if (i < chunks.length - 1) {
+        await sleep(300);
       }
     }
 

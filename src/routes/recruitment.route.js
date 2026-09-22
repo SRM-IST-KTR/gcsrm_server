@@ -7,6 +7,7 @@ const {
 } = require('../controller/recruitments/apply_MONGODB.controller');
 
 const requireOtpAuth = require('../middleware/requireOtpAuth');
+const requireApiKey = require('../middleware/requireApiKey');
 
 const {
   submitTask
@@ -66,7 +67,7 @@ router.get('/participants', getAllParticipants);
 // Batch update participant status / delete
 // ============================================================
 
-router.post('/batch', batchUpdateParticipants);
+router.post('/batch', requireApiKey, batchUpdateParticipants);
 
 
 // ============================================================
@@ -76,6 +77,7 @@ router.post('/batch', batchUpdateParticipants);
 
 router.post(
   '/send-task-reminder',
+  requireApiKey,
   [
     body('ids').isArray({ min: 1 }).withMessage('ids must be a non-empty array'),
     body('ids.*').isString().withMessage('each id must be a string'),

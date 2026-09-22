@@ -188,17 +188,34 @@ const sendBatchEmails = async (emails = [], batchOptions = {}) => {
 
   try {
     const results = await mapConcurrent(emails, concurrency, async (emailOptions, idx) => {
+      const recipient = emailOptions?.to;
       try {
         const res = await sendEmail(emailOptions);
-        return res.data;
+        return {
+          to: recipient,
+          success: true,
+          id: res.data?.id,
+          index: idx,
+        };
       } catch (err) {
-        err.message = `Batch email at index ${idx} failed (${emailOptions?.to || 'unknown'}): ${err.message}`;
-        throw err;
+        return {
+          to: recipient,
+          success: false,
+          error: err.message || String(err),
+          index: idx,
+        };
       }
     });
 
+    const sentCount = results.filter((r) => r.success).length;
+    const failedCount = results.length - sentCount;
+
     return {
-      success: true,
+      success: sentCount > 0 || emails.length === 0,
+      total: emails.length,
+      sentCount,
+      failedCount,
+      results,
       data: results,
     };
   } catch (error) {
