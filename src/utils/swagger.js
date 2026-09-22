@@ -111,43 +111,96 @@ const options = {
                 },
                 Team: {
                     type: "object",
-                    required: ["index", "name", "domain", "position", "pictureUrl"],
+                    required: ["name", "email", "phoneno", "domain", "position", "joined_yr"],
                     properties: {
                         _id: { type: "string", description: "MongoDB ObjectId", example: "507f1f77bcf86cd799439011" },
                         index: { type: "number", description: "Ordering index for display", example: 1 },
                         name: { type: "string", description: "Member's full name", example: "Jane Doe" },
-                        domain: { type: "string", description: "Area/domain (e.g., Backend)", example: "Backend" },
-                        position: { type: "string", description: "Role or position", example: "Lead" },
-                        caption: { type: "string", description: "Short caption or tagline", example: "Open source enthusiast" },
-                        joined: { type: "number", description: "Year joined", example: 2023 },
-                        pictureUrl: { type: "string", description: "URL to profile picture", example: "https://example.com/avatar.jpg" },
-                        isCurrent: { type: "boolean", description: "Whether member is currently active", example: true },
-                        socials: {
-                            type: "object",
-                            properties: {
-                                linkedin: { type: "string", example: "https://linkedin.com/in/janedoe" },
-                                github: { type: "string", example: "https://github.com/janedoe" },
-                                instagram: { type: "string", example: "https://instagram.com/janedoe" },
-                                website: { type: "string", example: "https://janedoe.dev" }
+                        email: { type: "string", description: "Member's email address", example: "jane.doe@example.com" },
+                        phoneno: { type: "string", description: "Member's phone number", example: "+919876543210" },
+                        section: { type: "string", description: "College section", example: "CSE-A" },
+                        faDetails: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    faname: { type: "string", example: "Dr. Smith" },
+                                    faphonenumber: { type: "string", example: "+919876543211" },
+                                    faemailid: { type: "string", example: "smith@srmist.edu.in" }
+                                }
                             }
                         },
+                        domain: { type: "string", description: "Area/domain (e.g., Technical)", example: "Technical" },
+                        subdomain: { type: "string", description: "Sub-specialization", example: "Web Development" },
+                        position: {
+                            type: "string",
+                            enum: ['Convenor', 'mentor', 'alumni', 'president', 'vp', 'director', 'lead', 'associate', 'member'],
+                            example: "lead"
+                        },
+                        caption: { type: "string", description: "Short caption or tagline", example: "Open source enthusiast" },
+                        joined_yr: { type: "number", description: "Year joined", example: 2024 },
+                        pictureUrl: { type: "string", description: "URL to profile picture", example: "https://res.cloudinary.com/demo/image/upload/sample.jpg" },
+                        isCurrentMember: { type: "boolean", description: "Whether member is currently active", example: true },
+                        socials: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    insta: { type: "string", example: "https://instagram.com/janedoe" },
+                                    github: { type: "string", example: "https://github.com/janedoe" },
+                                    linkedin: { type: "string", example: "https://linkedin.com/in/janedoe" },
+                                    portfolio: { type: "string", example: "https://janedoe.dev" }
+                                }
+                            }
+                        },
+                        ndaUrl: { type: "string", description: "Signed NDA URL", example: "https://res.cloudinary.com/demo/raw/upload/nda.pdf" },
                         createdAt: { type: "string", format: "date-time" },
                         updatedAt: { type: "string", format: "date-time" }
                     }
                 },
                 TeamInput: {
                     type: "object",
-                    required: ["index", "name", "domain", "position", "pictureUrl"],
+                    required: ["name", "email", "phoneno", "domain", "position", "joined_yr"],
                     properties: {
-                        index: { type: "number" },
-                        name: { type: "string" },
-                        domain: { type: "string" },
-                        position: { type: "string" },
-                        caption: { type: "string" },
-                        joined: { type: "number" },
-                        pictureUrl: { type: "string" },
-                        isCurrent: { type: "boolean" },
-                        socials: { type: "object" }
+                        name: { type: "string", example: "Jane Doe" },
+                        email: { type: "string", example: "jane.doe@example.com" },
+                        phoneno: { type: "string", example: "+919876543210" },
+                        section: { type: "string", example: "CSE-A" },
+                        faDetails: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    faname: { type: "string" },
+                                    faphonenumber: { type: "string" },
+                                    faemailid: { type: "string" }
+                                }
+                            }
+                        },
+                        domain: { type: "string", example: "Technical" },
+                        subdomain: { type: "string", example: "Web Development" },
+                        position: {
+                            type: "string",
+                            enum: ['Convenor', 'mentor', 'alumni', 'president', 'vp', 'director', 'lead', 'associate', 'member'],
+                            example: "lead"
+                        },
+                        caption: { type: "string", example: "Open source enthusiast" },
+                        joined_yr: { type: "number", example: 2024 },
+                        pictureUrl: { type: "string", example: "https://res.cloudinary.com/demo/image/upload/sample.jpg" },
+                        isCurrentMember: { type: "boolean", example: true },
+                        socials: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    insta: { type: "string" },
+                                    github: { type: "string" },
+                                    linkedin: { type: "string" },
+                                    portfolio: { type: "string" }
+                                }
+                            }
+                        },
+                        ndaUrl: { type: "string", example: "https://res.cloudinary.com/demo/raw/upload/nda.pdf" }
                     }
                 },
                 Event: {

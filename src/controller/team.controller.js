@@ -3,14 +3,18 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 const Sentry = require('@sentry/node');
 const { safeErrorMessage } = require('../utils/regex');
+const { validationResult } = require('express-validator');
 
 // get members
 const fetchTeamMembers = async (req, res) => {
     const startTime = Date.now();
 
+    const { isCurrentMember, domain, joined_yr } = req.query;
+
     // Log the fetch operation start
     Sentry.logger.info('Fetching team members', {
         operation: 'fetchTeamMembers',
+        filters: { isCurrentMember, domain, joined_yr },
         ip: req.ip || req.connection?.remoteAddress,
     });
 
@@ -19,10 +23,31 @@ const fetchTeamMembers = async (req, res) => {
             await connectDB();
         }
 
+        const filter = {};
+
+        if (isCurrentMember !== undefined) {
+            if (isCurrentMember === 'true' || isCurrentMember === true) {
+                filter.isCurrentMember = true;
+            } else if (isCurrentMember === 'false' || isCurrentMember === false) {
+                filter.isCurrentMember = false;
+            }
+        }
+
+        if (domain) {
+            filter.domain = { $regex: new RegExp(`^${domain.trim()}$`, 'i') };
+        }
+
+        if (joined_yr !== undefined) {
+            const yr = parseInt(joined_yr, 10);
+            if (!isNaN(yr)) {
+                filter.joined_yr = yr;
+            }
+        }
+
         const queryStart = Date.now();
         const members = await teamSchema
-            .find()
-            .sort({ index: 1 })
+            .find(filter)
+            .sort({ index: 1, joined_yr: -1, createdAt: -1 })
             .lean();
 
         const queryDuration = Date.now() - queryStart;
@@ -80,10 +105,31 @@ const fetchTeamMembers = async (req, res) => {
 const createTeamMember = async (req, res) => {
     const startTime = Date.now();
 
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        Sentry.captureMessage('Validation errors in createTeamMember', {
+            level: 'warning',
+            tags: {
+                operation: 'createTeamMember',
+                validation: 'failed'
+            },
+            extra: {
+                errors: errors.array()
+            }
+        });
+
+        return res.status(400).json({
+            success: false,
+            error: "Validation failed",
+            errors: errors.array()
+        });
+    }
+
     // Log the create operation start
     Sentry.logger.info('Creating team member', {
         operation: 'createTeamMember',
         memberName: req.body.name,
+        email: req.body.email,
         domain: req.body.domain,
         position: req.body.position,
         ip: req.ip || req.connection?.remoteAddress,
@@ -138,6 +184,7 @@ const createTeamMember = async (req, res) => {
             error: err.message,
             memberData: {
                 name: req.body.name,
+                email: req.body.email,
                 domain: req.body.domain,
                 position: req.body.position,
             },
@@ -150,6 +197,21 @@ const createTeamMember = async (req, res) => {
                 component: 'team.controller',
             }
         });
+
+        if (err instanceof mongoose.Error.ValidationError) {
+            return res.status(400).json({
+                success: false,
+                error: "Validation failed",
+                details: Object.values(err.errors).map(e => ({ field: e.path, message: e.message }))
+            });
+        }
+
+        if (err.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                error: "A team member with this unique identifier already exists"
+            });
+        }
 
         res.status(500).json({
             success: false,
@@ -378,6 +440,14 @@ const updateTeamMember = async (req, res) => {
                 updateData: req.body
             }
         });
+
+        if (err instanceof mongoose.Error.ValidationError) {
+            return res.status(400).json({
+                success: false,
+                error: "Validation failed",
+                details: Object.values(err.errors).map(e => ({ field: e.path, message: e.message }))
+            });
+        }
 
         res.status(500).json({
             success: false,

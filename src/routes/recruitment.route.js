@@ -36,6 +36,12 @@ const {
   sendTaskReminderEmails
 } = require('../controller/recruitments/sendTaskReminder.controller');
 
+const {
+  onboardMember
+} = require('../controller/recruitments/onboardMember.controller');
+
+const { teamMemberValidationRules } = require('./team.route');
+
 
 // ============================================================
 // 1. GET /api/recruitment/analytics
@@ -158,6 +164,19 @@ router.post(
   '/tasks/submit',
   requireOtpAuth,
   submitTask
+);
+
+
+// ============================================================
+// 4c. POST /api/recruitment/onboard
+// Onboard accepted candidate into GCSRM team collection
+// ============================================================
+
+router.post(
+  '/onboard',
+  requireOtpAuth,
+  teamMemberValidationRules,
+  onboardMember
 );
 
 
