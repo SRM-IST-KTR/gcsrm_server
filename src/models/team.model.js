@@ -16,22 +16,34 @@ const faDetailSchema = new mongoose.Schema({
     }
 }, { _id: false });
 
+const urlRegex = /^https?:\/\/.+/;
+const urlValidator = {
+    validator: function(v) {
+        return !v || urlRegex.test(v);
+    },
+    message: props => `${props.path} must begin with http:// or https://`
+};
+
 const socialSchema = new mongoose.Schema({
     insta: {
         type: String,
-        trim: true
+        trim: true,
+        validate: urlValidator
     },
     github: {
         type: String,
-        trim: true
+        trim: true,
+        validate: urlValidator
     },
     linkedin: {
         type: String,
-        trim: true
+        trim: true,
+        validate: urlValidator
     },
     portfolio: {
         type: String,
-        trim: true
+        trim: true,
+        validate: urlValidator
     }
 }, { _id: false });
 
@@ -47,6 +59,7 @@ const teamSchema = new mongoose.Schema({
     email: {
         type: String,
         required: true,
+        unique: true,
         trim: true,
         lowercase: true
     },
@@ -82,24 +95,51 @@ const teamSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    joined: {
+        type: Number,
+        select: false
+    },
     pictureUrl: {
         type: String,
-        trim: true
+        trim: true,
+        validate: urlValidator
     },
     isCurrentMember: {
         type: Boolean,
         default: true
     },
+    isCurrent: {
+        type: Boolean,
+        select: false
+    },
     socials: [socialSchema],
     ndaUrl: {
         type: String,
-        trim: true
+        trim: true,
+        validate: urlValidator
     }
 }, {
     timestamps: true
 });
 
-teamSchema.index({ email: 1 });
+teamSchema.pre('validate', function() {
+    if (this.joined_yr == null && this.joined != null) {
+        this.joined_yr = this.joined;
+    }
+    if (this.isCurrentMember == null && this.isCurrent != null) {
+        this.isCurrentMember = this.isCurrent;
+    }
+});
+
+teamSchema.pre('init', function(doc) {
+    if (doc.joined_yr == null && doc.joined != null) {
+        doc.joined_yr = doc.joined;
+    }
+    if (doc.isCurrentMember == null && doc.isCurrent != null) {
+        doc.isCurrentMember = doc.isCurrent;
+    }
+});
+
 teamSchema.index({ domain: 1, joined_yr: 1, isCurrentMember: 1 });
 
 const Team = mongoose.models.teams || mongoose.model('teams', teamSchema);

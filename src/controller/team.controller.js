@@ -5,6 +5,8 @@ const Sentry = require('@sentry/node');
 const { safeErrorMessage } = require('../utils/regex');
 const { validationResult } = require('express-validator');
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
 // get members
 const fetchTeamMembers = async (req, res) => {
     const startTime = Date.now();
@@ -34,7 +36,7 @@ const fetchTeamMembers = async (req, res) => {
         }
 
         if (domain) {
-            filter.domain = { $regex: new RegExp(`^${domain.trim()}$`, 'i') };
+            filter.domain = { $regex: new RegExp(`^${escapeRegex(domain.trim())}$`, 'i') };
         }
 
         if (joined_yr !== undefined) {
@@ -129,7 +131,6 @@ const createTeamMember = async (req, res) => {
     Sentry.logger.info('Creating team member', {
         operation: 'createTeamMember',
         memberName: req.body.name,
-        email: req.body.email,
         domain: req.body.domain,
         position: req.body.position,
         ip: req.ip || req.connection?.remoteAddress,
@@ -184,7 +185,6 @@ const createTeamMember = async (req, res) => {
             error: err.message,
             memberData: {
                 name: req.body.name,
-                email: req.body.email,
                 domain: req.body.domain,
                 position: req.body.position,
             },
@@ -209,7 +209,7 @@ const createTeamMember = async (req, res) => {
         if (err.code === 11000) {
             return res.status(409).json({
                 success: false,
-                error: "A team member with this unique identifier already exists"
+                error: 'A team member with this email already exists'
             });
         }
 
@@ -446,6 +446,13 @@ const updateTeamMember = async (req, res) => {
                 success: false,
                 error: "Validation failed",
                 details: Object.values(err.errors).map(e => ({ field: e.path, message: e.message }))
+            });
+        }
+
+        if (err.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                error: 'A team member with this email already exists'
             });
         }
 

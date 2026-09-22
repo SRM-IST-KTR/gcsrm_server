@@ -94,6 +94,18 @@ exports.sendBatch = async (req, res, next) => {
       duration: `${duration}ms`,
     });
 
+    if (result.total > 0 && result.sentCount === 0) {
+      return res.status(502).json({
+        success: false,
+        message: 'All batch emails failed to send',
+        total: result.total,
+        sentCount: 0,
+        failedCount: result.failedCount,
+        messageIds: [],
+        results: result.results,
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: `${result.sentCount} of ${result.total} emails sent successfully${result.failedCount > 0 ? `, ${result.failedCount} failed` : ''}`,

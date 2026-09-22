@@ -8,6 +8,7 @@ const {
 
 const requireOtpAuth = require('../middleware/requireOtpAuth');
 const requireApiKey = require('../middleware/requireApiKey');
+const { recruitmentLimiter, batchLimiter } = require('../middleware/rateLimiter');
 
 const {
   submitTask
@@ -43,6 +44,9 @@ const {
 
 const { teamMemberValidationRules } = require('./team.route');
 
+// Apply rate limiting router-wide to protect all database-accessing routes
+router.use(recruitmentLimiter);
+
 
 // ============================================================
 // 1. GET /api/recruitment/analytics
@@ -67,7 +71,7 @@ router.get('/participants', getAllParticipants);
 // Batch update participant status / delete
 // ============================================================
 
-router.post('/batch', requireApiKey, batchUpdateParticipants);
+router.post('/batch', batchLimiter, requireApiKey, batchUpdateParticipants);
 
 
 // ============================================================
@@ -77,6 +81,7 @@ router.post('/batch', requireApiKey, batchUpdateParticipants);
 
 router.post(
   '/send-task-reminder',
+  batchLimiter,
   requireApiKey,
   [
     body('ids').isArray({ min: 1 }).withMessage('ids must be a non-empty array'),

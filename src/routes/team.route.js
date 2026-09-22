@@ -77,10 +77,10 @@ const teamMemberValidationRules = [
         .toInt(),
 
     body('pictureUrl')
-        .optional({ nullable: true })
+        .optional({ nullable: true, checkFalsy: true })
         .trim()
-        .isString()
-        .withMessage('pictureUrl must be a string'),
+        .matches(/^https?:\/\/.+/)
+        .withMessage('pictureUrl must be a valid URL starting with http:// or https://'),
 
     body('isCurrentMember')
         .optional()
@@ -94,26 +94,34 @@ const teamMemberValidationRules = [
         .withMessage('socials must be an array'),
 
     body('socials.*.insta')
-        .optional({ nullable: true })
-        .trim(),
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^https?:\/\/.+/)
+        .withMessage('insta URL must start with http:// or https://'),
 
     body('socials.*.github')
-        .optional({ nullable: true })
-        .trim(),
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^https?:\/\/.+/)
+        .withMessage('github URL must start with http:// or https://'),
 
     body('socials.*.linkedin')
-        .optional({ nullable: true })
-        .trim(),
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^https?:\/\/.+/)
+        .withMessage('linkedin URL must start with http:// or https://'),
 
     body('socials.*.portfolio')
-        .optional({ nullable: true })
-        .trim(),
+        .optional({ nullable: true, checkFalsy: true })
+        .trim()
+        .matches(/^https?:\/\/.+/)
+        .withMessage('portfolio URL must start with http:// or https://'),
 
     body('ndaUrl')
-        .optional({ nullable: true })
+        .optional({ nullable: true, checkFalsy: true })
         .trim()
-        .isString()
-        .withMessage('ndaUrl must be a string')
+        .matches(/^https?:\/\/.+/)
+        .withMessage('ndaUrl must be a valid URL starting with http:// or https://')
 ];
 
 /**
