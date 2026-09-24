@@ -3,6 +3,42 @@ const { connectDB } = require('../../utils/db');
 const ossomeHacksSchema = require('../../models/ossomehacks.model');
 const Sentry = require('@sentry/node');
 const { getEventStatus, validateRegistrationPeriod } = require('../../utils/hackStatusHelper');
+const { safeErrorMessage } = require('../../utils/regex');
+const { pick } = require('../../utils/sanitize');
+
+// Self-registration allowlist: a registrant must not be able to set
+// registrationStatus, checkInTime, applicationNotes, registeredAt or lastUpdated.
+const OSSOMEHACKS_SELF_REGISTRATION_FIELDS = [
+    'firstName',
+    'lastName',
+    'email',
+    'phoneNumber',
+    'age',
+    'school',
+    'levelOfStudy',
+    'graduationYear',
+    'major',
+    'countryOfResidence',
+    'linkedInUrl',
+    'githubUsername',
+    'gender',
+    'genderSelfDescribe',
+    'pronouns',
+    'pronounsOther',
+    'hackathonsAttended',
+    'programmingExperience',
+    'teamName',
+    'lookingForTeam',
+    'mlhCodeOfConductAgreed',
+    'mlhPrivacyPolicyAgreed',
+    'mlhEmailSubscription',
+    'whyAttend',
+    'projectIdea',
+    'emergencyContactName',
+    'emergencyContactPhone',
+    'emergencyContactRelationship',
+    'referralSource',
+];
 
 const getOssomeHacksModel = (db, collectionName) => {
     if (db.models[collectionName]) {
@@ -71,7 +107,8 @@ const registerParticipant = async (req, res) => {
             });
         }
 
-        const { submissionTime, ...cleanedRegistrationData } = registrationData;
+        const { submissionTime, ...rest } = registrationData;
+        const cleanedRegistrationData = pick(rest, OSSOMEHACKS_SELF_REGISTRATION_FIELDS);
 
         const eventDbName = hackStatus.event.database;
         const eventCollectionName = hackStatus.event.collection.participants;
@@ -265,7 +302,7 @@ const getRegistrationById = async (req, res) => {
             });
         }
 
-        const hackStatus = await getOssomeHacksStatus();
+        const hackStatus = await getEventStatus('ossomehacks3');
         const eventDbName = hackStatus.event.database;
         const eventCollectionName = hackStatus.event.collection.participants;
 
@@ -309,7 +346,7 @@ const getRegistrationById = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to fetch registration')
         });
     }
 };
@@ -366,7 +403,7 @@ const getRegistrationByEmail = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to fetch registration')
         });
     }
 };

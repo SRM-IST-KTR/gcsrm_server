@@ -7,7 +7,9 @@ jest.mock('./src/utils/otpService', () => ({
   generateOTP: () => '123456',
   storeOTP: jest.fn().mockResolvedValue(true),
   getOTPTTL: jest.fn().mockResolvedValue(0),
-  OTP_TTL_SECONDS: 300
+  getFailedAttempts: jest.fn().mockResolvedValue(0),
+  OTP_TTL_SECONDS: 300,
+  OTP_MAX_ATTEMPTS: 5
 }));
 
 jest.mock('./src/utils/emailService', () => ({

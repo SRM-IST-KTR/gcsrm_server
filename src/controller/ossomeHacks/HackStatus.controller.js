@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const Sentry = require('@sentry/node');
 const { getEventStatus } = require('../../utils/hackStatusHelper');
+const { safeErrorMessage } = require('../../utils/regex');
 
 /**
  * Check registration status for OssomeHacks
@@ -46,7 +47,7 @@ const HackStatus = async (req, res) => {
         if (error.statusCode === 404) {
             return res.status(500).json({
                 success: false,
-                error: error.message
+                error: safeErrorMessage(error, 'Failed to fetch registration status. Please try again later.')
             });
         }
 

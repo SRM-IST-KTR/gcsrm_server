@@ -2,6 +2,9 @@ const sponsorSchema = require('../models/sponsor.model');
 const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 const Sentry = require('@sentry/node');
+const { pick } = require('../utils/sanitize');
+
+const SPONSOR_FIELDS = ['name', 'logo', 'alt', 'tier', 'link'];
 
 // fetch sponsors
 
@@ -130,7 +133,7 @@ const createSponsor = async (req, res) => {
         }
 
         const saveStart = Date.now();
-        const newSponsor = new sponsorSchema(req.body);
+        const newSponsor = new sponsorSchema(pick(req.body, SPONSOR_FIELDS));
         const savedSponsor = await newSponsor.save();
 
         const saveDuration = Date.now() - saveStart;
@@ -248,7 +251,7 @@ const updateSponsor = async (req, res) => {
         const updateStart = Date.now();
         const updatedSponsor = await sponsorSchema.findByIdAndUpdate(
             id,
-            req.body,
+            pick(req.body, SPONSOR_FIELDS),
             { new: true, runValidators: true });
 
         const updateDuration = Date.now() - updateStart;

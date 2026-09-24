@@ -116,8 +116,10 @@ const applyForRecruitment = async (req, res, next) => {
             }
         }
 
-        // Remove submissionTime from body before saving to database
-        const { submissionTime, ...userData } = req.body;
+        // Strip submissionTime and any client-controlled privileged fields.
+        // `status`, `review` and `notes` are admin-managed and must not be
+        // set by the applicant at self-registration time.
+        const { submissionTime, status, review, notes, ...userData } = req.body;
 
         // Check if task assignment upon registration is enabled via env/config (e.g., RECRUIT_ASSIGN_TASK_ENABLED=true or TRUE)
         const assignTaskEnabled = String(process.env.RECRUIT_ASSIGN_TASK_ENABLED || process.env.ASSIGN_TASK_ENABLED || '').toLowerCase() === 'true';

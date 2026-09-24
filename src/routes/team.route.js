@@ -3,6 +3,8 @@ const router = express.Router();
 const { body } = require('express-validator');
 
 const { fetchTeamMembers, createTeamMember, fetchTeamMemberById, updateTeamMember, deleteTeamMember } = require('../controller/team.controller');
+const requireApiKey = require('../middleware/requireApiKey');
+const requirePublicKey = require('../middleware/requirePublicKey');
 
 const teamMemberValidationRules = [
     body('name')
@@ -158,7 +160,7 @@ const teamMemberValidationRules = [
  *       500:
  *         description: Internal server error
  */
-router.get('/', fetchTeamMembers);
+router.get('/', requirePublicKey, fetchTeamMembers);
 
 /**
  * @swagger
@@ -181,7 +183,7 @@ router.get('/', fetchTeamMembers);
  *       500:
  *         description: Internal server error
  */
-router.post('/', teamMemberValidationRules, createTeamMember);
+router.post('/', requireApiKey, teamMemberValidationRules, createTeamMember);
 
 /**
  * @swagger
@@ -239,7 +241,7 @@ router.post('/', teamMemberValidationRules, createTeamMember);
  *       500:
  *         description: Internal server error
  */
-router.get('/:id', fetchTeamMemberById);
+router.get('/:id', requirePublicKey, fetchTeamMemberById);
 
 /**
  * @swagger
@@ -358,7 +360,7 @@ router.get('/:id', fetchTeamMemberById);
  *       500:
  *         description: Internal server error
  */
-router.put('/:id', updateTeamMember);
+router.put('/:id', requireApiKey, updateTeamMember);
 
 /**
  * @swagger
@@ -416,7 +418,7 @@ router.put('/:id', updateTeamMember);
  *       500:
  *         description: Internal server error
  */
-router.delete('/:id', deleteTeamMember);
+router.delete('/:id', requireApiKey, deleteTeamMember);
 
 module.exports = router;
 module.exports.teamMemberValidationRules = teamMemberValidationRules;

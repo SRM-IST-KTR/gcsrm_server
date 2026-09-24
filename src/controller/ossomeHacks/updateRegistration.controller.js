@@ -2,7 +2,43 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const ossomeHacksSchema = require('../../models/ossomehacks.model');
 const { getEventStatus } = require('../../utils/hackStatusHelper');
+const { safeErrorMessage } = require('../../utils/regex');
+const { pick } = require('../../utils/sanitize');
 const Sentry = require('@sentry/node');
+
+// Explicitly excludes checkInTime, registeredAt, lastUpdated and the MLH
+// agreement flags (which are set once at registration and cannot be revoked).
+const OSSOMEHACKS_EDITABLE_FIELDS = [
+    'firstName',
+    'lastName',
+    'email',
+    'phoneNumber',
+    'age',
+    'school',
+    'levelOfStudy',
+    'graduationYear',
+    'major',
+    'countryOfResidence',
+    'linkedInUrl',
+    'githubUsername',
+    'gender',
+    'genderSelfDescribe',
+    'pronouns',
+    'pronounsOther',
+    'hackathonsAttended',
+    'programmingExperience',
+    'teamName',
+    'lookingForTeam',
+    'whyAttend',
+    'projectIdea',
+    'emergencyContactName',
+    'emergencyContactPhone',
+    'emergencyContactRelationship',
+    'referralSource',
+    'mlhEmailSubscription',
+    'registrationStatus',
+    'applicationNotes',
+];
 
 const getOssomeHacksModel = (db, collectionName) => {
     if (db.models[collectionName]) {
@@ -22,7 +58,7 @@ const updateRegistration = async (req, res) => {
         }
 
         const { id } = req.params;
-        const updateData = req.body;
+        const updateData = pick(req.body, OSSOMEHACKS_EDITABLE_FIELDS);
 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
@@ -99,7 +135,7 @@ const updateRegistration = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to update registration')
         });
     }
 };

@@ -49,7 +49,7 @@ const { teamMemberValidationRules } = require('./team.route');
 // Recruitment demographic & funnel analytics
 // ============================================================
 
-router.get('/analytics', getRecruitmentAnalytics);
+router.get('/analytics', requireApiKey, getRecruitmentAnalytics);
 
 
 // ============================================================
@@ -58,8 +58,8 @@ router.get('/analytics', getRecruitmentAnalytics);
 // Explicit participant list endpoints
 // ============================================================
 
-router.get('/all', getAllParticipants);
-router.get('/participants', getAllParticipants);
+router.get('/all', requireApiKey, getAllParticipants);
+router.get('/participants', requireApiKey, getAllParticipants);
 
 
 // ============================================================
@@ -176,7 +176,7 @@ router.post(
 
 router.post(
   '/onboard',
-  requireOtpAuth,
+  requireApiKey,
   teamMemberValidationRules,
   onboardMember
 );
@@ -194,6 +194,7 @@ router.post(
 
 router.get(
   '/tasks',
+  requireApiKey,
   getAllTasks
 );
 
@@ -205,6 +206,7 @@ router.get(
 
 router.post(
   '/tasks',
+  requireApiKey,
   [
     // -------------------------
     // Required fields
@@ -357,6 +359,7 @@ router.post(
 
 router.get(
   '/tasks/:id',
+  requireApiKey,
   [
     param('id')
       .isMongoId()
@@ -373,6 +376,7 @@ router.get(
 
 router.get(
   '/email/:email',
+  requireApiKey,
   getParticipantByEmail
 );
 
@@ -395,6 +399,7 @@ router.get(
 
 router.get(
   '/',
+  requireApiKey,
   (req, res, next) => {
 
     if (
@@ -427,6 +432,7 @@ router.get(
 
 router.post(
   '/',
+  requireApiKey,
   createParticipant
 );
 
@@ -438,6 +444,7 @@ router.post(
 
 router.get(
   '/:id',
+  requireApiKey,
   getParticipantById
 );
 
@@ -449,11 +456,13 @@ router.get(
 
 router.put(
   '/:id',
+  requireApiKey,
   updateParticipant
 );
 
 router.patch(
   '/:id',
+  requireApiKey,
   updateParticipant
 );
 
@@ -465,6 +474,7 @@ router.patch(
 
 router.delete(
   '/:id',
+  requireApiKey,
   deleteParticipant
 );
 

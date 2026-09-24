@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const ossomeHacksSchema = require('../../models/ossomehacks.model');
 const { getEventStatus } = require('../../utils/hackStatusHelper');
+const { safeErrorMessage } = require('../../utils/regex');
 const Sentry = require('@sentry/node');
 
 const getOssomeHacksModel = (db, collectionName) => {
@@ -76,7 +77,7 @@ const deleteRegistration = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to delete registration')
         });
     }
 };

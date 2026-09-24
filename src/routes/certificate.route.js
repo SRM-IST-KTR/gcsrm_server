@@ -8,6 +8,8 @@ const { verifyCertificate } = require('../controller/certificates/verify.control
 const { downloadCertificate } = require('../controller/certificates/download.controller');
 const { listCertificates } = require('../controller/certificates/list.controller');
 const { revokeCertificate } = require('../controller/certificates/revoke.controller');
+const requireApiKey = require('../middleware/requireApiKey');
+const requirePublicKey = require('../middleware/requirePublicKey');
 /**
  * @swagger
  * /certificate/generate:
@@ -158,6 +160,7 @@ const { revokeCertificate } = require('../controller/certificates/revoke.control
  *                   error: "Image processing failed"
  */
 router.post('/generate',
+    requireApiKey,
     [
         body('email')
             .trim()
@@ -302,6 +305,7 @@ router.post('/generate',
  */
 
 router.get('/verify/:certificateId',
+    requirePublicKey,
     [
         param('certificateId')
             .trim()
@@ -478,6 +482,7 @@ router.get('/verify/:certificateId',
  *                   error: "Failed to regenerate certificate"
  */
 router.get('/download/:certificateId',
+    requirePublicKey,
     [
         param('certificateId')
             .trim()
@@ -492,7 +497,7 @@ router.get('/download/:certificateId',
     downloadCertificate
 );
 
-router.get('/', listCertificates);
-router.put('/revoke/:certificateId', revokeCertificate);
+router.get('/', requireApiKey, listCertificates);
+router.put('/revoke/:certificateId', requireApiKey, revokeCertificate);
 
 module.exports = router;

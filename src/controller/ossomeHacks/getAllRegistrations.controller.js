@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const ossomeHacksSchema = require('../../models/ossomehacks.model');
 const { getEventStatus } = require('../../utils/hackStatusHelper');
+const { escapeRegex, safeErrorMessage } = require('../../utils/regex');
 const Sentry = require('@sentry/node');
 
 /**
@@ -32,7 +33,7 @@ const getAllRegistrations = async (req, res) => {
         }
 
         if (school) {
-            query.school = new RegExp(school, 'i');
+            query.school = new RegExp(escapeRegex(school), 'i');
         }
 
         // Get event configuration
@@ -89,7 +90,7 @@ const getAllRegistrations = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to fetch registrations')
         });
     }
 };
@@ -192,7 +193,7 @@ const getRegistrationStats = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to fetch registration statistics')
         });
     }
 };
@@ -258,7 +259,7 @@ const exportRegistrations = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message
+            error: safeErrorMessage(error, 'Failed to export registrations')
         });
     }
 };

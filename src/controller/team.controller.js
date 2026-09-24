@@ -2,8 +2,31 @@ const teamSchema = require('../models/team.model');
 const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 const Sentry = require('@sentry/node');
-const { safeErrorMessage } = require('../utils/regex');
+const { safeErrorMessage, escapeRegex } = require('../utils/regex');
+const { pick } = require('../utils/sanitize');
 const { validationResult } = require('express-validator');
+
+// Fields a client may write when creating/updating a team member.
+const TEAM_MEMBER_FIELDS = [
+    'index',
+    'name',
+    'email',
+    'phoneno',
+    'section',
+    'faDetails',
+    'domain',
+    'subdomain',
+    'position',
+    'caption',
+    'joined_yr',
+    'pictureUrl',
+    'isCurrentMember',
+    'socials',
+    'ndaUrl',
+];
+
+// Public projection: no email, phone, family contacts, section or ndaUrl.
+const TEAM_PUBLIC_FIELDS = 'index name domain subdomain position caption joined_yr pictureUrl isCurrentMember socials';
 
 // get members
 const fetchTeamMembers = async (req, res) => {
@@ -34,7 +57,7 @@ const fetchTeamMembers = async (req, res) => {
         }
 
         if (domain) {
-            filter.domain = { $regex: new RegExp(`^${domain.trim()}$`, 'i') };
+            filter.domain = { $regex: new RegExp(`^${escapeRegex(domain.trim())}$`, 'i') };
         }
 
         if (joined_yr !== undefined) {
@@ -47,6 +70,7 @@ const fetchTeamMembers = async (req, res) => {
         const queryStart = Date.now();
         const members = await teamSchema
             .find(filter)
+            .select(TEAM_PUBLIC_FIELDS)
             .sort({ index: 1, joined_yr: -1, createdAt: -1 })
             .lean();
 
@@ -96,7 +120,7 @@ const fetchTeamMembers = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: err.message
+            error: safeErrorMessage(err, 'Failed to fetch team members')
         });
     }
 };
@@ -146,7 +170,7 @@ const createTeamMember = async (req, res) => {
         }
 
         const saveStart = Date.now();
-        const newMember = new teamSchema(req.body);
+        const newMember = new teamSchema(pick(req.body, TEAM_MEMBER_FIELDS));
         const savedMember = await newMember.save();
 
         const saveDuration = Date.now() - saveStart;
@@ -268,7 +292,7 @@ const fetchTeamMemberById = async (req, res) => {
         });
 
         const queryStart = Date.now();
-        const member = await teamSchema.findById(id).lean();
+        const member = await teamSchema.findById(id).select(TEAM_PUBLIC_FIELDS).lean();
         const queryDuration = Date.now() - queryStart;
 
         if (!member) {
@@ -320,7 +344,7 @@ const fetchTeamMemberById = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: err.message
+            error: safeErrorMessage(err, 'Failed to fetch team member')
         });
     }
 };
@@ -393,7 +417,7 @@ const updateTeamMember = async (req, res) => {
         const updateStart = Date.now();
         const updatedMember = await teamSchema.findByIdAndUpdate(
             id,
-            { ...req.body, updatedAt: new Date() },
+            { ...pick(req.body, TEAM_MEMBER_FIELDS), updatedAt: new Date() },
             { new: true, runValidators: true }
         );
         const updateDuration = Date.now() - updateStart;
@@ -451,7 +475,7 @@ const updateTeamMember = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: err.message
+            error: safeErrorMessage(err, 'Failed to update team member')
         });
     }
 };
@@ -556,7 +580,7 @@ const deleteTeamMember = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: err.message
+            error: safeErrorMessage(err, 'Failed to delete team member')
         });
     }
 };
@@ -568,3 +592,4 @@ module.exports = {
     updateTeamMember,
     deleteTeamMember
 };
+module.exports.TEAM_PUBLIC_FIELDS = TEAM_PUBLIC_FIELDS;

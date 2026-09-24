@@ -2,6 +2,8 @@ const express = require('express');
 const router = express.Router();
 
 const { fetchSponsor, createSponsor, updateSponsor, deleteSponsor } = require('../controller/sponsor.controller');
+const requireApiKey = require('../middleware/requireApiKey');
+const requirePublicKey = require('../middleware/requirePublicKey');
 
 /**
  * @swagger
@@ -42,7 +44,7 @@ const { fetchSponsor, createSponsor, updateSponsor, deleteSponsor } = require('.
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.get('/', fetchSponsor);
+router.get('/', requirePublicKey, fetchSponsor);
 
 /**
  * @swagger
@@ -129,7 +131,7 @@ router.get('/', fetchSponsor);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.post('/', createSponsor);
+router.post('/', requireApiKey, createSponsor);
 
 /**
  * @swagger
@@ -170,7 +172,7 @@ router.post('/', createSponsor);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.put('/:id', updateSponsor);
+router.put('/:id', requireApiKey, updateSponsor);
 
 /**
  * @swagger
@@ -202,6 +204,6 @@ router.put('/:id', updateSponsor);
  *       500:
  *         $ref: '#/components/responses/InternalServerError'
  */
-router.delete('/:id', deleteSponsor);
+router.delete('/:id', requireApiKey, deleteSponsor);
 
 module.exports = router;

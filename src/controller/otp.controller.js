@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
-const { generateOTP, storeOTP, verifyOTP, getOTPTTL, OTP_TTL_SECONDS } = require('../utils/otpService');
+const { generateOTP, storeOTP, verifyOTP, getOTPTTL, getFailedAttempts, OTP_TTL_SECONDS, OTP_MAX_ATTEMPTS } = require('../utils/otpService');
 const { sendEmail } = require('../utils/emailService');
 const { signOtpToken, OTP_JWT_TTL } = require('../utils/jwt');
 
@@ -111,9 +111,18 @@ exports.verifyOTP = async (req, res, next) => {
     });
 
     if (!isValid) {
+      const failedAttempts = await getFailedAttempts(email);
+      if (failedAttempts >= OTP_MAX_ATTEMPTS) {
+        return res.status(429).json({
+          success: false,
+          message: 'Too many incorrect attempts. Please request a new OTP.',
+        });
+      }
+
       return res.status(400).json({
         success: false,
         message: 'Invalid or expired OTP',
+        attemptsRemaining: Math.max(0, OTP_MAX_ATTEMPTS - failedAttempts),
       });
     }
 

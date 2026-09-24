@@ -18,6 +18,8 @@ const { checkInParticipant } = require('../controller/ossomeHacks/checkInPartici
 const { updateRegistration } = require('../controller/ossomeHacks/updateRegistration.controller');
 const { deleteRegistration } = require('../controller/ossomeHacks/deleteRegistration.controller');
 const { HackStatus } = require('../controller/ossomeHacks/HackStatus.controller');
+const requireApiKey = require('../middleware/requireApiKey');
+const requirePublicKey = require('../middleware/requirePublicKey');
 
 /**
  * @swagger
@@ -87,7 +89,7 @@ const { HackStatus } = require('../controller/ossomeHacks/HackStatus.controller'
  *       500:
  *         description: Internal server error
  */
-router.get('/registration-status', HackStatus);
+router.get('/registration-status', requirePublicKey, HackStatus);
 
 /**
  * @swagger
@@ -398,6 +400,7 @@ router.post('/register',
  *         description: Internal server error
  */
 router.get('/registrations',
+    requireApiKey,
     [
         query('status')
             .optional()
@@ -439,6 +442,7 @@ router.get('/registrations',
  *         description: Internal server error
  */
 router.get('/registrations/:id',
+    requireApiKey,
     [
         param('id')
             .isMongoId().withMessage('Invalid registration ID format')
@@ -470,6 +474,7 @@ router.get('/registrations/:id',
  *         description: Internal server error
  */
 router.get('/registrations/email/:email',
+    requireApiKey,
     [
         param('email')
             .isEmail().withMessage('Invalid email format')
@@ -510,6 +515,7 @@ router.get('/registrations/email/:email',
  *         description: Internal server error
  */
 router.put('/registrations/:id',
+    requireApiKey,
     [
         param('id')
             .isMongoId().withMessage('Invalid registration ID format')
@@ -543,6 +549,7 @@ router.put('/registrations/:id',
  *         description: Internal server error
  */
 router.delete('/registrations/:id',
+    requireApiKey,
     [
         param('id')
             .isMongoId().withMessage('Invalid registration ID format')
@@ -576,6 +583,7 @@ router.delete('/registrations/:id',
  *         description: Internal server error
  */
 router.post('/check-in/:id',
+    requireApiKey,
     [
         param('id')
             .isMongoId().withMessage('Invalid registration ID format')
@@ -596,7 +604,7 @@ router.post('/check-in/:id',
  *       500:
  *         description: Internal server error
  */
-router.get('/stats', getRegistrationStats);
+router.get('/stats', requireApiKey, getRegistrationStats);
 
 /**
  * @swagger
@@ -621,6 +629,7 @@ router.get('/stats', getRegistrationStats);
  *         description: Internal server error
  */
 router.get('/export',
+    requireApiKey,
     [
         query('status')
             .optional()

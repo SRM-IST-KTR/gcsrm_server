@@ -189,6 +189,7 @@ SES_BATCH_CONCURRENCY=10
 # Security Secrets
 CERTIFICATE_SECRET=your_certificate_secret
 SERVICE_API_KEY=your_service_api_key_here
+PUBLIC_API_KEY=your_public_read_key_here
 ORIGIN=*
 
 #### Environment Variable Details
@@ -211,7 +212,29 @@ ORIGIN=*
 | `AWS_SES_CONFIGURATION_SET` | SES Configuration Set for metrics | No | `gcsrm-events` |
 | `SES_BATCH_CONCURRENCY` | Worker pool concurrency for batch sending | No | `10` |
 | `CERTIFICATE_SECRET` | Secret key for certificate digital signature | Yes | - |
-| `SERVICE_API_KEY` | Secret Bearer token for gating `/api/email/send` & `/api/email/batch` | Yes | - |
+| `SERVICE_API_KEY` | Admin Bearer token: gates all write endpoints and admin-only reads (registrant lists, exports, analytics, email dispatch) | Yes | - |
+| `PUBLIC_API_KEY` | Public read Bearer token: gates display-only read endpoints (team, sponsors, events, certificate verify) | Yes | - |
+---
+
+## 🔐 API Authentication
+
+The API uses **two static Bearer keys**, sent as `Authorization: Bearer <key>`.
+
+| Key | Env var | Unlocks |
+| :--- | :--- | :--- |
+| Public read key | `PUBLIC_API_KEY` | `GET` team, sponsors, events, certificate verify/download, ossomehacks registration-status |
+| Admin key | `SERVICE_API_KEY` | All writes, plus admin reads (recruitment candidates, ossomehacks registrations/exports, certificate list/revoke, email dispatch) |
+| OTP session JWT | `JWT_SECRET` | Applicant self-service: `POST /api/recruitment/apply`, `/submit*` (obtained from `POST /api/otp/verify`) |
+
+Endpoints left intentionally anonymous: `POST /api/otp/send`, `POST /api/otp/verify`, `POST /api/contact`, `POST /api/events/register`, `POST /api/ossomehacks/register`, `GET /api/events/rsvp`, `GET /`, `GET /health`.
+
+The guard fails closed: if a key env var is unset the endpoint returns HTTP 500, and a missing/invalid header returns HTTP 401.
+
+```js
+fetch(`${API_BASE}/api/team`, {
+  headers: { Authorization: `Bearer ${PUBLIC_API_KEY}` },
+});
+```
 ---
 
 ## 📚 API Documentation

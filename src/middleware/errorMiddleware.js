@@ -51,8 +51,8 @@ const errorHandler = (err, req, res, next) => {
         timestamp: new Date().toISOString(),
     };
 
-    // Include Sentry ID in development or if explicitly requested
-    if (process.env.NODE_ENV !== 'production' || req.query.debug === 'true') {
+    // Include Sentry ID and stack only in development (never via a query flag)
+    if (process.env.NODE_ENV !== 'production') {
         response.sentryId = sentryId;
         response.stack = err.stack;
     }

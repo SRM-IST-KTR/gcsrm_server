@@ -3,6 +3,23 @@ const { connectRecruitmentDB } = require('../../utils/db');
 const getParticipantUserModel = require('../../models/recruitment.model');
 const Sentry = require('@sentry/node');
 const { escapeRegex, safeErrorMessage } = require('../../utils/regex');
+const { pick } = require('../../utils/sanitize');
+
+// Explicit allowlist: the recruitment schema is strict:false, so without this
+// a client could persist arbitrary keys.
+const RECRUITMENT_EDITABLE_FIELDS = [
+  'name',
+  'email',
+  'registrationNumber',
+  'phone',
+  'year',
+  'domain',
+  'degreeWithBranch',
+  'links',
+  'status',
+  'notes',
+  'review',
+];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const chunkArray = (arr, size) => {
@@ -271,7 +288,7 @@ const createParticipant = async (req, res, next) => {
 const updateParticipant = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const updateData = req.body;
+    const updateData = pick(req.body, RECRUITMENT_EDITABLE_FIELDS);
     const dbConn = await connectRecruitmentDB();
     const ParticipantUser = getParticipantUserModel(dbConn);
 

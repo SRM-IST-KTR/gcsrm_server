@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const { connectDB } = require('../../utils/db');
 const eventSchema = require('../../models/event.model');
 const { getParticipantModel } = require('../../models/participant.model');
+const { safeErrorMessage } = require('../../utils/regex');
 const Sentry = require('@sentry/node');
 
 const registerInEvent = async (req, res) => {
@@ -216,7 +217,7 @@ const registerInEvent = async (req, res) => {
 
         res.status(500).json({
             success: false,
-            error: error.message || "Internal Server Error"
+            error: safeErrorMessage(error, 'An error occurred during registration. Please try again.')
         });
     }
 }

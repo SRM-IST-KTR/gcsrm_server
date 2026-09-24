@@ -14,6 +14,7 @@ const ensureDB = require('./middleware/dbCheck');
 
 const errorHandler = require('./middleware/errorMiddleware');
 const requestLoggingMiddleware = require('./middleware/requestLogging');
+const rateLimit = require('express-rate-limit');
 
 dotenv.config();
 
@@ -21,6 +22,27 @@ const app = express();
 
 // Disable ETags so Vercel edge never returns 304 stripping Access-Control-Allow-Origin
 app.set('etag', false);
+
+// Behind Vercel's proxy — trust the first hop so rate limiting keys on the real client IP
+app.set('trust proxy', 1);
+
+// Rate limiting
+const apiLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000,
+    limit: 300,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests. Please try again later.' },
+});
+
+// Stricter limiter for anonymous, abuse-prone endpoints (OTP, contact, signups)
+const publicWriteLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    limit: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { success: false, message: 'Too many requests. Please try again later.' },
+});
 
 // Add comprehensive request logging middleware early
 app.use(requestLoggingMiddleware);
@@ -119,27 +141,23 @@ app.get('/health', async (req, res) => {
     }
 });
 
-// Handle preflight OPTIONS requests for all API routes using middleware
-app.use('/api/v1', (req, res, next) => {
-    if (req.method === 'OPTIONS') {
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, Cache-Control, Pragma');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        return res.sendStatus(204);
-    }
-    next();
-});
+app.use('/api', apiLimiter);
+app.use('/api/otp', publicWriteLimiter);
+app.use('/api/contact', publicWriteLimiter);
+app.use('/api/events/register', publicWriteLimiter);
+app.use('/api/ossomehacks/register', publicWriteLimiter);
 
 app.use('/api', ensureDB, routes);
 
 // Initialize Swagger documentation
 swaggerDocs(app);
 
-// Simple debug endpoint for testing Sentry
-app.get("/debug-sentry", function mainHandler(req, res) {
-    throw new Error("Test Sentry error!");
-});
+// Simple debug endpoint for testing Sentry (never exposed in production)
+if (process.env.NODE_ENV !== 'production') {
+    app.get("/debug-sentry", function mainHandler(req, res) {
+        throw new Error("Test Sentry error!");
+    });
+}
 
 // Sentry error handler should come before custom error handler
 Sentry.setupExpressErrorHandler(app);

@@ -7,13 +7,45 @@ const { getParticipantModel } = require('../../models/participant.model');
 const Sentry = require('@sentry/node');
 const { sendEmail } = require('../../utils/emailService');
 const { safeErrorMessage } = require('../../utils/regex');
+const { pick, escapeHtml } = require('../../utils/sanitize');
+
+// `database` and `collection` are deliberately excluded: they control which
+// DB/collection participant endpoints read from, so they must not be client-settable.
+const EVENT_EDITABLE_FIELDS = [
+    'slug',
+    'event_name',
+    'event_description',
+    'speakers_details',
+    'Registration_startDate',
+    'Registration_endDate',
+    'event_date',
+    'is_active',
+    'venue',
+    'sponsors_details',
+    'duration',
+    'prerequisites',
+    'cost',
+    'poster_url',
+    'registration_url',
+    'certificate',
+    'jimp_config',
+    'teamEvent',
+    'teamSize',
+];
+
+const PARTICIPANT_EDITABLE_FIELDS = ['name', 'regNo', 'phn', 'dept', 'rsvp', 'checkin', 'snacks'];
+
+const serverError = (res, error, fallback) => {
+    Sentry.captureException(error);
+    return res.status(500).json({ success: false, error: safeErrorMessage(error, fallback) });
+};
 
 const fetchAll = async (req, res) => {
     const startTime = Date.now();
 
     try {
         await connectDB();
-        const events = await Event.find().lean();
+        const events = await Event.find().select('-database -collection').lean();
         const duration = Date.now() - startTime;
 
         return res.status(200).json({
@@ -23,8 +55,7 @@ const fetchAll = async (req, res) => {
             data: events
         });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to fetch events');
     }
 };
 
@@ -33,14 +64,13 @@ const fetchEvent = async (req, res) => {
         const { id } = req.params;
         await connectDB();
 
-        const event = await Event.findById(id).lean();
+        const event = await Event.findById(id).select('-database -collection').lean();
         if (!event) {
             return res.status(404).json({ success: false, error: 'Event not found' });
         }
         return res.status(200).json({ success: true, data: event });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to fetch event');
     }
 };
 
@@ -49,14 +79,13 @@ const fetchEventSlug = async (req, res) => {
         const { slug } = req.params;
         await connectDB();
 
-        const event = await Event.findOne({ slug }).lean();
+        const event = await Event.findOne({ slug }).select('-database -collection').lean();
         if (!event) {
             return res.status(404).json({ success: false, error: 'Event not found' });
         }
         return res.status(200).json({ success: true, data: event });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to fetch event');
     }
 };
 
@@ -68,8 +97,7 @@ const createEvent = async (req, res) => {
         const newEvent = await Event.create(eventData);
         return res.status(201).json({ success: true, data: newEvent });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to create event');
     }
 };
 
@@ -78,14 +106,14 @@ const editEvent = async (req, res) => {
         const { id } = req.params;
         await connectDB();
 
-        const updated = await Event.findByIdAndUpdate(id, req.body, { new: true });
+        const updateData = pick(req.body.data || req.body, EVENT_EDITABLE_FIELDS);
+        const updated = await Event.findByIdAndUpdate(id, updateData, { new: true });
         if (!updated) {
             return res.status(404).json({ success: false, error: 'Event not found' });
         }
         return res.status(200).json({ success: true, data: updated });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to update event');
     }
 };
 
@@ -100,8 +128,7 @@ const deleteEvent = async (req, res) => {
         }
         return res.status(200).json({ success: true, data: deleted });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to delete event');
     }
 };
 
@@ -127,8 +154,7 @@ const fetchEventParticipants = async (req, res) => {
         const participants = await Participant.find().lean();
         return res.status(200).json({ success: true, count: participants.length, data: participants });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to fetch participants');
     }
 };
 
@@ -138,12 +164,14 @@ const fetchEventParticipants = async (req, res) => {
 const updateEventParticipant = async (req, res) => {
     try {
         const { email } = req.params;
-        const { eventSlug, slug, ...updateData } = req.body;
+        const { eventSlug, slug } = req.body;
         const targetSlug = eventSlug || slug;
 
         if (!targetSlug) {
             return res.status(400).json({ success: false, error: 'Event slug is required' });
         }
+
+        const updateData = pick(req.body, PARTICIPANT_EDITABLE_FIELDS);
 
         await connectDB();
         const event = await Event.findOne({ slug: targetSlug }).lean();
@@ -169,8 +197,7 @@ const updateEventParticipant = async (req, res) => {
 
         return res.status(200).json({ success: true, data: updated });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to update participant');
     }
 };
 
@@ -206,8 +233,7 @@ const checkinEventParticipant = async (req, res) => {
 
         return res.status(200).json({ success: true, message: 'Check-in successful', data: participant });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to check in participant');
     }
 };
 
@@ -243,8 +269,7 @@ const snacksEventParticipant = async (req, res) => {
 
         return res.status(200).json({ success: true, message: 'Snacks marked successfully', data: participant });
     } catch (error) {
-        Sentry.captureException(error);
-        return res.status(500).json({ success: false, error: error.message });
+        return serverError(res, error, 'Failed to mark snacks');
     }
 };
 
@@ -332,7 +357,7 @@ const confirmParticipantRsvp = async (req, res) => {
             <html lang="en">
             <head>
                 <meta charset="utf-8">
-                <title>RSVP Confirmed - ${event.event_name}</title>
+                <title>RSVP Confirmed - ${escapeHtml(event.event_name)}</title>
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <style>
                     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #09090b; color: #f4f4f5; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 20px; }
@@ -351,11 +376,11 @@ const confirmParticipantRsvp = async (req, res) => {
                 <div class="card">
                     <span class="badge">✓ Confirmed</span>
                     <h1>Your Seat is Reserved!</h1>
-                    <p>Hi <strong>${participant.name}</strong>, your seat for <strong>${event.event_name}</strong> has been secured.</p>
+                    <p>Hi <strong>${escapeHtml(participant.name)}</strong>, your seat for <strong>${escapeHtml(event.event_name)}</strong> has been secured.</p>
                     <div class="details">
-                        <div class="row"><span class="lbl">Venue</span><span class="val">${event.venue || 'Campus Venue'}</span></div>
+                        <div class="row"><span class="lbl">Venue</span><span class="val">${escapeHtml(event.venue || 'Campus Venue')}</span></div>
                         <div class="row"><span class="lbl">Date</span><span class="val">${new Date(event.event_date).toLocaleString()}</span></div>
-                        <div class="row"><span class="lbl">Reg No</span><span class="val">${participant.regNo}</span></div>
+                        <div class="row"><span class="lbl">Reg No</span><span class="val">${escapeHtml(participant.regNo)}</span></div>
                     </div>
                     <p style="font-size: 12px; color: #71717a; margin: 0;">Show your registration number or college ID at the desk for check-in.</p>
                 </div>
@@ -363,7 +388,8 @@ const confirmParticipantRsvp = async (req, res) => {
             </html>
         `);
     } catch (err) {
-        return res.status(500).send(`<h2>Error processing RSVP confirmation: ${err.message}</h2>`);
+        Sentry.captureException(err);
+        return res.status(500).send(`<h2>Error processing RSVP confirmation. Please try again later.</h2>`);
     }
 };
 

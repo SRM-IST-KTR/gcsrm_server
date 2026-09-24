@@ -1,7 +1,6 @@
 const express = require('express');
-const { body, param } = require('express-validator');
-
 const router = express.Router();
+
 const {
     fetchAll,
     fetchEvent,
@@ -17,24 +16,33 @@ const {
     confirmParticipantRsvp,
 } = require('../controller/events/event.controller');
 const { registerInEvent } = require('../controller/events/register.controller');
+const requireApiKey = require('../middleware/requireApiKey');
+const requirePublicKey = require('../middleware/requirePublicKey');
+const validateObjectId = require('../middleware/validateObjectId');
 
-// Event routes
-router.get('/', fetchAll);
-router.get('/slug/:slug', fetchEventSlug);
-router.get('/participants/:slug', fetchEventParticipants);
-router.put('/participants/:email', updateEventParticipant);
-router.post('/checkin', checkinEventParticipant);
-router.post('/snacks', snacksEventParticipant);
-router.post('/send-rsvp', sendEventRsvpEmail);
+// Public reads
+router.get('/', requirePublicKey, fetchAll);
+router.get('/slug/:slug', requirePublicKey, fetchEventSlug);
 router.get('/rsvp', confirmParticipantRsvp);
 
-router.get('/:id', fetchEvent);
-router.post('/createEvent', createEvent);
-router.post('/', createEvent);
-router.put('/:id', editEvent);
-router.delete('/deleteEvent/:id', deleteEvent);
-router.delete('/:id', deleteEvent);
+// Admin: participant management
+router.get('/participants/:slug', requireApiKey, fetchEventParticipants);
+router.put('/participants/:email', requireApiKey, updateEventParticipant);
+router.post('/checkin', requireApiKey, checkinEventParticipant);
+router.post('/snacks', requireApiKey, snacksEventParticipant);
+router.post('/send-rsvp', requireApiKey, sendEventRsvpEmail);
 
+// Admin: event CRUD
+router.post('/createEvent', requireApiKey, createEvent);
+router.post('/', requireApiKey, createEvent);
+router.put('/:id', requireApiKey, validateObjectId('id'), editEvent);
+router.delete('/deleteEvent/:id', requireApiKey, validateObjectId('id'), deleteEvent);
+router.delete('/:id', requireApiKey, validateObjectId('id'), deleteEvent);
+
+// Public self-service signup
 router.post('/register', registerInEvent);
+
+// Public read by id (after literal routes so /rsvp and /slug/* match first)
+router.get('/:id', requirePublicKey, validateObjectId('id'), fetchEvent);
 
 module.exports = router;
