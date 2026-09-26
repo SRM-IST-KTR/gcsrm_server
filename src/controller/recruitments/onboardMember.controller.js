@@ -108,6 +108,7 @@ const onboardMember = async (req, res, next) => {
             uploadStream(req.files.nda[0].buffer, {
                 folder: 'Team/Team26-27/NDA',
                 public_id: ndaPublicId,
+                resource_type: 'raw',
                 overwrite: true
             })
         ]);
