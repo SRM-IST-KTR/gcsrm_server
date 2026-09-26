@@ -120,7 +120,7 @@ describe('Security Fixes', () => {
       expect(mockSendEmail).toHaveBeenCalledTimes(1);
       const emailArgs = mockSendEmail.mock.calls[0][0];
       
-      expect(emailArgs.subject).toBe('Your OTP Code — GitHub Community SRM');
+      expect(emailArgs.subject).toBe('Your OTP Code, GitHub Community SRM');
       expect(emailArgs.html).not.toContain('<h1>Hacked</h1>');
       expect(emailArgs.html).toContain('123456');
     });

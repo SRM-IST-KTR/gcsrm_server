@@ -16,3 +16,5 @@ aws_ses_credentials.json
 aws_ses_credentials.*
 *.pem
 *.key
+
+.commandcode/
