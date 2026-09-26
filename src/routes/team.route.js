@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { body } = require('express-validator');
 
-const { fetchTeamMembers, createTeamMember, fetchTeamMemberById, updateTeamMember, deleteTeamMember } = require('../controller/team.controller');
+const { fetchTeamMembers, createTeamMember, fetchTeamMemberById, fetchTeamMemberByEmail, updateTeamMember, deleteTeamMember } = require('../controller/team.controller');
 const requireApiKey = require('../middleware/requireApiKey');
 const requirePublicKey = require('../middleware/requirePublicKey');
 
@@ -242,6 +242,42 @@ router.post('/', requireApiKey, teamMemberValidationRules, createTeamMember);
  *         description: Internal server error
  */
 router.get('/:id', requirePublicKey, fetchTeamMemberById);
+
+/**
+ * @swagger
+ * /team/by-email/{email}:
+ *   get:
+ *     summary: Get onboarding data by email
+ *     description: Retrieve full onboarding record (including PFP, NDA URLs, socials, caption) from the teams_new collection by candidate email. Uses admin API key.
+ *     tags: [Team]
+ *     parameters:
+ *       - in: path
+ *         name: email
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The candidate's email address
+ *     responses:
+ *       200:
+ *         description: Onboarding record retrieved
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   $ref: '#/components/schemas/Team'
+ *       400:
+ *         description: No email provided
+ *       404:
+ *         description: Onboarding record not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/by-email/:email', requireApiKey, fetchTeamMemberByEmail);
 
 /**
  * @swagger

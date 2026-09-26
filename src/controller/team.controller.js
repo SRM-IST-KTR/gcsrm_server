@@ -585,10 +585,87 @@ const deleteTeamMember = async (req, res) => {
     }
 };
 
+// Fetch onboarding data (from teams_new) by email for admin review.
+// Returns full projection including ndaUrl, pictureUrl, socials, caption, etc.
+const fetchTeamMemberByEmail = async (req, res) => {
+    const startTime = Date.now();
+
+    try {
+        if (mongoose.connection.readyState !== 1) {
+            await connectDB();
+        }
+
+        const { email } = req.params;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                error: "No email provided"
+            });
+        }
+
+        const normalizedEmail = String(email).trim().toLowerCase();
+
+        Sentry.logger.info('Fetching onboarding data by email', {
+            operation: 'fetchTeamMemberByEmail',
+            email: normalizedEmail
+        });
+
+        const member = await teamSchema
+            .findOne({ email: normalizedEmail })
+            .select('+ndaUrl +pictureUrl +socials +caption +phoneno +section +faDetails +domain +subdomain +position +joined_yr +isCurrentMember +index')
+            .lean();
+
+        if (!member) {
+            return res.status(404).json({
+                success: false,
+                error: "Onboarding record not found"
+            });
+        }
+
+        const totalDuration = Date.now() - startTime;
+
+        Sentry.logger.info('Onboarding data fetched successfully', {
+            operation: 'fetchTeamMemberByEmail',
+            memberId: member._id.toString(),
+            email: normalizedEmail,
+            totalDuration: `${totalDuration}ms`
+        });
+
+        res.status(200).json({
+            success: true,
+            data: member
+        });
+    } catch (err) {
+        const totalDuration = Date.now() - startTime;
+
+        Sentry.logger.error('Failed to fetch onboarding data', {
+            operation: 'fetchTeamMemberByEmail',
+            error: err.message,
+            email: req.params?.email,
+            duration: `${totalDuration}ms`
+        });
+
+        Sentry.captureException(err, {
+            tags: {
+                operation: 'fetch_team_member_by_email',
+                component: 'team.controller',
+                email: req.params?.email
+            }
+        });
+
+        res.status(500).json({
+            success: false,
+            error: safeErrorMessage(err, 'Failed to fetch onboarding data')
+        });
+    }
+};
+
 module.exports = {
     fetchTeamMembers,
     createTeamMember,
     fetchTeamMemberById,
+    fetchTeamMemberByEmail,
     updateTeamMember,
     deleteTeamMember
 };
