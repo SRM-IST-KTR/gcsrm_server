@@ -1,4 +1,5 @@
 const teamSchema = require('../models/team.model');
+const TeamNew = teamSchema.TeamNew;
 const mongoose = require('mongoose');
 const { connectDB } = require('../utils/db');
 const Sentry = require('@sentry/node');
@@ -611,7 +612,7 @@ const fetchTeamMemberByEmail = async (req, res) => {
             email: normalizedEmail
         });
 
-        const member = await teamSchema
+        const member = await TeamNew
             .findOne({ email: normalizedEmail })
             .select('+ndaUrl +pictureUrl +socials +caption +phoneno +section +faDetails +domain +subdomain +position +joined_yr +isCurrentMember +index')
             .lean();
