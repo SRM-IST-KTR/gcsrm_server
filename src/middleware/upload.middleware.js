@@ -2,7 +2,7 @@ const multer = require('multer');
 
 const storage = multer.memoryStorage();
 
-const ALLOWED_MIME_TYPES = [
+const IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/jpg',
   'image/png',
@@ -11,7 +11,21 @@ const ALLOWED_MIME_TYPES = [
 ];
 
 const fileFilter = (req, file, cb) => {
-  const isMimeAllowed = ALLOWED_MIME_TYPES.includes(file.mimetype);
+  if (file.fieldname === 'nda') {
+    const isPdfMime = file.mimetype === 'application/pdf';
+    const isPdfExt = /\.pdf$/i.test(file.originalname);
+    if (isPdfMime && isPdfExt) {
+      cb(null, true);
+    } else {
+      const error = new Error('Invalid file type. NDA must be a PDF file.');
+      error.status = 400;
+      cb(error, false);
+    }
+    return;
+  }
+
+  // Default: picture field accepts only images
+  const isMimeAllowed = IMAGE_MIME_TYPES.includes(file.mimetype);
   const isExtAllowed = /\.(jpe?g|png|heic|heif)$/i.test(file.originalname);
 
   if (isMimeAllowed && isExtAllowed) {
@@ -42,12 +56,19 @@ const uploadOnboardingFiles = multerInstance.fields([
  */
 const validateImageMagicBytes = (req, res, next) => {
   const files = req.files || {};
-  const fileList = [
-    ...(files.picture || []),
-    ...(files.nda || []),
-  ];
+  const fileList = [];
 
-  for (const file of fileList) {
+  // Pictures must be valid images
+  for (const file of files.picture || []) {
+    fileList.push({ file, fieldType: 'image' });
+  }
+
+  // NDA must be a valid PDF
+  for (const file of files.nda || []) {
+    fileList.push({ file, fieldType: 'pdf' });
+  }
+
+  for (const { file, fieldType } of fileList) {
     if (!file.buffer || file.buffer.length < 4) {
       return res.status(400).json({
         success: false,
@@ -59,12 +80,22 @@ const validateImageMagicBytes = (req, res, next) => {
     const isJpeg = buf[0] === 0xFF && buf[1] === 0xD8 && buf[2] === 0xFF;
     const isPng = buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
     const isHeic = buf.length >= 12 && buf.toString('ascii', 4, 8) === 'ftyp';
+    const isPdf = buf[0] === 0x25 && buf[1] === 0x50 && buf[2] === 0x44 && buf[3] === 0x46; // %PDF
 
-    if (!isJpeg && !isPng && !isHeic) {
-      return res.status(400).json({
-        success: false,
-        error: `Invalid file signature for ${file.fieldname}. Uploaded file is not a valid image.`,
-      });
+    if (fieldType === 'image') {
+      if (!isJpeg && !isPng && !isHeic) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid file signature for ${file.fieldname}. Uploaded file is not a valid image (JPG, PNG, or HEIC).`,
+        });
+      }
+    } else if (fieldType === 'pdf') {
+      if (!isPdf) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid file signature for ${file.fieldname}. NDA must be a valid PDF file.`,
+        });
+      }
     }
   }
 
