@@ -59,7 +59,7 @@ exports.sendOTP = async (req, res, next) => {
       .replace(/\{\{otp\}\}/gi, otp);
     const { data } = await sendEmail({
       to: email,
-      subject: 'Your OTP Code — GitHub Community SRM',
+      subject: 'Your OTP Code, GitHub Community SRM',
       html,
       text: `Your OTP code is: ${otp}\n\nIt expires in 5 minutes.\n\nIf you didn't request this, please ignore this email.`,
     });
