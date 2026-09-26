@@ -52,7 +52,7 @@ const getAllParticipants = async (req, res, next) => {
     // Status Filter
     if (status && status !== 'all') {
       if (status === 'interviewShortlisted') {
-        query.status = { $in: ['interviewShortlisted', 'interviewShortlist'] };
+        query.status = 'interviewShortlisted';
       } else {
         query.status = status;
       }
@@ -569,7 +569,6 @@ const getRecruitmentAnalytics = async (req, res, next) => {
 
       // Normalize status
       let s = candidate.status || 'registered';
-      if (s === 'interviewShortlist') s = 'interviewShortlisted';
       if (statusCounts[s] !== undefined) {
         statusCounts[s]++;
       } else {

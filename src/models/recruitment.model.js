@@ -57,7 +57,6 @@ const participantSchema = new mongoose.Schema(
         'task_assigned',
         'taskSubmitted',
         'interviewShortlisted',
-        'interviewShortlist',
         'selected',
         'onboarding',
         'onboarded',
