@@ -1,0 +1,4 @@
+- Expects the frontend (admin-portal) to stay in sync with backend (gcsrm_server) model/enum changes, including dropdowns, filters, stats cards, modals, and all other related UI areas — not just the most obvious component. Confidence: 0.85
+- Prefers comprehensive updates: when a backend change ripples to the UI, all affected frontend components should be updated rather than just the one explicitly mentioned. Confidence: 0.8
+- Keeps frontend (admin-portal) and backend (gcsrm_server) as separate projects located in ~/Downloads. Confidence: 0.7
+- Communicates informally and concisely ("do the needful", casual phrasing), trusting the developer to determine the full scope of what's needed. Confidence: 0.7

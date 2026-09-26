@@ -6,7 +6,11 @@ const {
   applyForRecruitment
 } = require('../controller/recruitments/apply_MONGODB.controller');
 
-const requireOtpAuth = require('../middleware/requireOtpAuth');
+const {
+  requireOtpAuth,
+  requireOtpTokenHeader,
+  verifyOtpEmailMatch
+} = require('../middleware/requireOtpAuth');
 const requireApiKey = require('../middleware/requireApiKey');
 
 const {
@@ -41,6 +45,11 @@ const {
   onboardMember
 } = require('../controller/recruitments/onboardMember.controller');
 
+const {
+  uploadOnboardingFiles,
+  validateImageMagicBytes,
+  parseOnboardingJsonFields
+} = require('../middleware/upload.middleware');
 const { teamMemberValidationRules } = require('./team.route');
 
 
@@ -176,7 +185,11 @@ router.post(
 
 router.post(
   '/onboard',
-  requireApiKey,
+  requireOtpTokenHeader,
+  uploadOnboardingFiles,
+  validateImageMagicBytes,
+  parseOnboardingJsonFields,
+  verifyOtpEmailMatch,
   teamMemberValidationRules,
   onboardMember
 );

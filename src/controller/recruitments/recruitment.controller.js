@@ -517,7 +517,9 @@ const getRecruitmentAnalytics = async (req, res, next) => {
       task_assigned: 0,
       taskSubmitted: 0,
       interviewShortlisted: 0,
+      selected: 0,
       onboarding: 0,
+      onboarded: 0,
       rejected: 0,
       other: 0,
     };
@@ -602,15 +604,17 @@ const getRecruitmentAnalytics = async (req, res, next) => {
 
     const funnel = {
       registered: total,
-      taskAssigned: statusCounts.task_assigned + statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding,
-      taskSubmitted: statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding,
-      interviewShortlisted: statusCounts.interviewShortlisted + statusCounts.onboarding,
-      onboarded: statusCounts.onboarding,
+      taskAssigned: statusCounts.task_assigned + statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded,
+      taskSubmitted: statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded,
+      interviewShortlisted: statusCounts.interviewShortlisted + statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded,
+      selected: statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded,
+      onboarded: statusCounts.onboarding + statusCounts.onboarded,
       rejected: statusCounts.rejected,
-      taskAssignmentRate: total > 0 ? (((statusCounts.task_assigned + statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding) / total) * 100).toFixed(1) : 0,
-      taskConversionRate: total > 0 ? (((statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.onboarding) / total) * 100).toFixed(1) : 0,
-      interviewConversionRate: total > 0 ? (((statusCounts.interviewShortlisted + statusCounts.onboarding) / total) * 100).toFixed(1) : 0,
-      onboardingRate: total > 0 ? ((statusCounts.onboarding / total) * 100).toFixed(1) : 0,
+      taskAssignmentRate: total > 0 ? (((statusCounts.task_assigned + statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded) / total) * 100).toFixed(1) : 0,
+      taskConversionRate: total > 0 ? (((statusCounts.taskSubmitted + statusCounts.interviewShortlisted + statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded) / total) * 100).toFixed(1) : 0,
+      interviewConversionRate: total > 0 ? (((statusCounts.interviewShortlisted + statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded) / total) * 100).toFixed(1) : 0,
+      selectedRate: total > 0 ? (((statusCounts.selected + statusCounts.onboarding + statusCounts.onboarded) / total) * 100).toFixed(1) : 0,
+      onboardingRate: total > 0 ? (((statusCounts.onboarding + statusCounts.onboarded) / total) * 100).toFixed(1) : 0,
     };
 
     return res.status(200).json({
