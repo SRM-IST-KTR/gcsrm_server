@@ -78,12 +78,12 @@ const onboardMember = async (req, res, next) => {
             });
         }
 
-        // 6. Strictly authorize applicant: must exist in recruitment DB with status in ['accepted', 'onboarding']
+        // 6. Strictly authorize applicant: must exist in recruitment DB with status in ['selected', 'onboarding']
         const recruitmentConn = await connectRecruitmentDB();
         const ParticipantUser = getParticipantUserModel(recruitmentConn);
         const applicant = await ParticipantUser.findOne({ email: normalizedEmail });
 
-        const ELIGIBLE_STATUSES = ['accepted', 'onboarding'];
+        const ELIGIBLE_STATUSES = ['selected', 'onboarding'];
         if (!applicant || !ELIGIBLE_STATUSES.includes(applicant.status)) {
             return res.status(403).json({
                 success: false,
@@ -115,14 +115,18 @@ const onboardMember = async (req, res, next) => {
         if (pictureUpload?.public_id) uploadedPublicIds.push(pictureUpload.public_id);
         if (ndaUpload?.public_id) uploadedPublicIds.push(ndaUpload.public_id);
 
-        // 9. Determine display index
+        // 9. Mark applicant as 'onboarding' — NDA and other files are submitted
+        applicant.status = 'onboarding';
+        await applicant.save();
+
+        // 10. Determine display index
         let memberIndex = req.body.index;
         if (memberIndex == null) {
             const maxMember = await teamSchema.findOne().sort({ index: -1 }).lean();
             memberIndex = (maxMember?.index != null ? maxMember.index : -1) + 1;
         }
 
-        // 10. Build team member document
+        // 11. Build team member document
         const memberData = {
             index: memberIndex,
             name: req.body.name.trim(),
@@ -144,10 +148,10 @@ const onboardMember = async (req, res, next) => {
         const newMember = new teamSchema(memberData);
         const savedMember = await newMember.save();
 
-        // 11. Update applicant status ONLY after Team document has successfully persisted
-        applicant.status = 'onboarding';
+        // 12. Update applicant status to 'onboarded' ONLY after Team document has successfully persisted
+        applicant.status = 'onboarded';
         await applicant.save();
-        Sentry.logger.info('Updated recruitment applicant status to onboarding', {
+        Sentry.logger.info('Updated recruitment applicant status to onboarded', {
             applicantId: applicant._id.toString(),
             email: normalizedEmail
         });
