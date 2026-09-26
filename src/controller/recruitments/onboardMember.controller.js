@@ -61,7 +61,7 @@ const onboardMember = async (req, res, next) => {
             });
         }
 
-        // 4. Ensure connection to primary DB (for teams collection)
+        // 4. Ensure connection to primary DB (for teams_new collection)
         if (mongoose.connection.readyState !== 1) {
             await connectDB();
         }
@@ -101,12 +101,12 @@ const onboardMember = async (req, res, next) => {
         // 8. Concurrently upload both images to Cloudinary with overwrite: true
         const [pictureUpload, ndaUpload] = await Promise.all([
             uploadStream(req.files.picture[0].buffer, {
-                folder: 'Team26/PFP',
+                folder: 'Team/Team26-27/PFP',
                 public_id: picturePublicId,
                 overwrite: true
             }),
             uploadStream(req.files.nda[0].buffer, {
-                folder: 'Team26/NDA',
+                folder: 'Team/Team26-27/NDA',
                 public_id: ndaPublicId,
                 overwrite: true
             })
