@@ -148,17 +148,18 @@ const onboardMember = async (req, res, next) => {
         const newMember = new teamSchema(memberData);
         const savedMember = await newMember.save();
 
-        // 12. Update applicant status to 'onboarded' ONLY after Team document has successfully persisted
-        applicant.status = 'onboarded';
-        await applicant.save();
-        Sentry.logger.info('Updated recruitment applicant status to onboarded', {
+        // Status remains 'onboarding' — 'onboarded' is set only by admins
+        // after manual verification of submitted details.
+        Sentry.logger.info('Candidate documents submitted; status set to onboarding', {
             applicantId: applicant._id.toString(),
-            email: normalizedEmail
+            email: normalizedEmail,
+            memberId: savedMember._id.toString(),
+            operation: 'onboardMember'
         });
 
         const totalDuration = Date.now() - startTime;
 
-        Sentry.logger.info('Candidate onboarded successfully into team', {
+        Sentry.logger.info('Candidate team record created (onboarding pending admin review)', {
             operation: 'onboardMember',
             memberId: savedMember._id.toString(),
             email: savedMember.email,
@@ -169,7 +170,7 @@ const onboardMember = async (req, res, next) => {
 
         return res.status(201).json({
             success: true,
-            message: 'Candidate onboarded successfully into team',
+            message: 'Onboarding details submitted. Status updated to onboarding for admin review.',
             data: savedMember
         });
 
