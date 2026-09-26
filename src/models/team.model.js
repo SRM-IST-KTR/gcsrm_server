@@ -102,7 +102,7 @@ const teamSchema = new mongoose.Schema({
 teamSchema.index({ email: 1 });
 teamSchema.index({ domain: 1, joined_yr: 1, isCurrentMember: 1 });
 
-const Team = mongoose.models.teams || mongoose.model('teams', teamSchema);
+const Team = mongoose.models.teams_new || mongoose.model('teams_new', teamSchema);
 
 /**
  * Get or create Team model for a specific connection
@@ -110,11 +110,11 @@ const Team = mongoose.models.teams || mongoose.model('teams', teamSchema);
  * @returns {mongoose.Model}
  */
 function getTeamModel(connection) {
-    if (connection && connection.models && connection.models.teams) {
-        return connection.models.teams;
+    if (connection && connection.models && connection.models.teams_new) {
+        return connection.models.teams_new;
     }
     const target = connection || mongoose;
-    return target.models.teams || target.model('teams', teamSchema);
+    return target.models.teams_new || target.model('teams_new', teamSchema);
 }
 
 Team.getTeamModel = getTeamModel;
