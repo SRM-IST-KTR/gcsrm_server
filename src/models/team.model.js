@@ -102,21 +102,35 @@ const teamSchema = new mongoose.Schema({
 teamSchema.index({ email: 1 });
 teamSchema.index({ domain: 1, joined_yr: 1, isCurrentMember: 1 });
 
-const Team = mongoose.models.teams_new || mongoose.model('teams_new', teamSchema);
+const TeamNew = mongoose.models.teams_new || mongoose.model('teams_new', teamSchema);
+
+/**
+ * Legacy model for the original `teams` collection.
+ * Used by team CRUD operations (fetch, create, update, delete)
+ * so the admin portal teams section shows actual team members,
+ * not onboarding candidates who live in teams_new.
+ */
+const TeamLegacy = mongoose.models.teams || mongoose.model('teams', teamSchema);
 
 /**
  * Get or create Team model for a specific connection
  * @param {mongoose.Connection} [connection]
+ * @param {string} [collectionName] - 'teams_new' (default) or 'teams'
  * @returns {mongoose.Model}
  */
-function getTeamModel(connection) {
-    if (connection && connection.models && connection.models.teams_new) {
-        return connection.models.teams_new;
+function getTeamModel(connection, collectionName) {
+    const name = collectionName || 'teams_new';
+    if (connection && connection.models && connection.models[name]) {
+        return connection.models[name];
     }
     const target = connection || mongoose;
-    return target.models.teams_new || target.model('teams_new', teamSchema);
+    return target.models[name] || target.model(name, teamSchema);
 }
 
-Team.getTeamModel = getTeamModel;
+TeamNew.getTeamModel = getTeamModel;
+TeamNew.getLegacyModel = () => TeamLegacy;
 
-module.exports = Team;
+// Default export is the legacy teams model (used by team.controller.js for CRUD)
+module.exports = TeamLegacy;
+module.exports.TeamNew = TeamNew;
+module.exports.getTeamModel = getTeamModel;

@@ -2,7 +2,8 @@ const mongoose = require('mongoose');
 const Sentry = require('@sentry/node');
 const { validationResult } = require('express-validator');
 const { connectDB, connectRecruitmentDB } = require('../../utils/db');
-const teamSchema = require('../../models/team.model');
+const teamModel = require('../../models/team.model');
+const TeamNew = teamModel.TeamNew;
 const getParticipantUserModel = require('../../models/recruitment.model');
 const { safeErrorMessage } = require('../../utils/regex');
 const { uploadStream, cloudinary } = require('../../utils/cloudinary');
@@ -69,7 +70,7 @@ const onboardMember = async (req, res, next) => {
         const normalizedEmail = String(req.body.email).trim().toLowerCase();
 
         // 5. Check if team member already exists with this email
-        const existingMember = await teamSchema.findOne({ email: normalizedEmail }).lean();
+        const existingMember = await TeamNew.findOne({ email: normalizedEmail }).lean();
         if (existingMember) {
             return res.status(409).json({
                 success: false,
@@ -123,7 +124,7 @@ const onboardMember = async (req, res, next) => {
         // 10. Determine display index
         let memberIndex = req.body.index;
         if (memberIndex == null) {
-            const maxMember = await teamSchema.findOne().sort({ index: -1 }).lean();
+            const maxMember = await TeamNew.findOne().sort({ index: -1 }).lean();
             memberIndex = (maxMember?.index != null ? maxMember.index : -1) + 1;
         }
 
@@ -146,7 +147,7 @@ const onboardMember = async (req, res, next) => {
             ndaUrl: ndaUpload.secure_url
         };
 
-        const newMember = new teamSchema(memberData);
+        const newMember = new TeamNew(memberData);
         const savedMember = await newMember.save();
 
         // Status remains 'onboarding' — 'onboarded' is set only by admins
