@@ -12,7 +12,7 @@ jest.mock('@sentry/node', () => ({
 // not controller behaviour, so no DB is touched.
 jest.mock('./src/controller/team.controller', () => {
   const h = (req, res) => res.status(200).json({ ok: true });
-  return { fetchTeamMembers: h, createTeamMember: h, fetchTeamMemberById: h, updateTeamMember: h, deleteTeamMember: h };
+  return { fetchTeamMembers: h, createTeamMember: h, fetchTeamMemberById: h, fetchTeamMemberByEmail: h, updateTeamMember: h, deleteTeamMember: h };
 });
 jest.mock('./src/controller/sponsor.controller', () => {
   const h = (req, res) => res.status(200).json({ ok: true });
