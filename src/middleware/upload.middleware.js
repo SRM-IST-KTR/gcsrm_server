@@ -2,6 +2,12 @@ const multer = require('multer');
 
 const storage = multer.memoryStorage();
 
+// Per-field size limits. Picture + NDA must add up to less than Vercel's
+// 4.5MB serverless request cap (2.5MB + 1.5MB = 4MB), otherwise the platform
+// rejects the upload with an opaque 413 before this code even runs.
+const MAX_PICTURE_BYTES = 2.5 * 1024 * 1024;
+const MAX_NDA_BYTES = 1.5 * 1024 * 1024;
+
 const IMAGE_MIME_TYPES = [
   'image/jpeg',
   'image/jpg',
@@ -40,19 +46,49 @@ const fileFilter = (req, file, cb) => {
 const multerInstance = multer({
   storage,
   limits: {
-    fileSize: 5 * 1024 * 1024, // 5MB limit
+    // Hard cap = the largest per-field limit. The tighter NDA limit below is
+    // enforced per field in validateImageMagicBytes.
+    fileSize: MAX_PICTURE_BYTES,
   },
   fileFilter,
 });
 
-const uploadOnboardingFiles = multerInstance.fields([
+const onboardingFields = multerInstance.fields([
   { name: 'picture', maxCount: 1 },
   { name: 'nda', maxCount: 1 },
 ]);
 
 /**
- * Middleware to verify magic-byte signatures on in-memory buffers.
- * Enforces valid JPEG (0xFF 0xD8 0xFF), PNG (0x89 0x50 0x4E 0x47), or HEIC (ftyp at offset 4).
+ * Runs the multer upload and converts its errors into clean 400 responses
+ * instead of falling through to the generic 500 handler.
+ */
+const uploadOnboardingFiles = (req, res, next) => {
+  onboardingFields(req, res, (err) => {
+    if (!err) return next();
+
+    if (err instanceof multer.MulterError) {
+      if (err.code === 'LIMIT_FILE_SIZE') {
+        const isNda = err.field === 'nda';
+        return res.status(400).json({
+          success: false,
+          error: isNda
+            ? 'Signed NDA is too large. Maximum size is 1.5MB.'
+            : 'Profile picture is too large. Maximum size is 2.5MB.',
+        });
+      }
+
+      return res.status(400).json({ success: false, error: err.message });
+    }
+
+    return next(err);
+  });
+};
+
+/**
+ * Middleware to enforce per-field file size limits and verify magic-byte
+ * signatures on in-memory buffers.
+ * Sizes: picture <= 2.5MB, nda <= 1.5MB.
+ * Signatures: valid JPEG (0xFF 0xD8 0xFF), PNG (0x89 0x50 0x4E 0x47), or HEIC (ftyp at offset 4).
  */
 const validateImageMagicBytes = (req, res, next) => {
   const files = req.files || {};
@@ -73,6 +109,18 @@ const validateImageMagicBytes = (req, res, next) => {
       return res.status(400).json({
         success: false,
         error: `Invalid file: ${file.fieldname} contains insufficient data`,
+      });
+    }
+
+    // Enforce the tighter per-field limits (multer only caps at the largest one)
+    const maxBytes = fieldType === 'pdf' ? MAX_NDA_BYTES : MAX_PICTURE_BYTES;
+    if (file.size > maxBytes) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+      return res.status(400).json({
+        success: false,
+        error: fieldType === 'pdf'
+          ? `Signed NDA is too large (${sizeMb}MB). Maximum size is 1.5MB.`
+          : `Profile picture is too large (${sizeMb}MB). Maximum size is 2.5MB.`,
       });
     }
 
